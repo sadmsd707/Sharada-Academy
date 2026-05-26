@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parent Section - Soham</title>
+  <!-- Firebase Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    /* ========== All original CSS (unchanged) ========== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: #f5f7fa;
+      color: #333;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: linear-gradient(to right, #2563eb, #1e3a8a);
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: relative;
+      z-index: 100;
+      height: 70px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .hamburger {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 30px;
+      height: 21px;
+      padding: 0;
+      z-index: 1001;
+      position: relative;
+    }
+
+    .hamburger span {
+      display: block;
+      height: 3px;
+      width: 100%;
+      background-color: white;
+      border-radius: 3px;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      transform-origin: center;
+    }
+
+    .hamburger.active span:nth-child(1) {
+      transform: translateY(9px) rotate(45deg);
+    }
+
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+
+    .hamburger.active span:nth-child(3) {
+      transform: translateY(-9px) rotate(-45deg);
+    }
+
+    .side-nav {
+      position: fixed;
+      top: 0;
+      right: -300px;
+      width: 300px;
+      height: 100vh;
+      background: linear-gradient(to bottom, #2563eb, #1e3a8a);
+      box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+      transition: right 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .side-nav.active {
+      right: 0;
+    }
+
+    .side-nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex: 1;
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .side-nav ul::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .side-nav ul::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .side-nav ul::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+    }
+
+    .side-nav ul::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .side-nav ul li {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      opacity: 0;
+      transform: translateX(20px);
+      animation: slideInRight 0.5s forwards;
+    }
+
+    .side-nav.active ul li {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .side-nav ul li:nth-child(1) { animation-delay: 0.1s; }
+    .side-nav ul li:nth-child(2) { animation-delay: 0.15s; }
+    .side-nav ul li:nth-child(3) { animation-delay: 0.2s; }
+    .side-nav ul li:nth-child(4) { animation-delay: 0.25s; }
+    .side-nav ul li:nth-child(5) { animation-delay: 0.3s; }
+    .side-nav ul li:nth-child(6) { animation-delay: 0.35s; }
+    .side-nav ul li:nth-child(7) { animation-delay: 0.4s; }
+    .side-nav ul li:nth-child(8) { animation-delay: 0.45s; }
+    .side-nav ul li:nth-child(9) { animation-delay: 0.5s; }
+    .side-nav ul li:nth-child(10) { animation-delay: 0.55s; }
+    .side-nav ul li:nth-child(11) { animation-delay: 0.6s; }
+    .side-nav ul li:nth-child(12) { animation-delay: 0.65s; }
+    .side-nav ul li:nth-child(13) { animation-delay: 0.7s; }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .side-nav ul li:first-child {
+      border-top: none;
+      margin-top: 70px;
+    }
+
+    .side-nav ul li a {
+      display: block;
+      color: white;
+      text-decoration: none;
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: transparent;
+      margin: 0;
+    }
+
+    .side-nav ul li a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding-left: 40px;
+      transform: translateX(5px);
+    }
+
+    .nav-icon {
+      font-size: 1.2rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    .nav-active {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-left: 4px solid white;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .dashboard {
+      padding: 30px 20px;
+      max-width: 1400px;
+      margin: auto;
+    }
+
+    .welcome-section {
+      background: linear-gradient(to right, #2563eb, #1e3a8a);
+      color: white;
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    .welcome-section::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 200%;
+      background: rgba(255, 255, 255, 0.1);
+      transform: rotate(30deg);
+    }
+
+    .welcome-section h2 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .welcome-section p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+      position: relative;
+    }
+
+    .stats-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+      border-left: 4px solid #f59e0b;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeInUp 0.6s ease;
+      animation-fill-mode: both;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+    .stat-card h3 {
+      font-size: 2.5rem;
+      color: #1e3a8a;
+      margin-bottom: 10px;
+    }
+
+    .stat-card p {
+      color: #555;
+      font-weight: 600;
+    }
+
+    .dashboard-section {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      animation: fadeInUp 0.6s ease;
+      animation-fill-mode: both;
+    }
+
+    .dashboard-section:nth-child(1) { animation-delay: 0.1s; }
+    .dashboard-section:nth-child(2) { animation-delay: 0.2s; }
+
+    .dashboard-section h3 {
+      color: #1e3a8a;
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dashboard-section h3 .icon {
+      font-size: 1.5rem;
+    }
+
+    .btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: inline-block;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .btn:hover {
+      background: #1e3a8a;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .btn-secondary {
+      background: #f59e0b;
+    }
+
+    .btn-secondary:hover {
+      background: #d97706;
+    }
+
+    .btn-success {
+      background: #10b981;
+    }
+
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn-small {
+      padding: 8px 15px;
+      font-size: 0.9rem;
+    }
+
+    footer {
+      background: #1e3a8a;
+      color: white;
+      text-align: center;
+      padding: 30px;
+      margin-top: 50px;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    footer p {
+      font-size: 1rem;
+    }
+
+    .parent-filter {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+    
+    .search-box input {
+      width: 100%;
+      padding: 12px 15px 12px 40px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+    
+    .search-box input:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+    
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+    }
+    
+    .parent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .parent-card {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      border-left: 4px solid #10b981;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeInUp 0.5s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    
+    .parent-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+    }
+    
+    .parent-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .parent-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #1e3a8a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    
+    .parent-info h4 {
+      color: #1e3a8a;
+      margin-bottom: 5px;
+      font-size: 1.2rem;
+    }
+    
+    .parent-info p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .student-list {
+      margin-bottom: 20px;
+    }
+    
+    .student-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .student-item:last-child {
+      border-bottom: none;
+    }
+    
+    .student-details {
+      flex: 1;
+    }
+    
+    .student-name {
+      color: #1e293b;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    
+    .student-class {
+      color: #666;
+      font-size: 0.85rem;
+    }
+    
+    .parent-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .stat-box {
+      padding: 15px 10px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #2563eb;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      color: #666;
+    }
+    
+    .parent-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+      grid-column: 1 / -1;
+    }
+    
+    .empty-state .icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      animation: slideInUp 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .modal-header {
+      background: #2563eb;
+      color: white;
+      padding: 20px;
+      border-radius: 15px 15px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 5px;
+      transition: transform 0.3s ease;
+    }
+
+    .close-modal:hover {
+      transform: rotate(90deg);
+    }
+
+    .modal-body {
+      padding: 30px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #1e3a8a;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+    
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    .message-preview {
+      background: #f8fafc;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      margin-top: 10px;
+    }
+    
+    .message-preview h4 {
+      margin-top: 0;
+      color: #1e3a8a;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        padding: 15px 20px;
+      }
+      
+      .welcome-section h2 {
+        font-size: 1.8rem;
+      }
+      
+      .welcome-section p {
+        font-size: 1rem;
+      }
+      
+      .stats-container {
+        flex-direction: column;
+      }
+      
+      .parent-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .parent-filter {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .search-box {
+        min-width: 100%;
+      }
+      
+      .parent-actions {
+        flex-wrap: wrap;
+      }
+      
+      .side-nav {
+        width: 280px;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideInUp {
+      from { opacity: 0; transform: translateY(100px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #10b981;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      z-index: 9999;
+      animation: slideInRight 0.3s ease, fadeOut 0.3s ease 3s forwards;
+      min-width: 300px;
+      max-width: 400px;
+    }
+
+    .notification-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .notification-error {
+      background: #ef4444;
+    }
+
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(100px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(100px); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Soham - Parent Section</h1>
+    <button class="hamburger" id="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </header>
+
+  <div class="side-nav" id="sideNav">
+    <ul>
+      <li><a href="teacher-dashboard.html"><span class="nav-icon">📊</span>Dashboard</a></li>
+      <li><a href="teacher-classes.html"><span class="nav-icon">🏫</span>My Classes</a></li>
+      <li><a href="attendance.html"><span class="nav-icon">📅</span>Attendance</a></li>
+      <li><a href="announcements.html"><span class="nav-icon">📢</span>Announcements</a></li>
+      <li><a href="create-test.html"><span class="nav-icon">✏️</span>Create Test</a></li>
+      <li><a href="my-tests.html"><span class="nav-icon">📝</span>My Tests</a></li>
+      <li><a href="sitting-arrangement.html"><span class="nav-icon">💺</span>Sitting Arrangement</a></li>
+      <li><a href="omr-scanner.html"><span class="nav-icon">📸</span>OMR Scanner</a></li>
+      <li><a href="teacher-scores.html"><span class="nav-icon">📈</span>Student Scores</a></li>
+      <li><a href="add-student.html"><span class="nav-icon">👨‍🎓</span>Add Student</a></li>
+      <li><a href="teacher-parent.html" class="nav-active"><span class="nav-icon">👪</span>Parent Section</a></li>
+      <li><a href="teacher-resources.html"><span class="nav-icon">📚</span>Resources</a></li>
+      <li><a href="my-account.html"><span class="nav-icon">👤</span>My Account</a></li>
+      <li><a href="../role-selection.html" onclick="logout()"><span class="nav-icon">🚪</span>Logout</a></li>
+    </ul>
+  </div>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="modal" id="messageModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Send Message to Parent</h3>
+        <button class="close-modal" onclick="closeMessageModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="messageForm">
+          <div class="form-group">
+            <label for="parentNameDisplay">Parent Name</label>
+            <input type="text" id="parentNameDisplay" readonly>
+          </div>
+          <div class="form-group">
+            <label for="parentMobileDisplay">Mobile Number</label>
+            <input type="text" id="parentMobileDisplay" readonly>
+          </div>
+          <div class="form-group">
+            <label for="messageSubject">Subject</label>
+            <input type="text" id="messageSubject" placeholder="Enter message subject">
+          </div>
+          <div class="form-group">
+            <label for="messageContent">Message</label>
+            <textarea id="messageContent" rows="6" placeholder="Type your message here..."></textarea>
+          </div>
+          <div class="message-preview">
+            <h4>Preview:</h4>
+            <p id="messagePreview">Your message will appear here...</p>
+          </div>
+          <div class="parent-actions" style="margin-top: 20px;">
+            <button class="btn btn-success" onclick="sendParentMessage()">Send Message</button>
+            <button class="btn btn-danger" onclick="closeMessageModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="dashboard">
+    <section class="welcome-section">
+      <h2>Parent Communication Portal</h2>
+      <p>Connect with parents and keep them updated about their child's progress</p>
+    </section>
+
+    <div class="stats-container">
+      <div class="stat-card">
+        <h3 id="totalParents">0</h3>
+        <p>Total Parents</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="activeParents">0</h3>
+        <p>Active This Month</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="avgAttendance">0%</h3>
+        <p>Avg. Attendance</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="avgScore">0%</h3>
+        <p>Avg. Score</p>
+      </div>
+    </div>
+
+    <div class="dashboard-section">
+      <div class="parent-filter">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="parentSearch" placeholder="Search parents or students..." onkeyup="searchParents()">
+        </div>
+        <select id="classFilter" class="btn btn-small" onchange="filterParents()">
+          <option value="all">All Classes</option>
+          <option value="11th-mhtcet-pcm">11th MHTCET (PCM)</option>
+          <option value="11th-mhtcet-pcb">11th MHTCET (PCB)</option>
+          <option value="11th-jee">11th JEE</option>
+          <option value="11th-neet">11th NEET</option>
+          <option value="12th-mhtcet-pcm">12th MHTCET (PCM)</option>
+          <option value="12th-mhtcet-pcb">12th MHTCET (PCB)</option>
+          <option value="12th-jee">12th JEE</option>
+          <option value="12th-neet">12th NEET</option>
+        </select>
+        <button class="btn btn-success" onclick="sendBulkMessage()">Send Bulk Message</button>
+      </div>
+
+      <h3><span class="icon">👪</span> Parents Directory</h3>
+      <div class="parent-grid" id="parentGrid">
+        <!-- Parent cards will be populated by JavaScript -->
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Soham - Entrance Exam Practice. All rights reserved.</p>
+    <p style="margin-top: 10px; font-size: 0.9rem;">Made with ❤️ by Team Soham</p>
+  </footer>
+
+  <script>
+    // ============================
+    // Firebase Initialization
+    // ============================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXWEuA7G55nawfNUoIqr9PqGP9YGQwGnc",
+      authDomain: "soham-6d886.firebaseapp.com",
+      projectId: "soham-6d886",
+      storageBucket: "soham-6d886.firebasestorage.app",
+      messagingSenderId: "281780176229",
+      appId: "1:281780176229:web:cd1eea7bd171c14a338d8c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ============================
+    // Daily Teacher Verification
+    // ============================
+    let teacherData = null;
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        localStorage.removeItem("teacherVerification");
+        window.location.href = "../role-selection.html";
+        return;
+      }
+      const cached = JSON.parse(localStorage.getItem("teacherVerification"));
+      const today = new Date().toISOString().split('T')[0];
+      if (cached && cached.uid === user.uid && cached.date === today) {
+        teacherData = cached.teacherData || null;
+        initPage();
+        return;
+      }
+      try {
+        const docSnap = await db.collection("teachers").doc(user.uid).get();
+        if (docSnap.exists && docSnap.data().role === "teacher") {
+          teacherData = docSnap.data();
+          localStorage.setItem("teacherVerification", JSON.stringify({
+            uid: user.uid,
+            date: today,
+            teacherData
+          }));
+          initPage();
+        } else {
+          localStorage.removeItem("teacherVerification");
+          auth.signOut();
+          window.location.href = "../role-selection.html";
+        }
+      } catch (err) {
+        console.error(err);
+        localStorage.removeItem("teacherVerification");
+        auth.signOut();
+        window.location.href = "../role-selection.html";
+      }
+    });
+
+    // ============================
+    // Global Variables
+    // ============================
+    let allStudents = [];
+    let parentData = []; // grouped parents
+    let selectedParent = null;
+    const classTemplates = {
+      '11th-mhtcet-pcm': '11th MHTCET (PCM)',
+      '11th-mhtcet-pcb': '11th MHTCET (PCB)',
+      '11th-jee': '11th JEE',
+      '11th-neet': '11th NEET',
+      '12th-mhtcet-pcm': '12th MHTCET (PCM)',
+      '12th-mhtcet-pcb': '12th MHTCET (PCB)',
+      '12th-jee': '12th JEE',
+      '12th-neet': '12th NEET'
+    };
+
+    // ============================
+    // Page Init
+    // ============================
+    async function initPage() {
+      await loadStudentsFromFirestore();
+      setupHamburger();
+      setupMessagePreview();
+      document.getElementById('messageModal').addEventListener('click', function(e) {
+        if (e.target === this) closeMessageModal();
+      });
+    }
+
+    async function loadStudentsFromFirestore() {
+      try {
+        const snap = await db.collection("students").get();
+        allStudents = [];
+        snap.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
+        buildParentDirectory();
+      } catch (err) {
+        console.error("Error fetching students:", err);
+        showNotification("Failed to load student data", "error");
+      }
+    }
+
+    // ============================
+    // Build Parent Directory
+    // ============================
+    function buildParentDirectory(searchTerm = '', classFilter = 'all') {
+      const parentMap = {};
+      let filteredStudents = allStudents.filter(s => {
+        if (classFilter !== 'all' && s.studentClass !== classFilter) return false;
+        if (searchTerm) {
+          const term = searchTerm.toLowerCase();
+          return s.studentName.toLowerCase().includes(term) ||
+                 s.studentId.toLowerCase().includes(term) ||
+                 s.parentMobile.includes(term);
+        }
+        return true;
+      });
+
+      filteredStudents.forEach(student => {
+        const key = student.parentMobile;
+        if (!parentMap[key]) {
+          parentMap[key] = {
+            name: `Mr./Mrs. ${student.studentName.split(' ').slice(1).join(' ') || student.studentName}`,
+            mobile: student.parentMobile,
+            students: []
+          };
+        }
+        parentMap[key].students.push({
+          name: student.studentName,
+          class: student.studentClass,
+          studentId: student.studentId
+        });
+      });
+
+      parentData = Object.values(parentMap);
+
+      // Compute aggregates (attendance and scores) from Firestore
+      computeAggregates().then(() => {
+        displayParents(parentData);
+        updateStats(parentData);
+      });
+    }
+
+    async function computeAggregates() {
+      // Fetch attendance for all students (today's or monthly)
+      const today = new Date().toISOString().split('T')[0];
+      const attendanceSnap = await db.collection("attendance").where("date", "==", today).get();
+      const attendanceMap = {};
+      attendanceSnap.forEach(doc => {
+        const d = doc.data();
+        attendanceMap[d.studentId] = d.status;
+      });
+
+      // Fetch scores average per student (simplified: average of last 5 scores)
+      const scoresMap = {};
+      const scoresSnap = await db.collection("scores").get();
+      scoresSnap.forEach(doc => {
+        const d = doc.data();
+        if (!scoresMap[d.studentId]) scoresMap[d.studentId] = [];
+        scoresMap[d.studentId].push(d.percentage || 0);
+      });
+
+      parentData.forEach(parent => {
+        let totalAttendance = 0, totalScore = 0, count = parent.students.length;
+        parent.students.forEach(student => {
+          // Attendance (present = 100%, else 0%)
+          const status = attendanceMap[student.studentId];
+          const attendance = (status === 'present' || status === 'late') ? 100 : 0;
+          totalAttendance += attendance;
+
+          // Score
+          const scores = scoresMap[student.studentId] || [];
+          const avgScore = scores.length > 0 ? scores.reduce((a,b)=>a+b,0)/scores.length : 0;
+          totalScore += avgScore;
+        });
+        parent.avgAttendance = count > 0 ? Math.round(totalAttendance / count) : 0;
+        parent.avgScore = count > 0 ? Math.round(totalScore / count) : 0;
+
+        // Message count from parentMessages
+        // For simplicity, we'll leave it as a placeholder or fetch later
+        parent.messageCount = 0;
+      });
+
+      // Fetch message counts per parent mobile (last 30 days)
+      const thirtyDaysAgo = new Date(Date.now() - 30*24*60*60*1000);
+      const msgsSnap = await db.collection("parentMessages")
+        .where("timestamp", ">=", thirtyDaysAgo)
+        .get();
+      msgsSnap.forEach(doc => {
+        const mobile = doc.data().parentMobile;
+        const parent = parentData.find(p => p.mobile === mobile);
+        if (parent) parent.messageCount++;
+      });
+    }
+
+    function displayParents(parents) {
+      const grid = document.getElementById('parentGrid');
+      if (parents.length === 0) {
+        grid.innerHTML = `<div class="empty-state"><div class="icon">👪</div><h3>No Parents Found</h3><p>Add students with parent information to see parent profiles</p><a href="add-student.html" class="btn btn-success" style="margin-top: 20px;">Add Student</a></div>`;
+        return;
+      }
+      let html = '';
+      parents.forEach((parent, index) => {
+        const initials = parent.name.split(' ').slice(1).map(n => n[0]).join('') || 'P';
+        let studentsHTML = parent.students.map(s => `
+          <div class="student-item">
+            <div class="student-details">
+              <div class="student-name">${s.name}</div>
+              <div class="student-class">${classTemplates[s.class] || s.class}</div>
+            </div>
+            <div style="text-align: right;">
+              <button class="btn btn-small" onclick="viewStudent('${s.studentId}')" style="padding: 4px 8px; font-size: 0.8rem;">View</button>
+            </div>
+          </div>`).join('');
+
+        html += `
+          <div class="parent-card" style="animation-delay: ${0.1 * index}s">
+            <div class="parent-header">
+              <div class="parent-avatar">${initials}</div>
+              <div class="parent-info">
+                <h4>${parent.name}</h4>
+                <p>📱 ${parent.mobile}</p>
+                <p style="font-size: 0.8rem; color: #888;">${parent.students.length} child${parent.students.length > 1 ? 'ren' : ''}</p>
+              </div>
+            </div>
+            <div class="student-list">${studentsHTML}</div>
+            <div class="parent-stats">
+              <div class="stat-box">
+                <div class="stat-value">${parent.avgAttendance}%</div>
+                <div class="stat-label">Avg. Attendance</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value">${parent.avgScore}%</div>
+                <div class="stat-label">Avg. Score</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value">${parent.messageCount}</div>
+                <div class="stat-label">Messages</div>
+              </div>
+            </div>
+            <div class="parent-actions">
+              <button class="btn btn-small btn-success" onclick="openMessageModal('${parent.mobile}', '${parent.name}')">Message</button>
+              <button class="btn btn-small" onclick="callParent('${parent.mobile}')">Call</button>
+              <button class="btn btn-small btn-secondary" onclick="viewProgressReport('${parent.mobile}')">Progress Report</button>
+            </div>
+          </div>`;
+      });
+      grid.innerHTML = html;
+    }
+
+    function updateStats(parents) {
+      const total = parents.length;
+      const active = parents.filter(p => p.messageCount > 0).length;
+      let totalAttendance = 0, totalScore = 0, totalStudents = 0;
+      parents.forEach(p => {
+        totalAttendance += p.avgAttendance * p.students.length;
+        totalScore += p.avgScore * p.students.length;
+        totalStudents += p.students.length;
+      });
+      document.getElementById('totalParents').textContent = total;
+      document.getElementById('activeParents').textContent = active;
+      document.getElementById('avgAttendance').textContent = totalStudents > 0 ? Math.round(totalAttendance / totalStudents) + '%' : '0%';
+      document.getElementById('avgScore').textContent = totalStudents > 0 ? Math.round(totalScore / totalStudents) + '%' : '0%';
+    }
+
+    // ============================
+    // Search & Filter
+    // ============================
+    function searchParents() {
+      const term = document.getElementById('parentSearch').value;
+      const classFilter = document.getElementById('classFilter').value;
+      buildParentDirectory(term, classFilter);
+    }
+
+    function filterParents() {
+      searchParents();
+    }
+
+    // ============================
+    // Message Modal
+    // ============================
+    function openMessageModal(mobile, name) {
+      selectedParent = { mobile, name };
+      document.getElementById('parentNameDisplay').value = name;
+      document.getElementById('parentMobileDisplay').value = mobile;
+      document.getElementById('messageSubject').value = '';
+      document.getElementById('messageContent').value = '';
+      document.getElementById('messagePreview').textContent = 'Your message will appear here...';
+      document.getElementById('messageModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMessageModal() {
+      document.getElementById('messageModal').classList.remove('active');
+      document.body.style.overflow = 'auto';
+      selectedParent = null;
+    }
+
+    async function sendParentMessage() {
+      if (!selectedParent) return;
+      const subject = document.getElementById('messageSubject').value.trim();
+      const content = document.getElementById('messageContent').value.trim();
+      if (!subject || !content) {
+        showNotification('Please fill in both subject and message', 'error');
+        return;
+      }
+      try {
+        await db.collection("parentMessages").add({
+          parentMobile: selectedParent.mobile,
+          parentName: selectedParent.name,
+          subject,
+          content,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          teacherId: auth.currentUser.uid,
+          teacherName: teacherData?.name || 'Teacher'
+        });
+        showNotification(`Message sent to ${selectedParent.name}!`, 'success');
+        closeMessageModal();
+        await loadStudentsFromFirestore(); // refresh to update message counts
+      } catch (err) {
+        console.error(err);
+        showNotification('Failed to send message', 'error');
+      }
+    }
+
+    function setupMessagePreview() {
+      document.getElementById('messageContent').addEventListener('input', function() {
+        document.getElementById('messagePreview').textContent = this.value || 'Your message will appear here...';
+      });
+    }
+
+    function callParent(mobile) {
+      if (confirm(`Call ${mobile}?`)) {
+        showNotification(`Initiating call to ${mobile}...`, 'info');
+      }
+    }
+
+    function viewProgressReport(mobile) {
+      showNotification(`Progress report for parent with mobile ${mobile} would be displayed here.`, 'info');
+    }
+
+    function viewStudent(studentId) {
+      localStorage.setItem('viewStudentId', studentId);
+      window.location.href = 'teacher-scores.html'; // or a student profile page
+    }
+
+    function sendBulkMessage() {
+      showNotification('Bulk message feature coming soon', 'info');
+    }
+
+    // ============================
+    // Helpers
+    // ============================
+    function showNotification(message, type = 'info') {
+      const existing = document.querySelector('.notification');
+      if (existing) existing.remove();
+      const el = document.createElement('div');
+      el.className = `notification notification-${type}`;
+      el.innerHTML = `<div class="notification-content"><span>${message}</span><button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button></div>`;
+      document.body.appendChild(el);
+      setTimeout(() => { if (el.parentNode) el.remove(); }, 3000);
+    }
+
+    function logout() {
+      auth.signOut().then(() => {
+        localStorage.removeItem("teacherVerification");
+        window.location.href = "../role-selection.html";
+      });
+    }
+
+    function setupHamburger() {
+      const hamburger = document.getElementById('hamburger');
+      const sideNav = document.getElementById('sideNav');
+      const overlay = document.getElementById('overlay');
+      hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        sideNav.classList.toggle('active');
+        overlay.classList.toggle('active');
+        document.body.style.overflow = sideNav.classList.contains('active') ? 'hidden' : 'auto';
+      });
+      overlay.addEventListener('click', () => {
+        hamburger.classList.remove('active');
+        sideNav.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = 'auto';
+      });
+      document.querySelectorAll('.side-nav a').forEach(link => {
+        link.addEventListener('click', () => {
+          if (link.getAttribute('href') === '../role-selection.html' && link.onclick) return;
+          hamburger.classList.remove('active');
+          sideNav.classList.remove('active');
+          overlay.classList.remove('active');
+          document.body.style.overflow = 'auto';
+        });
+      });
+    }
+  </script>
+</body>
+</html>
