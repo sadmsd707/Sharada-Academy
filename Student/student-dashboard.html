@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f8fafc">
+    <title>Student Dashboard - Sharada Academy</title>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
+            --safe-top: env(safe-area-inset-top, 0px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            background-color: #f8fafc;
+            min-height: 100vh;
+            min-height: 100dvh;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #1e293b;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        #equations-canvas {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        /* Header with logo and hamburger */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 5vw;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(203, 213, 225, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-area {
+            display: flex;
+            flex-direction: column;
+        }
+        .logo-text {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            color: #db2777;
+            line-height: 1.2;
+        }
+        .logo-text .light {
+            font-weight: 300;
+            color: #1e293b;
+        }
+        .tagline {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        /* Hamburger button */
+        .hamburger {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 28px;
+            height: 20px;
+            padding: 0;
+            z-index: 110;
+        }
+        .hamburger span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #db2777;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        /* Glass side navigation */
+        .side-nav {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            height: 100dvh;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: -8px 0 30px rgba(0, 0, 0, 0.08);
+            border-left: 1px solid rgba(203, 213, 225, 0.5);
+            transition: right 0.4s ease;
+            z-index: 1000;
+            padding-top: 80px;
+            display: flex;
+            flex-direction: column;
+        }
+        .side-nav.active {
+            right: 0;
+        }
+        .side-nav ul {
+            list-style: none;
+            padding: 0;
+            flex: 1;
+        }
+        .side-nav ul li {
+            border-bottom: 1px solid rgba(219, 39, 119, 0.1);
+        }
+        .side-nav ul li a {
+            display: block;
+            color: #1e293b;
+            text-decoration: none;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+        .side-nav ul li a:hover {
+            background: rgba(219, 39, 119, 0.05);
+            border-left-color: #db2777;
+            color: #db2777;
+            padding-left: 32px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Main content wrapper */
+        .main-content {
+            flex: 1;
+            padding: 24px 5vw 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        /* Glass cards – general */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+            padding: 28px 24px;
+        }
+
+        /* Welcome card – light pink variant */
+        .welcome-card {
+            background: rgba(252, 231, 243, 0.7);   /* light pink tint */
+            border-color: rgba(219, 39, 119, 0.2);
+            text-align: center;
+            padding: 36px 24px;
+        }
+        .welcome-card h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .welcome-card .class-info {
+            font-size: 1.1rem;
+            color: #475569;
+            margin-bottom: 24px;
+        }
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            box-shadow: 0 8px 24px rgba(219, 39, 119, 0.25);
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+            text-decoration: none;
+        }
+        .btn-primary:active {
+            transform: scale(0.96);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+            background: linear-gradient(135deg, #be185d, #db2777);
+        }
+
+        /* Subject cards grid */
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1e293b;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+        .subject-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            border-radius: 20px;
+            padding: 24px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: default;
+            border-top-width: 4px;
+            border-top-style: solid;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .subject-card:hover {
+                transform: translateY(-6px);
+                box-shadow: 0 16px 36px rgba(0, 0, 0, 0.06);
+            }
+        }
+        .subject-card:active {
+            transform: scale(0.98);
+        }
+        .subject-card h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .subject-card p {
+            color: #475569;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Colored tops matching role selection accents */
+        .card-physics { border-top-color: #10b981; }
+        .card-physics h3 { color: #059669; }
+        .card-chemistry { border-top-color: #f59e0b; }
+        .card-chemistry h3 { color: #d97706; }
+        .card-maths { border-top-color: #8b5cf6; }
+        .card-maths h3 { color: #6d28d9; }
+        .card-biology { border-top-color: #db2777; }
+        .card-biology h3 { color: #be185d; }
+
+        /* Footer – exact copy from role selection */
+        .site-footer {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            margin-top: auto;
+            text-align: center;
+            width: 100%;
+            padding-bottom: 16px;
+        }
+        .site-footer .copyright {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .site-footer .love {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .app-header {
+                padding: 14px 20px;
+            }
+            .main-content {
+                padding: 16px 16px 24px;
+                gap: 24px;
+            }
+            .welcome-card h2 {
+                font-size: 1.6rem;
+            }
+            .section-title {
+                font-size: 1.5rem;
+            }
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="equations-canvas" aria-hidden="true" role="presentation"></canvas>
+
+    <div class="content-layer">
+        <!-- Sticky header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-text">SHARADA <span class="light">ACADEMY</span></div>
+                <div class="tagline">Student Dashboard</div>
+            </div>
+            <button class="hamburger" id="hamburger" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </header>
+
+        <!-- Side Navigation -->
+        <div class="side-nav" id="sideNav">
+            <ul>
+                <li><a href="student-dashboard.html">Home</a></li>
+                <li><a href="Exams/take-test.html">Take a Test</a></li>
+                <li><a href="Exams/exam.html">Practice</a></li>
+                <li><a href="Exams/scores.html">Scores</a></li>
+                <li><a href="student-announcement.html">Announcements</a></li>
+                <li><a href="student-resources.html">Resources</a></li>
+                <li><a href="Boardprep/board-prep.html">Board Preparation</a></li>
+                <li><a href="student-account.html">My Account</a></li>
+                <li><a href="../role-selection.html" onclick="logout()">Logout</a></li>
+            </ul>
+        </div>
+        <div class="overlay" id="overlay"></div>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Welcome card – now light pink -->
+            <div class="glass-card welcome-card">
+                <h2>Welcome, <span class="gradient-text" id="studentName">Student</span>!</h2>
+                <p class="class-info">Your class: <strong id="studentClass">Loading...</strong></p>
+                <a href="Exams/exam.html" class="btn-primary">Start Practicing Now</a>
+            </div>
+
+            <!-- Subjects section -->
+            <section>
+                <h2 class="section-title">Subjects</h2>
+                <div class="cards-grid">
+                    <div class="subject-card card-physics">
+                        <h3>Physics</h3>
+                        <p>Practice questions from mechanics, optics, thermodynamics, and other important topics. Detailed explanations for every concept.</p>
+                    </div>
+                    <div class="subject-card card-chemistry">
+                        <h3>Chemistry</h3>
+                        <p>Sharpen your knowledge in organic, inorganic, and physical chemistry with tailored quizzes. Master chemical reactions and equations.</p>
+                    </div>
+                    <div class="subject-card card-maths">
+                        <h3>Mathematics</h3>
+                        <p>Test your problem-solving skills with MCQs from algebra, geometry, calculus, and statistics. Build strong mathematical foundations.</p>
+                    </div>
+                    <div class="subject-card card-biology">
+                        <h3>Biology</h3>
+                        <p>Explore life sciences with comprehensive questions on botany, zoology, genetics, and human physiology. Perfect for medical entrance exams.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="copyright">&copy; 2026 Sharada Academy . All rights reserved.</div>
+            <div class="love">Made with ❤️ by Team Soham</div>
+        </footer>
+    </div>
+
+    <script>
+        // ---------- Firebase Configuration ----------
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXWEuA7G55nawfNUoIqr9PqGP9YGQwGnc",
+            authDomain: "soham-6d886.firebaseapp.com",
+            projectId: "soham-6d886",
+            storageBucket: "soham-6d886.firebasestorage.app",
+            messagingSenderId: "281780176229",
+            appId: "1:281780176229:web:cd1eea7bd171c14a338d8c",
+            measurementId: "G-CB1J6LQ7DJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Check login
+        if (localStorage.getItem("isLoggedIn") !== "true") {
+            window.location.href = "student-login.html";
+        }
+
+        // Load student data
+        async function loadStudentData() {
+            const studentInfo = JSON.parse(localStorage.getItem("currentStudent") || "{}");
+            const studentId = studentInfo.studentId;
+
+            if (!studentId) {
+                document.getElementById("studentName").textContent = studentInfo.name || "Student";
+                document.getElementById("studentClass").textContent = studentInfo.class || "your class";
+                return;
+            }
+
+            try {
+                const docSnap = await db.collection("students").doc(studentId).get();
+                if (docSnap.exists) {
+                    const student = docSnap.data();
+                    document.getElementById("studentName").textContent = student.studentName || studentInfo.name || "Student";
+                    document.getElementById("studentClass").textContent = student.studentClass || studentInfo.class || "your class";
+                } else {
+                    document.getElementById("studentName").textContent = studentInfo.name || "Student";
+                    document.getElementById("studentClass").textContent = studentInfo.class || "your class";
+                }
+            } catch (error) {
+                console.error("Error fetching student data:", error);
+                document.getElementById("studentName").textContent = studentInfo.name || "Student";
+                document.getElementById("studentClass").textContent = studentInfo.class || "your class";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("userRole");
+            localStorage.removeItem("currentStudent");
+            localStorage.removeItem("username");
+            window.location.href = "../role-selection.html";
+        }
+
+        // Hamburger menu
+        const hamburger = document.getElementById('hamburger');
+        const sideNav = document.getElementById('sideNav');
+        const overlay = document.getElementById('overlay');
+
+        hamburger.addEventListener('click', () => {
+            sideNav.classList.toggle('active');
+            overlay.classList.toggle('active');
+            document.body.style.overflow = sideNav.classList.contains('active') ? 'hidden' : '';
+        });
+
+        overlay.addEventListener('click', () => {
+            sideNav.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+
+        document.querySelectorAll('.side-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                sideNav.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', loadStudentData);
+
+        // ---------- Canvas Background (identical to role selection) ----------
+        (function() {
+            const canvas = document.getElementById('equations-canvas');
+            const ctx = canvas.getContext('2d');
+
+            let width, height;
+            let dpr = Math.min(window.devicePixelRatio || 1, 2);
+            let isMobile = false;
+            let particleCount;
+            let baseSizeMultiplier;
+
+            function detectMobile() {
+                const w = window.innerWidth;
+                isMobile = w <= 768;
+                if (w <= 380) { particleCount = 18; baseSizeMultiplier = 0.55; }
+                else if (w <= 480) { particleCount = 24; baseSizeMultiplier = 0.65; }
+                else if (w <= 768) { particleCount = 32; baseSizeMultiplier = 0.78; }
+                else if (w <= 1024) { particleCount = 40; baseSizeMultiplier = 0.9; }
+                else { particleCount = 48; baseSizeMultiplier = 1.0; }
+            }
+
+            function resizeCanvas() {
+                detectMobile();
+                dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 2);
+                width = canvas.width = window.innerWidth * dpr;
+                height = canvas.height = window.innerHeight * dpr;
+                canvas.style.width = window.innerWidth + 'px';
+                canvas.style.height = window.innerHeight + 'px';
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(dpr, dpr);
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 300));
+            resizeCanvas();
+
+            const expressions = [
+                "E = mc²", "∫ x² dx", "∇ × B = μ₀J", "PV = nRT",
+                "sin²θ + cos²θ = 1", "H₂O + CO₂ → C₆H₁₂O₆", "ΔG = ΔH - TΔS",
+                "F = G(m₁m₂)/r²", "pH = -log[H⁺]", "DNA ⇌ RNA",
+                "Fe²⁺ + e⁻ → Fe", "λ = h/p", "v = u + at", "C₆H₁₂O₆",
+                "∑ F = ma", "lim (x→0) sin(x)/x = 1", "ATP → ADP + Pi",
+                "Krebs Cycle", "dψ/dt", "K_a = [H⁺][A⁻]/[HA]", "y = mx + c",
+            ];
+
+            function drawBenzene(ctx, x, y, size) {
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    const nextX = x + size * Math.cos(angle);
+                    const nextY = y + size * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(nextX, nextY);
+                    else ctx.lineTo(nextX, nextY);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.6, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            class ScienceParticle {
+                constructor() {
+                    this.reset();
+                    this.y = Math.random() * (window.innerHeight || 800);
+                }
+                reset() {
+                    this.type = Math.random() < 0.7 ? 'text' : 'chemistry';
+                    this.text = expressions[Math.floor(Math.random() * expressions.length)];
+                    this.x = Math.random() * (window.innerWidth || 400);
+                    this.y = -60;
+                    this.speed = 0.15 + Math.random() * 0.45;
+                    this.size = (10 + Math.floor(Math.random() * 14)) * baseSizeMultiplier;
+                    this.opacity = 0.12 + Math.random() * 0.15;
+                }
+                update(screenW, screenH) {
+                    this.y += this.speed;
+                    if (this.y > screenH + 60) {
+                        this.reset();
+                        this.y = -60;
+                        this.x = Math.random() * screenW;
+                    }
+                }
+                draw(ctx) {
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.fillStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.lineWidth = Math.max(1.2, 1.8 * baseSizeMultiplier);
+                    if (this.type === 'text') {
+                        ctx.font = `bold ${this.size}px 'Courier New', monospace`;
+                        ctx.fillText(this.text, this.x, this.y);
+                    } else {
+                        drawBenzene(ctx, this.x, this.y, this.size * 1.2);
+                    }
+                    ctx.restore();
+                }
+            }
+
+            let particles = [];
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    const p = new ScienceParticle();
+                    p.y = (window.innerHeight / particleCount) * i - 60 + Math.random() * 40;
+                    particles.push(p);
+                }
+            }
+            initParticles();
+
+            let animFrameId;
+            function animateCanvas() {
+                const screenW = window.innerWidth;
+                const screenH = window.innerHeight;
+                ctx.clearRect(0, 0, screenW, screenH);
+                particles.forEach(p => { p.update(screenW, screenH); p.draw(ctx); });
+                animFrameId = requestAnimationFrame(animateCanvas);
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                } else if (!document.hidden && !animFrameId) {
+                    animFrameId = requestAnimationFrame(animateCanvas);
+                }
+            });
+            animateCanvas();
+
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => { resizeCanvas(); initParticles(); }, 250);
+            });
+        })();
+    </script>
+</body>
+</html>
