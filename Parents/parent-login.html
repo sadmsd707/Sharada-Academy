@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parent Login - Soham</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    /* ========== All your existing CSS – kept exactly as you provided ========== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #e6f2ff, #cce0ff);
+      color: #1a3a5f;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      padding: 20px 40px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%233b82f6' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+      opacity: 0.3;
+    }
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+    .login-container {
+      max-width: 420px;
+      margin: 60px auto;
+      background: white;
+      padding: 40px 35px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15);
+      text-align: center;
+      flex-grow: 1;
+      border: 1px solid rgba(37, 99, 235, 0.1);
+      animation: fadeIn 0.6s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .login-container h2 {
+      color: #1d4ed8;
+      margin-bottom: 25px;
+      font-size: 1.7rem;
+      font-weight: 600;
+    }
+    .form-group {
+      margin-bottom: 22px;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #1e40af;
+      font-size: 0.95rem;
+    }
+    .login-container input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1.5px solid #dbeafe;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+      background: #f8fafc;
+      color: #1e3a8a;
+    }
+    .login-container input:focus {
+      border: 1.5px solid #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      background: white;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.3s;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    .login-btn:hover {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    }
+    .login-btn:active { transform: translateY(0); }
+    .info-text {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 25px;
+      text-align: center;
+      line-height: 1.6;
+      padding: 15px;
+      background: #f0f9ff;
+      border-radius: 10px;
+      border-left: 4px solid #3b82f6;
+    }
+    .back-link {
+      display: inline-block;
+      color: #2563eb;
+      text-decoration: none;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+      background: #eff6ff;
+      transform: translateX(-3px);
+    }
+    footer {
+      padding: 25px;
+      text-align: center;
+      background: linear-gradient(135deg, #1e40af, #1e3a8a);
+      color: white;
+      font-size: 0.9rem;
+      margin-top: auto;
+      position: relative;
+      overflow: hidden;
+    }
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%233b82f6' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+      opacity: 0.2;
+    }
+    footer p { position: relative; margin-bottom: 10px; }
+    .parent-icon {
+      font-size: 3.5rem;
+      margin-bottom: 20px;
+      color: #3b82f6;
+      filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3));
+    }
+    .validation-message { font-size: 0.8rem; margin-top: 6px; color: #64748b; display: none; padding-left: 5px; }
+    .loading { opacity: 0.8; pointer-events: none; background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; }
+    .error-message { background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; display: none; }
+    .error-message.show { display: block; }
+    .success-message { background: #dcfce7; border: 1px solid #10b981; color: #065f46; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; display: none; }
+    .success-message.show { display: block; }
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; vertical-align: middle; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Parent Login</h1>
+  </header>
+  <div class="login-container">
+    <div class="parent-icon">👨‍👩‍👧‍👦</div>
+    <h2>Parent Login</h2>
+    <div class="error-message" id="errorMessage"></div>
+    <div class="success-message" id="successMessage"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="parentId">Parent ID (Phone Number)</label>
+        <input type="text" id="parentId" placeholder="Enter parent's mobile number" required />
+        <div id="parentIdMessage" class="validation-message"></div>
+      </div>
+      <div class="form-group">
+        <label for="studentName">Student Name (Password)</label>
+        <input type="text" id="studentName" placeholder="Enter student's full name" required />
+        <div id="studentNameMessage" class="validation-message"></div>
+      </div>
+      <div class="form-group">
+        <label for="studentDob">Student Date of Birth</label>
+        <input type="date" id="studentDob" required />
+        <div id="dobMessage" class="validation-message"></div>
+      </div>
+      <button type="submit" class="login-btn" id="loginButton">Login</button>
+    </form>
+    <a href="../role-selection.html" class="back-link">← Back to Role Selection</a>
+    <p class="info-text">Use the parent mobile number, student's full name, and student's date of birth as registered by your teacher.</p>
+  </div>
+  <footer>
+    <p>&copy; 2026 Soham Educational Institute. All rights reserved.</p>
+    <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.9;">Made with ❤️ by Team Soham</p>
+  </footer>
+  <script>
+    // ---------- Firebase Configuration (SAME AS TEACHER PAGES) ----------
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXWEuA7G55nawfNUoIqr9PqGP9YGQwGnc",
+      authDomain: "soham-6d886.firebaseapp.com",
+      projectId: "soham-6d886",
+      storageBucket: "soham-6d886.firebasestorage.app",
+      messagingSenderId: "281780176229",
+      appId: "1:281780176229:web:cd1eea7bd171c14a338d8c",
+      measurementId: "G-CB1J6LQ7DJ"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const form = document.getElementById("loginForm");
+    const parentIdInput = document.getElementById("parentId");
+    const studentNameInput = document.getElementById("studentName");
+    const studentDobInput = document.getElementById("studentDob");
+    const loginButton = document.getElementById("loginButton");
+    const parentIdMessage = document.getElementById("parentIdMessage");
+    const studentNameMessage = document.getElementById("studentNameMessage");
+    const dobMessage = document.getElementById("dobMessage");
+    const errorMessage = document.getElementById("errorMessage");
+    const successMessage = document.getElementById("successMessage");
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const today = new Date().toISOString().split('T')[0];
+      studentDobInput.max = today;
+    });
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      parentIdMessage.style.display = "none";
+      studentNameMessage.style.display = "none";
+      dobMessage.style.display = "none";
+      errorMessage.classList.remove("show");
+      successMessage.classList.remove("show");
+
+      const parentMobile = parentIdInput.value.trim();
+      const studentName = studentNameInput.value.trim();
+      const studentDob = studentDobInput.value;
+
+      let isValid = true;
+      if (!parentMobile) {
+        parentIdMessage.textContent = "Please enter the parent's mobile number";
+        parentIdMessage.style.display = "block"; parentIdMessage.style.color = "#dc2626"; isValid = false;
+      }
+      if (!studentName || studentName.length < 2) {
+        studentNameMessage.textContent = "Please enter the student's full name";
+        studentNameMessage.style.display = "block"; studentNameMessage.style.color = "#dc2626"; isValid = false;
+      }
+      if (!studentDob) {
+        dobMessage.textContent = "Please select the student's date of birth";
+        dobMessage.style.display = "block"; dobMessage.style.color = "#dc2626"; isValid = false;
+      }
+      if (!isValid) return;
+
+      const userRole = localStorage.getItem("userRole");
+      if (userRole !== "parent") {
+        errorMessage.textContent = "Please select parent role first from the role selection page.";
+        errorMessage.classList.add("show");
+        return;
+      }
+
+      loginButton.innerHTML = '<span class="spinner"></span> Verifying...';
+      loginButton.disabled = true;
+
+      try {
+        const querySnapshot = await db.collection("students")
+          .where("parentMobile", "==", parentMobile)
+          .get();
+
+        if (querySnapshot.empty) throw new Error("No student found with this parent mobile number.");
+
+        let matchedStudent = null;
+        querySnapshot.forEach(doc => {
+          const student = doc.data();
+          if (student.studentName.toLowerCase() === studentName.toLowerCase() &&
+              student.dateOfBirth === studentDob) {
+            matchedStudent = { id: doc.id, ...student };
+          }
+        });
+
+        if (!matchedStudent) throw new Error("Student name or date of birth does not match our records.");
+
+        localStorage.setItem("currentParent", JSON.stringify({
+          parentMobile: parentMobile,
+          studentName: matchedStudent.studentName,
+          studentId: matchedStudent.studentId,
+          studentClass: matchedStudent.studentClass,
+          role: "parent",
+          loginTime: new Date().toISOString()
+        }));
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("username", `Parent of ${matchedStudent.studentName}`);
+        localStorage.setItem("userRole", "parent");
+
+        successMessage.textContent = "Login successful! Redirecting...";
+        successMessage.classList.add("show");
+
+        setTimeout(() => { window.location.href = "parent-dashboard.html"; }, 1000);
+      } catch (error) {
+        loginButton.innerHTML = 'Login';
+        loginButton.disabled = false;
+        if (error.message.includes("No student found")) {
+          errorMessage.textContent = "No student found with this parent mobile number. Please check the number.";
+        } else if (error.message.includes("does not match")) {
+          errorMessage.textContent = "Student name or date of birth does not match. Please try again.";
+        } else {
+          errorMessage.textContent = "Login failed: " + error.message;
+        }
+        errorMessage.classList.add("show");
+        form.style.animation = "shake 0.5s";
+        setTimeout(() => { form.style.animation = ""; }, 500);
+      }
+    });
+
+    parentIdInput.addEventListener('input', () => { parentIdMessage.style.display = "none"; errorMessage.classList.remove("show"); });
+    studentNameInput.addEventListener('input', () => { studentNameMessage.style.display = "none"; errorMessage.classList.remove("show"); });
+    studentDobInput.addEventListener('change', () => { dobMessage.style.display = "none"; errorMessage.classList.remove("show"); });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const userRole = localStorage.getItem("userRole");
+      if (userRole !== "parent") {
+        errorMessage.textContent = "Please select 'Parent' role from the role selection page.";
+        errorMessage.classList.add("show");
+        loginButton.disabled = true;
+        setTimeout(() => { window.location.href = "../role-selection.html"; }, 3000);
+      }
+    });
+  </script>
+</body>
+</html>
