@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme (NoActionBar because we use full‑screen WebView) -->
+    <style name="Theme.SharadaAcademy" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- You can customise the color palette here later -->
+    </style>
+
+    <!-- Splash screen theme (Android 12+ native splash) -->
+    <style name="Theme.SharadaAcademy.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenAnimationDuration">300</item>
+        <!-- After the splash, the app will switch to the main theme -->
+        <item name="postSplashScreenTheme">@style/Theme.SharadaAcademy</item>
+    </style>
+</resources>

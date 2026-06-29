@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f8fafc">
+    <title>My Tests - Sharada Academy</title>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <!-- jsPDF & html2canvas for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
+            --safe-top: env(safe-area-inset-top, 0px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            background-color: #f8fafc;
+            min-height: 100vh;
+            min-height: 100dvh;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #1e293b;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+            overflow-x: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #equations-canvas {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border: 1px solid rgba(203,213,225,0.5);
+        }
+        /* Extra wide styling for Exam Paper Preview Modal */
+        .modal-content.wide-paper {
+            max-width: 850px;
+            background: #fff;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            color: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header.paper-header {
+            background: #1e293b;
+        }
+
+        /* Exam Paper Formatting styles */
+        .paper-control-panel {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .paper-toggle-label {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .paper-toggle-label input {
+            width: 18px;
+            height: 18px;
+            accent-color: #db2777;
+            cursor: pointer;
+        }
+        
+        .exam-sheet {
+            background: #fff;
+            border: 1.5px solid #cbd5e1;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            border-radius: 12px;
+            padding: 40px 30px;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: #0f172a;
+            position: relative;
+        }
+        .exam-letterhead {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px double #0f172a;
+            padding-bottom: 15px;
+        }
+        .exam-letterhead-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #db2777;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        .exam-letterhead-subtitle {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        .exam-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            text-align: left;
+            font-size: 0.95rem;
+            font-weight: 600;
+            background: #f1f5f9;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .exam-meta-item span {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .exam-instructions {
+            background: #f8fafc;
+            border-left: 4px solid #1e293b;
+            padding: 12px 16px;
+            font-size: 0.88rem;
+            color: #334155;
+            margin-bottom: 25px;
+            border-radius: 0 8px 8px 0;
+            text-align: left;
+        }
+        .exam-instructions h5 {
+            font-weight: 800;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+            color: #0f172a;
+        }
+
+        .exam-question-list {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            text-align: left;
+        }
+        .exam-question-item {
+            border-bottom: 1px dashed #e2e8f0;
+            padding-bottom: 20px;
+        }
+        .exam-question-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .exam-question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .exam-question-marks {
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 0.8rem;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+        .exam-question-text {
+            line-height: 1.6;
+            margin-bottom: 8px;
+            white-space: pre-wrap;
+        }
+        .exam-question-image {
+            max-width: 100%;
+            max-height: 250px;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            margin: 10px 0;
+            display: block;
+        }
+        .exam-options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        @media (max-width: 580px) {
+            .exam-options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .exam-option-box {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.92rem;
+            background: #fafbfc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+        .exam-option-box.correct {
+            border-color: #86efac;
+            background: #f0fdf4;
+            color: #16a34a;
+            font-weight: 700;
+        }
+        .exam-option-letter {
+            font-weight: 900;
+            color: #db2777;
+        }
+        .exam-option-box.correct .exam-option-letter {
+            color: #16a34a;
+        }
+
+        .exam-solution-box {
+            background: linear-gradient(135deg, #fdf2f8, #fce7f3);
+            border: 1px solid #fbcfe8;
+            border-left: 4px solid #db2777;
+            border-radius: 0 10px 10px 0;
+            padding: 14px 18px;
+            margin-top: 15px;
+            display: none;
+            text-align: left;
+        }
+        .exam-solution-box.active {
+            display: block;
+        }
+        .exam-solution-title {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #9d174d;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+        .exam-solution-text {
+            font-size: 0.92rem;
+            color: #475569;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .exam-solution-image {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 6px;
+            border: 1px solid #fbcfe8;
+            margin-top: 10px;
+            display: block;
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 5vw;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(203, 213, 225, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 70px;
+        }
+        .logo-area {
+            display: flex;
+            flex-direction: column;
+        }
+        .logo-text {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            color: #db2777;
+            line-height: 1.2;
+        }
+        .logo-text .light {
+            font-weight: 300;
+            color: #1e293b;
+        }
+        .tagline {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        /* Hamburger */
+        .hamburger {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 28px;
+            height: 20px;
+            padding: 0;
+            z-index: 110;
+            position: relative;
+        }
+        .hamburger span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #db2777;
+            border-radius: 3px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform-origin: center;
+        }
+        .hamburger.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+        .hamburger.active span:nth-child(2) { opacity: 0; transform: translateX(-20px); }
+        .hamburger.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+        /* Side navigation */
+        .side-nav {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            height: 100dvh;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: -8px 0 30px rgba(0, 0, 0, 0.08);
+            border-left: 1px solid rgba(203, 213, 225, 0.5);
+            transition: right 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+        .side-nav.active { right: 0; }
+        .side-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+        .side-nav ul::-webkit-scrollbar { width: 5px; }
+        .side-nav ul::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); }
+        .side-nav ul::-webkit-scrollbar-thumb { background: rgba(219,39,119,0.3); border-radius: 3px; }
+        .side-nav ul li {
+            border-bottom: 1px solid rgba(219, 39, 119, 0.1);
+        }
+        .side-nav ul li:first-child { margin-top: 70px; }
+        .side-nav ul li a {
+            display: block;
+            color: #1e293b;
+            text-decoration: none;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: transparent;
+        }
+        .side-nav ul li a:hover,
+        .side-nav ul li a.nav-active {
+            background: rgba(219, 39, 119, 0.05);
+            border-left-color: #db2777;
+            color: #db2777;
+            padding-left: 32px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .overlay.active { opacity: 1; visibility: visible; }
+
+        /* Main content */
+        .main-content {
+            flex: 1;
+            padding: 24px 5vw 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        /* Glass cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+            padding: 28px 24px;
+        }
+
+        /* Welcome card – light pink */
+        .welcome-card {
+            background: rgba(252, 231, 243, 0.7);
+            border-color: rgba(219, 39, 119, 0.2);
+            text-align: center;
+            padding: 36px 24px;
+        }
+        .welcome-card h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .welcome-card p {
+            font-size: 1.1rem;
+            color: #475569;
+        }
+
+        /* Stats */
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(203,213,225,0.5);
+            border-radius: 20px;
+            padding: 24px;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            border-top: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:nth-child(1) { border-top-color: #10b981; }
+        .stat-card:nth-child(2) { border-top-color: #f59e0b; }
+        .stat-card:nth-child(3) { border-top-color: #8b5cf6; }
+        .stat-card:nth-child(4) { border-top-color: #db2777; }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 36px rgba(0,0,0,0.06);
+        }
+        .stat-card h3 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        .stat-card p {
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Section title */
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Test items */
+        .recent-tests {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 16px;
+            border-left: 4px solid #10b981;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(203,213,225,0.5);
+        }
+        .test-item:hover {
+            transform: translateX(6px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+        }
+        .test-info h4 {
+            color: #1e293b;
+            font-weight: 800;
+            margin-bottom: 6px;
+            font-size: 1.1rem;
+        }
+        .test-info p {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        .test-actions { display: flex; gap: 10px; }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+            text-decoration: none;
+            font-family: inherit;
+            min-height: 44px;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(219, 39, 119, 0.2);
+        }
+        .btn-primary:hover { background: linear-gradient(135deg, #be185d, #db2777); }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .btn-secondary:hover { background: #e2e8f0; color: #334155; }
+        .btn-success {
+            background: #10b981;
+            color: white;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+        }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-small { padding: 6px 14px; font-size: 0.85rem; border-radius: 10px; min-height: auto; }
+
+        /* Status badges */
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .status-draft { background: #fef3c7; color: #92400e; }
+        .status-published { background: #d1fae5; color: #065f46; }
+        .status-active { background: #dbeafe; color: #1e40af; }
+        .status-completed { background: #e5e7eb; color: #374151; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border: 1px solid rgba(203,213,225,0.5);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            color: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { margin: 0; font-size: 1.5rem; font-weight: 800; }
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+        }
+        .modal-body { padding: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 0.95rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            background: rgba(255,255,255,0.9);
+            color: #1e293b;
+            transition: border 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #db2777;
+            box-shadow: 0 0 0 3px rgba(219,39,119,0.15);
+            background: white;
+        }
+        .modal-actions { display: flex; gap: 15px; margin-top: 25px; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+        .empty-icon { font-size: 4rem; margin-bottom: 15px; opacity: 0.5; }
+
+        /* Update indicator */
+        .update-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 3000;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            transform: translateY(150%);
+            transition: transform 0.3s ease;
+        }
+        .update-indicator.show { transform: translateY(0); }
+
+        /* Footer */
+        .site-footer {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            margin-top: auto;
+            text-align: center;
+            width: 100%;
+            padding-bottom: 16px;
+        }
+        .site-footer .copyright {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .site-footer .love {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px; height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .app-header { padding: 14px 20px; }
+            .main-content { padding: 16px; gap: 24px; }
+            font-size: 0.9rem;
+        }
+        .test-actions { display: flex; gap: 10px; }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+            text-decoration: none;
+            font-family: inherit;
+            min-height: 44px;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(219, 39, 119, 0.2);
+        }
+        .btn-primary:hover { background: linear-gradient(135deg, #be185d, #db2777); }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .btn-secondary:hover { background: #e2e8f0; color: #334155; }
+        .btn-success {
+            background: #10b981;
+            color: white;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+        }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-small { padding: 6px 14px; font-size: 0.85rem; border-radius: 10px; min-height: auto; }
+
+        /* Status badges */
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .status-draft { background: #fef3c7; color: #92400e; }
+        .status-published { background: #d1fae5; color: #065f46; }
+        .status-active { background: #dbeafe; color: #1e40af; }
+        .status-completed { background: #e5e7eb; color: #374151; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border: 1px solid rgba(203,213,225,0.5);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            color: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { margin: 0; font-size: 1.5rem; font-weight: 800; }
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+        }
+        .modal-body { padding: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 0.95rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            background: rgba(255,255,255,0.9);
+            color: #1e293b;
+            transition: border 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #db2777;
+            box-shadow: 0 0 0 3px rgba(219,39,119,0.15);
+            background: white;
+        }
+        .modal-actions { display: flex; gap: 15px; margin-top: 25px; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+        .empty-icon { font-size: 4rem; margin-bottom: 15px; opacity: 0.5; }
+
+        /* Update indicator */
+        .update-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 3000;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            transform: translateY(150%);
+            transition: transform 0.3s ease;
+        }
+        .update-indicator.show { transform: translateY(0); }
+
+        /* Footer */
+        .site-footer {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            margin-top: auto;
+            text-align: center;
+            width: 100%;
+            padding-bottom: 16px;
+        }
+        .site-footer .copyright {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .site-footer .love {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px; height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .app-header { padding: 14px 20px; }
+            .main-content { padding: 16px; gap: 24px; }
+            .stats-container { flex-direction: column; }
+            .test-item { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .test-actions { width: 100%; justify-content: flex-start; }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+    <canvas id="equations-canvas" aria-hidden="true" role="presentation"></canvas>
+
+    <div class="content-layer">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-text">SHARADA <span class="light">ACADEMY</span></div>
+                <div class="tagline">My Tests</div>
+            </div>
+            <button class="hamburger" id="hamburger" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </header>
+
+        <!-- Side Navigation -->
+        <div class="side-nav" id="sideNav">
+            <style>
+                .side-nav {
+                    position: fixed !important;
+                    top: 0 !important;
+                    right: -320px !important;
+                    width: 300px !important;
+                    height: 100vh !important;
+                    height: 100dvh !important;
+                    background: rgba(255, 255, 255, 0.95) !important;
+                    backdrop-filter: blur(16px) !important;
+                    -webkit-backdrop-filter: blur(16px) !important;
+                    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.08) !important;
+                    border-left: 1px solid rgba(203, 213, 225, 0.5) !important;
+                    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                    z-index: 1000 !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    padding-top: 80px !important;
+                    box-sizing: border-box !important;
+                }
+                body.dark-mode .side-nav {
+                    background: rgba(15, 23, 42, 0.95) !important;
+                    border-left-color: rgba(51, 65, 85, 0.5) !important;
+                }
+                .side-nav.active {
+                    right: 0 !important;
+                }
+                .side-nav ul {
+                    list-style: none !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    flex: 1 !important;
+                    overflow-y: auto !important;
+                }
+                .side-nav ul li {
+                    border-bottom: 1px solid rgba(219, 39, 119, 0.08) !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    opacity: 1 !important;
+                    transform: none !important;
+                }
+                .side-nav ul li a {
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 14px !important;
+                    color: #1e293b !important;
+                    text-decoration: none !important;
+                    padding: 16px 24px !important;
+                    font-size: 0.95rem !important;
+                    font-weight: 600 !important;
+                    border-left: 4px solid transparent !important;
+                    transition: all 0.25s ease !important;
+                    background: transparent !important;
+                    box-sizing: border-box !important;
+                }
+                body.dark-mode .side-nav ul li a {
+                    color: #f1f5f9 !important;
+                }
+                .side-nav ul li a:hover,
+                .side-nav ul li a.active-nav,
+                .side-nav ul li a.nav-active {
+                    background: rgba(219, 39, 119, 0.05) !important;
+                    border-left-color: #db2777 !important;
+                    color: #db2777 !important;
+                    padding-left: 32px !important;
+                }
+                .side-nav .nav-icon {
+                    font-size: 1.1rem !important;
+                    width: 24px !important;
+                    text-align: center !important;
+                    flex-shrink: 0 !important;
+                    transition: transform 0.25s ease !important;
+                    color: inherit !important;
+                    display: inline-block !important;
+                }
+                .side-nav ul li a:hover .nav-icon {
+                    transform: scale(1.15) !important;
+                }
+            </style>
+            <ul>
+                <li><a href="teacher-dashboard.html" class=""><i class="fa-solid fa-chart-simple nav-icon"></i>Dashboard</a></li>
+                <li><a href="teacher-classes.html" class=""><i class="fa-solid fa-school nav-icon"></i>My Classes</a></li>
+                <li><a href="attendance.html" class=""><i class="fa-solid fa-calendar-days nav-icon"></i>Attendance</a></li>
+                <li><a href="announcements.html" class=""><i class="fa-solid fa-bullhorn nav-icon"></i>Announcements</a></li>
+                <li><a href="create-test.html" class=""><i class="fa-solid fa-pen-clip nav-icon"></i>Create Test</a></li>
+                <li><a href="my-tests.html" class="active-nav nav-active"><i class="fa-solid fa-file-signature nav-icon"></i>My Tests</a></li>
+                <li><a href="sitting-arrangement.html" class=""><i class="fa-solid fa-chair nav-icon"></i>Sitting Arrangement</a></li>
+                <li><a href="omr-scanner.html" class=""><i class="fa-solid fa-camera nav-icon"></i>OMR Scanner</a></li>
+                <li><a href="teacher-scores.html" class=""><i class="fa-solid fa-chart-line nav-icon"></i>Student Scores</a></li>
+                <li><a href="add-student.html" class=""><i class="fa-solid fa-user-graduate nav-icon"></i>Add Student</a></li>
+                <li><a href="fees-section.html" class=""><i class="fa-solid fa-credit-card nav-icon"></i>Fees Section</a></li>
+                <li><a href="teacher-parent.html" class=""><i class="fa-solid fa-people-group nav-icon"></i>Parent Section</a></li>
+                <li><a href="teacher-resources.html" class=""><i class="fa-solid fa-book nav-icon"></i>Resources</a></li>
+                <li><a href="add-questions.html" class=""><i class="fa-solid fa-circle-question nav-icon"></i>Add New Questions</a></li>
+                <li><a href="my-account.html" class=""><i class="fa-solid fa-user-gear nav-icon"></i>My Account</a></li>
+                <li><a href="../role-selection.html" class="" onclick="logout(event); return false;"><i class="fa-solid fa-right-from-bracket nav-icon"></i>Logout</a></li>
+            </ul>
+        </div>
+        <div class="overlay" id="overlay"></div>
+
+        <!-- Create Test Modal -->
+        <div class="modal" id="createTestModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create New Test</h3>
+                    <button class="close-modal" onclick="closeCreateTestModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="createTestForm">
+                        <div class="form-group">
+                            <label for="testTitle">Test Title</label>
+                            <input type="text" id="testTitle" class="form-control" placeholder="e.g., Algebra Midterm Exam" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="testClass">Select Class</label>
+                            <select id="testClass" class="form-control" required>
+                                <option value="">Choose a class</option>
+                                <option value="11th-mhtcet-pcm">11th MHTCET (PCM)</option>
+                                <option value="11th-mhtcet-pcb">11th MHTCET (PCB)</option>
+                                <option value="11th-jee">11th JEE</option>
+                                <option value="11th-neet">11th NEET</option>
+                                <option value="12th-mhtcet-pcm">12th MHTCET (PCM)</option>
+                                <option value="12th-mhtcet-pcb">12th MHTCET (PCB)</option>
+                                <option value="12th-jee">12th JEE</option>
+                                <option value="12th-neet">12th NEET</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="testDate">Scheduled Date</label>
+                            <input type="date" id="testDate" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="testDuration">Duration (minutes)</label>
+                            <input type="number" id="testDuration" class="form-control" placeholder="e.g., 60" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="numberOfQuestions">Number of Questions</label>
+                            <input type="number" id="numberOfQuestions" class="form-control" placeholder="e.g., 30" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="totalMarks">Total Marks</label>
+                            <input type="number" id="totalMarks" class="form-control" placeholder="e.g., 100" required>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="submit" class="btn btn-success">Save Test</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeCreateTestModal()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exam Paper Preview Modal -->
+        <div class="modal" id="examPaperModal">
+            <div class="modal-content wide-paper">
+                <div class="modal-header paper-header">
+                    <h3 id="examPaperModalTitle">📄 Test Examination Sheet</h3>
+                    <button class="close-modal" onclick="closeExamPaperModal()">×</button>
+                </div>
+                <div class="modal-body" style="padding: 20px;">
+                    <div class="paper-control-panel">
+                        <label class="paper-toggle-label">
+                            <input type="checkbox" id="toggleSolutionsCheckbox" onchange="toggleSolutionsDisplay()">
+                            <span>💡 Show Answer Key & Detailed Solutions</span>
+                        </label>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-primary" id="downloadPaperPdfBtn" onclick="triggerDownloadPDF()">📥 Download PDF</button>
+                            <button class="btn btn-secondary" onclick="closeExamPaperModal()">Close</button>
+                        </div>
+                    </div>
+
+                    <div id="examPaperRenderArea">
+                        <div class="exam-sheet" id="examSheetPrint">
+                            <div class="exam-letterhead">
+                                <div class="exam-letterhead-title">SHARADA ACADEMY</div>
+                                <div class="exam-letterhead-subtitle" id="previewSubtitle">ASSESSMENT SHEET</div>
+                                <div class="exam-meta-grid">
+                                    <div class="exam-meta-item"><span>Test Name:</span> <strong id="previewTestName">--</strong></div>
+                                    <div class="exam-meta-item"><span>Subject:</span> <strong id="previewSubject">--</strong></div>
+                                    <div class="exam-meta-item"><span>Class:</span> <strong id="previewClass">--</strong></div>
+                                    <div class="exam-meta-item"><span>Time Allowed:</span> <strong id="previewDuration">--</strong> mins</div>
+                                    <div class="exam-meta-item"><span>Total Questions:</span> <strong id="previewQuestionsCount">--</strong></div>
+                                    <div class="exam-meta-item"><span>Max Marks:</span> <strong id="previewTotalMarks">--</strong></div>
+                                </div>
+                                <div id="previewInstructionsBlock" class="exam-instructions">
+                                    <h5>General Instructions:</h5>
+                                    <p id="previewInstructionsText">All questions are compulsory. Use of calculators is prohibited.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="exam-question-list" id="previewQuestionsList">
+                                <div class="empty-state" style="padding: 30px;">
+                                    <div class="spinner" style="margin: 0 auto 12px;"></div>
+                                    <p>Compiling database questions matching syllabus...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update indicator -->
+        <div class="update-indicator" id="updateIndicator">
+            <span>🔄</span>
+            <span id="newTestTitle"></span>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Welcome Card -->
+            <div class="glass-card welcome-card">
+                <h2>My <span class="gradient-text">Tests</span></h2>
+                <p>Manage and track all your tests in one place.</p>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-container" id="statsContainer">
+                <!-- Filled by JS -->
+            </div>
+
+            <!-- Recent Tests -->
+            <div class="glass-card">
+                <h3 class="section-title">📊 Recent Tests</h3>
+                <div class="recent-tests" id="recentTests">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="copyright">&copy; 2026 Sharada Academy . All rights reserved.</div>
+            <div class="love">Made with ❤️ by Team Soham</div>
+        </footer>
+    </div>
+
+    <!-- JavaScript (same as original) -->
+    <script>
+        if (localStorage.getItem("isLoggedIn") !== "true" || localStorage.getItem("userRole") !== "teacher") {
+            window.location.href = "../role-selection.html";
+        }
+        function logout(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("userRole");
+            localStorage.removeItem("currentTeacher");
+            localStorage.removeItem("teacherVerification");
+            localStorage.removeItem("username");
+            if (typeof auth !== 'undefined') {
+                auth.signOut().then(() => {
+                    window.location.href = "../role-selection.html";
+                }).catch(() => {
+                    window.location.href = "../role-selection.html";
+                });
+            } else {
+                window.location.href = "../role-selection.html";
+            }
+        }
+        // ============================
+        // Firebase Initialization
+        // ============================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXWEuA7G55nawfNUoIqr9PqGP9YGQwGnc",
+            authDomain: "soham-6d886.firebaseapp.com",
+            projectId: "soham-6d886",
+            storageBucket: "soham-6d886.firebasestorage.app",
+            messagingSenderId: "281780176229",
+            appId: "1:281780176229:web:cd1eea7bd171c14a338d8c",
+            measurementId: "G-CB1J6LQ7DJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ============================
+        // Daily Teacher Verification
+        // ============================
+        let teacherData = null;
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                localStorage.removeItem("teacherVerification");
+                window.location.href="../role-selection.html";
+                return;
+            }
+            const cached = JSON.parse(localStorage.getItem("teacherVerification"));
+            const today = new Date().toISOString().split('T')[0];
+            if (cached && cached.uid === user.uid && cached.date === today) {
+                teacherData = cached.teacherData || null;
+                initPage();
+                return;
+            }
+            try {
+                const docSnap = await db.collection("teachers").doc(user.uid).get();
+                if (docSnap.exists && docSnap.data().role === "teacher") {
+                    teacherData = docSnap.data();
+                    localStorage.setItem("teacherVerification", JSON.stringify({
+                        uid: user.uid,
+                        date: today,
+                        teacherData
+                    }));
+                    initPage();
+                } else {
+                    localStorage.removeItem("teacherVerification");
+                    auth.signOut();
+                    window.location.href="../role-selection.html";
+                }
+            } catch (err) {
+                console.error(err);
+                localStorage.removeItem("teacherVerification");
+                auth.signOut();
+                window.location.href="../role-selection.html";
+            }
+        });
+
+        async function initPage() {
+            document.getElementById('testDate').min = new Date().toISOString().split('T')[0];
+            await loadDashboardData();
+            setupEventListeners();
+            setupHamburger();
+        }
+
+        // ============================
+        // Dashboard Data (Firestore)
+        // ============================
+        async function loadDashboardData() {
+            try {
+                const testsSnap = await db.collection("tests").orderBy("date", "desc").get();
+                const tests = [];
+                testsSnap.forEach(doc => tests.push({ id: doc.id, ...doc.data() }));
+                updateDashboardStats(tests);
+                renderRecentTests(tests);
+            } catch (error) {
+                console.error("Error loading tests:", error);
+            }
+        }
+
+        function updateDashboardStats(tests) {
+            const totalTests = tests.length;
+            const activeTests = tests.filter(t => t.status === 'active').length;
+            const avgScore = tests.length > 0 ? Math.round(tests.reduce((sum, t) => sum + (t.averageScore || 0), 0) / tests.length) : 0;
+            const draftTests = tests.filter(t => t.status === 'draft').length;
+
+            document.getElementById('statsContainer').innerHTML = `
+                <div class="stat-card"><h3>${totalTests}</h3><p>Total Tests</p></div>
+                <div class="stat-card"><h3>${activeTests}</h3><p>Active Tests</p></div>
+                <div class="stat-card"><h3>${avgScore}%</h3><p>Average Score</p></div>
+                <div class="stat-card"><h3>${draftTests}</h3><p>Draft Tests</p></div>
+            `;
+        }
+
+        function renderRecentTests(tests) {
+            const container = document.getElementById('recentTests');
+            if (tests.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📝</div>
+                        <h3>No tests created yet</h3>
+                        <p>Create your first test to get started</p>
+                        <button class="btn btn-primary" onclick="openCreateTestModal()" style="margin-top: 15px;">Create Your First Test</button>
+                    </div>`;
+                return;
+            }
+
+            const recent = tests.slice(0, 5);
+            container.innerHTML = recent.map(test => {
+                const statusBadge = getStatusBadge(test.status || 'draft');
+                const formattedDate = test.date ? new Date(test.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+                return `
+                    <div class="test-item">
+                        <div class="test-info">
+                            <h4>${test.title} ${statusBadge}</h4>
+                            <p>${formattedDate} | ${test.class || ''} | ${test.numberOfQuestions || 0} questions | ${test.totalMarks || 0} marks</p>
+                        </div>
+                        <div class="test-actions">
+                            <button class="btn btn-small btn-primary">View Results</button>
+                            <button class="btn btn-small btn-secondary" onclick="editTest('${test.id}')">Edit</button>
+                            <button class="btn btn-small btn-secondary" onclick="openExamPaperModal('${test.id}')">📄 Preview & PDF</button>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'draft': { class: 'status-draft', text: 'Draft' },
+                'published': { class: 'status-published', text: 'Published' },
+                'active': { class: 'status-active', text: 'Active' },
+                'completed': { class: 'status-completed', text: 'Completed' }
+            };
+            const info = map[status] || map.draft;
+            return `<span class="status-badge ${info.class}">${info.text}</span>`;
+        }
+
+        // ============================
+        // Test CRUD Operations
+        // ============================
+        let editingTestId = null;
+
+        function openCreateTestModal() {
+            editingTestId = null;
+            document.getElementById('createTestForm').reset();
+            document.querySelector('.modal-header h3').textContent = 'Create New Test';
+            document.querySelector('#createTestForm button[type="submit"]').textContent = 'Create Test';
+            document.getElementById('createTestModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCreateTestModal() {
+            document.getElementById('createTestModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function editTest(docId) {
+            localStorage.setItem('editTestId', docId);
+            window.location.href = 'create-test.html';
+        }
+
+        document.getElementById('createTestForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<span class="loading"></span> Saving...';
+            btn.disabled = true;
+
+            const testData = {
+                title: document.getElementById('testTitle').value.trim(),
+                class: document.getElementById('testClass').value,
+                date: document.getElementById('testDate').value,
+                duration: parseInt(document.getElementById('testDuration').value),
+                numberOfQuestions: parseInt(document.getElementById('numberOfQuestions').value),
+                totalMarks: parseInt(document.getElementById('totalMarks').value),
+                status: editingTestId ? undefined : 'draft'
+            };
+
+            try {
+                if (editingTestId) {
+                    await db.collection("tests").doc(editingTestId).update(testData);
+                } else {
+                    await db.collection("tests").add({
+                        ...testData,
+                        status: 'draft',
+                        studentsAssigned: 0,
+                        averageScore: 0,
+                        createdDate: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                closeCreateTestModal();
+                loadDashboardData();
+            } catch (err) {
+                console.error(err);
+                alert('Failed to save test');
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        });
+
+        function showUpdateIndicator(title) {
+            const indicator = document.getElementById('updateIndicator');
+            const titleSpan = document.getElementById('newTestTitle');
+            if (indicator && titleSpan) {
+                titleSpan.textContent = title;
+                indicator.classList.add('active');
+                setTimeout(() => {
+                    indicator.classList.remove('active');
+                }, 4000);
+            }
+        }
+
+        // ============================
+        // Test Preview & PDF Export Operations
+        // ============================
+        let currentPreviewTest = null;
+        let compiledQuestions = [];
+
+        function getCourseFromClass(classValue) {
+            if (!classValue) return '';
+            const val = classValue.toLowerCase();
+            if (val.includes('mhtcet') || val.includes('pcb') || val.includes('pcm')) return 'MHT CET';
+            if (val.includes('jee')) return 'JEE';
+            if (val.includes('neet')) return 'NEET';
+            return '';
+        }
+
+        function getClassName(classValue) {
+            const map = {
+                '11th-mhtcet-pcm': '11th MHTCET (PCM)',
+                '11th-mhtcet-pcb': '11th MHTCET (PCB)',
+                '11th-jee': '11th JEE',
+                '11th-neet': '11th NEET',
+                '12th-mhtcet-pcm': '12th MHTCET (PCM)',
+                '12th-mhtcet-pcb': '12th MHTCET (PCB)',
+                '12th-jee': '12th JEE',
+                '12th-neet': '12th NEET'
+            };
+            return map[classValue] || classValue || '--';
+        }
+
+        async function openExamPaperModal(testId) {
+            currentPreviewTest = null;
+            compiledQuestions = [];
+            document.getElementById('toggleSolutionsCheckbox').checked = false;
+            
+            document.getElementById('previewQuestionsList').innerHTML = `
+                <div class="empty-state" style="padding: 30px;">
+                    <div class="spinner" style="margin: 0 auto 12px; width: 30px; height: 30px; border: 3px solid rgba(219, 39, 119, 0.2); border-radius: 50%; border-top-color: #db2777; animation: spin 1s ease-in-out infinite;"></div>
+                    <p style="font-weight: 600; color: #475569;">Compiling database questions matching syllabus...</p>
+                </div>
+            `;
+            
+            document.getElementById('examPaperModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            try {
+                const testDoc = await db.collection("tests").doc(testId).get();
+                if (!testDoc.exists) { alert("Test not found!"); closeExamPaperModal(); return; }
+                const test = testDoc.data();
+                test.id = testDoc.id;
+                currentPreviewTest = test;
+                
+                document.getElementById('previewTestName').textContent = test.title || 'Untitled Test';
+                document.getElementById('previewSubject').textContent = test.subject || 'N/A';
+                document.getElementById('previewClass').textContent = getClassName(test.class);
+                document.getElementById('previewDuration').textContent = test.duration || '0';
+                document.getElementById('previewQuestionsCount').textContent = test.numberOfQuestions || '0';
+                document.getElementById('previewTotalMarks').textContent = test.totalMarks || '0';
+                document.getElementById('previewSubtitle').textContent = `${getCourseFromClass(test.class).toUpperCase()} ASSESSMENT SHEET`;
+                
+                const cls = (test.class || '').toLowerCase();
+                const title = (test.title || '').toLowerCase();
+                const isMHTCET = cls.includes('mht') || title.includes('mht');
+                const instructionsText = test.instructions || (isMHTCET ? 'All questions are compulsory. No negative marking is applicable. Use of calculators is strictly prohibited.' : 'All questions are compulsory. Negative marking is applicable as per rules. Use of calculators is strictly prohibited.');
+                document.getElementById('previewInstructionsText').textContent = instructionsText;
+
+                if (test.questions && test.questions.length > 0) {
+                    compiledQuestions = test.questions;
+                } else {
+                    const course = getCourseFromClass(test.class);
+                    const subject = test.subject;
+                    
+                    const querySnap = await db.collection("practice_questions")
+                        .where("course", "==", course)
+                        .where("subject", "==", subject)
+                        .get();
+                    
+                    let allMatchingQuestions = [];
+                    querySnap.forEach(doc => {
+                        const q = doc.data();
+                        q.id = doc.id;
+                        const inChapters = test.chapters ? test.chapters.includes(q.chapter) : true;
+                        const inTopics = test.topics && test.topics.length > 0 ? test.topics.includes(q.topic) : true;
+                        if (inChapters && inTopics) allMatchingQuestions.push(q);
+                    });
+
+                    if (allMatchingQuestions.length === 0) {
+                        document.getElementById('previewQuestionsList').innerHTML = `
+                            <div class="empty-state" style="padding: 40px 20px;">
+                                <div style="font-size: 3rem; margin-bottom: 12px;">⚠️</div>
+                                <h4 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">No questions found in Question Bank</h4>
+                                <p style="color: #64748b;">There are no questions matching this test's course, subject, chapters, and topics.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    allMatchingQuestions.sort(() => Math.random() - 0.5);
+                    compiledQuestions = allMatchingQuestions.slice(0, test.numberOfQuestions || 10);
+                }
+                renderQuestionsOnSheet();
+
+            } catch (err) {
+                console.error("Error generating paper:", err);
+                document.getElementById('previewQuestionsList').innerHTML = `<p style="color:red; text-align:center; padding: 20px;">❌ Error compiling exam paper: ${err.message}</p>`;
+            }
+        }
+
+        function renderQuestionsOnSheet() {
+            const listContainer = document.getElementById('previewQuestionsList');
+            const showSolutions = document.getElementById('toggleSolutionsCheckbox').checked;
+            if (compiledQuestions.length === 0) return;
+            const marksPerQ = Math.round((currentPreviewTest.totalMarks / compiledQuestions.length) * 10) / 10;
+
+            let html = '';
+            const mcqs = compiledQuestions.filter(q => q.type === 'mcq');
+            const subjectives = compiledQuestions.filter(q => q.type !== 'mcq');
+
+            let qNum = 1;
+
+            if (mcqs.length > 0) {
+                html += `
+                    <div style="border-bottom: 2px solid #db2777; margin: 20px 0 15px; padding-bottom: 6px; page-break-after: avoid;">
+                        <h4 style="color:#db2777; font-weight:900; margin:0; text-transform:uppercase; letter-spacing:0.05em; font-size:1.1rem;">SECTION A: MULTIPLE CHOICE QUESTIONS (MCQs)</h4>
+                        <span style="font-size:0.8rem; color:#64748b; font-weight:600;">Each question carries ${marksPerQ} Marks</span>
+                    </div>
+                `;
+                mcqs.forEach(q => {
+                    html += renderQuestionItem(q, qNum++, marksPerQ, showSolutions);
+                });
+            }
+
+            if (subjectives.length > 0) {
+                html += `
+                    <div style="border-bottom: 2px solid #db2777; margin: 30px 0 15px; padding-bottom: 6px; page-break-after: avoid;">
+                        <h4 style="color:#db2777; font-weight:900; margin:0; text-transform:uppercase; letter-spacing:0.05em; font-size:1.1rem;">SECTION B: SUBJECTIVE & THEORY QUESTIONS</h4>
+                        <span style="font-size:0.8rem; color:#64748b; font-weight:600;">Each question carries ${marksPerQ} Marks</span>
+                    </div>
+                `;
+                subjectives.forEach(q => {
+                    html += renderQuestionItem(q, qNum++, marksPerQ, showSolutions);
+                });
+            }
+
+            listContainer.innerHTML = html;
+
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typesetPromise().catch(err => console.error(err));
+            }
+        }
+
+        function renderQuestionItem(q, qNum, marksPerQ, showSolutions) {
+            let html = `
+                <div class="exam-question-item" style="page-break-inside: avoid; margin-bottom: 24px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 20px;">
+                    <div class="exam-question-header" style="display:flex; justify-content:space-between; margin-bottom:10px; gap: 16px;">
+                        <strong style="color: #1e293b; font-size: 1rem;">Q${qNum}. ${q.text || ''}</strong>
+                        <span class="exam-question-marks" style="color:#db2777; font-weight:700; font-size:0.875rem; flex-shrink:0;">[${marksPerQ} Marks]</span>
+                    </div>
+            `;
+            if (q.questionImage) {
+                html += `<div style="margin: 10px 0;"><img src="${q.questionImage}" class="exam-question-image" style="max-height: 200px; max-width: 100%; object-fit: contain; border-radius: 8px;"></div>`;
+            }
+            
+            if (q.type === 'mcq' && q.options) {
+                html += `<div class="exam-options-grid" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; margin-top:12px;">`;
+                ['A', 'B', 'C', 'D'].forEach(opt => {
+                    const val = q.options[opt];
+                    if (val) {
+                        const isCorrect = q.correctAnswer === opt;
+                        const correctClass = (showSolutions && isCorrect) ? 'correct' : '';
+                        const correctStyle = (showSolutions && isCorrect) ? 'background-color:#f0fdf4; border-color:#86efac; color:#16a34a; font-weight:600;' : '';
+                        html += `
+                            <div class="exam-option-box ${correctClass}" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; display:flex; align-items:center; gap:8px; transition: all 0.2s; ${correctStyle}">
+                                <span class="exam-option-letter" style="font-weight:700; color:#db2777; margin-right:4px; ${showSolutions && isCorrect ? 'color:#16a34a;' : ''}">${opt}.</span>
+                                <span>${val.text || ''}</span>
+                                ${val.image ? `<img src="${val.image}" style="max-height:60px; margin-left:10px; object-fit:contain;">` : ''}
+                            </div>
+                        `;
+                    }
+                });
+                html += `</div>`;
+            } else if (showSolutions && q.correctAnswer) {
+                html += `<div style="color:#16a34a; font-weight:700; margin-top:10px; font-size:0.95rem;">Correct Answer: ${q.correctAnswer}</div>`;
+            }
+
+            if (showSolutions && (q.solutionText || q.solutionImage)) {
+                html += `
+                    <div class="exam-solution-box active" style="margin-top: 14px; background: #faf5ff; border: 1px solid #f3e8ff; border-radius: 8px; padding: 14px;">
+                        <div class="exam-solution-title" style="font-weight: 700; color: #7e22ce; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                            <span>💡</span> Solution & Explanation:
+                        </div>
+                        <div style="color: #581c87; font-size: 0.9rem; line-height: 1.5;">${q.solutionText || ''}</div>
+                `;
+                if (q.solutionImage) {
+                    html += `<div style="margin-top:10px;"><img src="${q.solutionImage}" class="exam-solution-image" style="max-height: 150px; max-width: 100%; object-fit: contain; border-radius: 6px;"></div>`;
+                }
+                html += `</div>`;
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        function toggleSolutionsDisplay() {
+            renderQuestionsOnSheet();
+        }
+
+        function closeExamPaperModal() {
+            document.getElementById('examPaperModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function triggerDownloadPDF() {
+            const element = document.getElementById('examSheetPrint');
+            if (!element) return;
+            const testTitle = currentPreviewTest ? currentPreviewTest.title.replace(/\s+/g, '_') : 'Exam_Paper';
+            const btn = document.getElementById('downloadPaperPdfBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '🔄 Generating...';
+            btn.disabled = true;
+
+            const { jsPDF } = window.jspdf;
+            
+            html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 190;
+                const pageHeight = 297;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 10;
+
+                pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+                heightLeft -= (pageHeight - 20);
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight + 10;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+                    heightLeft -= (pageHeight - 20);
+                }
+
+                pdf.save(`${testTitle}_Exam_Paper.pdf`);
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }).catch(err => {
+                console.error("PDF generation failed:", err);
+                alert("Failed to generate PDF. Please try again.");
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function setupEventListeners() {
+            const createModal = document.getElementById('createTestModal');
+            if (createModal) {
+                createModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeCreateTestModal();
+                    }
+                });
+            }
+            const examModal = document.getElementById('examPaperModal');
+            if (examModal) {
+                examModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeExamPaperModal();
+                    }
+                });
+            }
+        }
+
+        function setupHamburger() {
+            const hamburger = document.getElementById('hamburger');
+            const sideNav = document.getElementById('sideNav');
+            const overlay = document.getElementById('overlay');
+            if(!hamburger || !sideNav || !overlay) return;
+            hamburger.addEventListener('click', () => {
+                hamburger.classList.toggle('active');
+                sideNav.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sideNav.classList.contains('active') ? 'hidden' : 'auto';
+            });
+            overlay.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                sideNav.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+            document.querySelectorAll('.side-nav a').forEach(link => {
+                link.addEventListener('click', () => {
+                    hamburger.classList.remove('active');
+                    sideNav.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                });
+            });
+        }
+
+        // ---------- Canvas Background (identical to role selection) ----------
+        (function() {
+            const canvas = document.getElementById('equations-canvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width, height, dpr = Math.min(window.devicePixelRatio || 1, 2);
+            let isMobile, particleCount, baseSizeMultiplier;
+
+            function detectMobile() {
+                const w = window.innerWidth;
+                isMobile = w <= 768;
+                if (w <= 380) { particleCount = 18; baseSizeMultiplier = 0.55; }
+                else if (w <= 480) { particleCount = 24; baseSizeMultiplier = 0.65; }
+                else if (w <= 768) { particleCount = 32; baseSizeMultiplier = 0.78; }
+                else if (w <= 1024) { particleCount = 40; baseSizeMultiplier = 0.9; }
+                else { particleCount = 48; baseSizeMultiplier = 1.0; }
+            }
+
+            function resizeCanvas() {
+                detectMobile();
+                dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 2);
+                width = canvas.width = window.innerWidth * dpr;
+                height = canvas.height = window.innerHeight * dpr;
+                canvas.style.width = window.innerWidth + 'px';
+                canvas.style.height = window.innerHeight + 'px';
+                ctx.setTransform(1,0,0,1,0,0);
+                ctx.scale(dpr, dpr);
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 300));
+            resizeCanvas();
+
+            const expressions = [
+                "E = mc²", "∫ x² dx", "∇ × B = μ₀J", "PV = nRT",
+                "sin²θ + cos²θ = 1", "H₂O + CO₂ → C₆H₁₂O₆", "ΔG = ΔH - TΔS",
+                "F = G(m₁m₂)/r²", "pH = -log[H⁺]", "DNA ⇌ RNA",
+                "Fe²⁺ + e⁻ → Fe", "λ = h/p", "v = u + at", "C₆H₁₂O₆",
+                "∑ F = ma", "lim (x→0) sin(x)/x = 1", "ATP → ADP + Pi",
+                "Krebs Cycle", "dψ/dt", "K_a = [H⁺][A⁻]/[HA]", "y = mx + c",
+            ];
+
+            function drawBenzene(ctx, x, y, size) {
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    const nextX = x + size * Math.cos(angle);
+                    const nextY = y + size * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(nextX, nextY);
+                    else ctx.lineTo(nextX, nextY);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.6, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            class ScienceParticle {
+                constructor() {
+                    this.reset();
+                    this.y = Math.random() * (window.innerHeight || 800);
+                }
+                reset() {
+                    this.type = Math.random() < 0.7 ? 'text' : 'chemistry';
+                    this.text = expressions[Math.floor(Math.random() * expressions.length)];
+                    this.x = Math.random() * (window.innerWidth || 400);
+                    this.y = -60;
+                    this.speed = 0.15 + Math.random() * 0.45;
+                    this.size = (10 + Math.floor(Math.random() * 14)) * baseSizeMultiplier;
+                    this.opacity = 0.12 + Math.random() * 0.15;
+                }
+                update(screenW, screenH) {
+                    this.y += this.speed;
+                    if (this.y > screenH + 60) {
+                        this.reset();
+                        this.y = -60;
+                        this.x = Math.random() * screenW;
+                    }
+                }
+                draw(ctx) {
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.fillStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.lineWidth = Math.max(1.2, 1.8 * baseSizeMultiplier);
+                    if (this.type === 'text') {
+                        ctx.font = `bold ${this.size}px 'Courier New', monospace`;
+                        ctx.fillText(this.text, this.x, this.y);
+                    } else {
+                        drawBenzene(ctx, this.x, this.y, this.size * 1.2);
+                    }
+                    ctx.restore();
+                }
+            }
+
+            let particles = [];
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    const p = new ScienceParticle();
+                    p.y = (window.innerHeight / particleCount) * i - 60 + Math.random() * 40;
+                    particles.push(p);
+                }
+            }
+            initParticles();
+
+            let animFrameId;
+            function animateCanvas() {
+                const screenW = window.innerWidth, screenH = window.innerHeight;
+                ctx.clearRect(0, 0, screenW, screenH);
+                particles.forEach(p => { p.update(screenW, screenH); p.draw(ctx); });
+                animFrameId = requestAnimationFrame(animateCanvas);
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                } else if (!document.hidden && !animFrameId) {
+                    animFrameId = requestAnimationFrame(animateCanvas);
+                }
+            });
+            animateCanvas();
+
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => { resizeCanvas(); initParticles(); }, 250);
+            });
+        })();
+    </script>
+</body>
+</html>

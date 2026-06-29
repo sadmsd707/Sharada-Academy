@@ -1,0 +1,117 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if the request is from an authenticated teacher
+    function isTeacher() {
+      return request.auth != null;
+    }
+
+    // Rules for teacher profiles
+    match /teachers/{teacherId} {
+      allow read, write: if request.auth != null && request.auth.uid == teacherId;
+    }
+
+    // Rules for student login credentials
+    match /studentCredentials/{studentId} {
+      // Allow single document read (get) for verification during login,
+      // but prevent listing (list) the entire collection to stop scanning/scraping.
+      allow get: if true;
+      allow list: if false;
+      
+      // Only authenticated teachers can create, update or delete student credentials
+      allow write: if isTeacher();
+    }
+
+    // Rules for general student data
+    match /students/{studentId} {
+      // Allow single document read (get) for parent/student profile loading,
+      // and allow listing (queries) for parent login by parentMobile.
+      allow get: if true;
+      allow list: if true;
+      
+      // Only authenticated teachers can write student records
+      allow write: if isTeacher();
+    }
+
+    // Rules for administrators
+    match /admins/{adminId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Rules for system settings
+    match /systemSettings/{settingId} {
+      allow read, write: if true;
+    }
+
+    // Rules for user management
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    // Rules for pending approval requests
+    match /pendingRequests/{requestId} {
+      allow read, write: if true;
+    }
+
+    // Rules for activity logs
+    match /activityLogs/{logId} {
+      allow read, write: if true;
+    }
+
+    // Rules for test papers and practice quizzes
+    match /tests/{testId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // Rules for scores
+    match /scores/{scoreId} {
+      allow read: if true;
+      allow write: if true; // Since students/scanners submit scores from the client
+    }
+
+    // Rules for class attendance sheets
+    match /attendance/{attendanceId} {
+      allow read: if true;
+      allow write: if isTeacher() || true; // Allow client submission
+    }
+
+    // Rules for announcements
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // Rules for class study materials/resources
+    match /resources/{resourceId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // Rules for messaging/queries
+    match /parentMessages/{messageId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Rules for class stats
+    match /classStats/{statId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // Rules for OMR scans
+    match /scans/{scanId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // Rules for practice questions bank
+    match /practice_questions/{questionId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+  }
+}

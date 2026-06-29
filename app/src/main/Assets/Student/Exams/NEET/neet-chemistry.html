@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Select Chapter - Chemistry</title>
+  
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #e0f2fe, #f8fafc);
+      color: #333;
+      margin: 0;
+    }
+
+    header {
+      background: #1e3a8a;
+      color: white;
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    nav ul {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      color: #93c5fd;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 20px;
+      bottom: -35px;
+      background: #1e3a8a;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: background 0.3s;
+    }
+
+    .back-btn:hover {
+      background: #1e40af;
+    }
+
+    .chapter-section {
+      max-width: 800px;
+      margin: 80px auto 40px;
+      padding: 0 20px;
+    }
+
+    .chapter-title {
+      text-align: center;
+      font-size: 1.8rem;
+      color: #1e3a8a;
+      margin-bottom: 30px;
+    }
+
+    .chapter-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 15px 20px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s;
+    }
+
+    .chapter-row:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .chapter-name {
+      font-size: 1.05rem;
+      color: #1e3a8a;
+      font-weight: 600;
+    }
+
+    .chapter-row a {
+      background: #2563eb;
+      color: white;
+      padding: 8px 18px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .chapter-row a:hover {
+      background: #1e40af;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+      .chapter-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #1e3a8a;
+      color: white;
+      margin-top: 50px;
+    }
+  </style>
+    <!-- Global Dark Mode Support -->
+    <style>
+        body.dark-mode {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .glass-card, 
+        body.dark-mode .app-header, 
+        body.dark-mode .side-nav {
+            background: rgba(30, 41, 59, 0.85) !important;
+            border-color: rgba(51, 65, 85, 0.5) !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .side-nav ul li a {
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .logo-text .light,
+        body.dark-mode .welcome-card h2,
+        body.dark-mode .section-title,
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode p,
+        body.dark-mode span,
+        body.dark-mode label,
+        body.dark-mode strong {
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode .gradient-text,
+        body.dark-mode .logo-text {
+            color: #db2777 !important;
+            background: none !important;
+            -webkit-text-fill-color: #db2777 !important;
+        }
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: rgba(15, 23, 42, 0.6) !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 !important;
+        }
+    </style>
+    <script>
+        (function() {
+            if (localStorage.getItem("appTheme") === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                document.addEventListener("DOMContentLoaded", () => {
+                    document.body.classList.add("dark-mode");
+                });
+            }
+        })();
+    </script>
+</head>
+
+<body>
+  <header>
+    <h1>Select Chapter</h1>
+    <a href="neet.html" class="back-btn">⬅ Back</a>
+    <nav>
+      <ul>
+        <li><a href="neet.html">Home</a></li>
+        <li><a href="../exam.html">Practice</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="chapter-section">
+    <h2 class="chapter-title">Chemistry Chapters</h2>
+
+    <!-- Chapter Rows -->
+    <div class="chapter-row"><span class="chapter-name">1. Some Basic Concepts of Chemistry</span><a href="ChemistryCW(NEET)/Some Basic Concepts of Chemistry.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">2. Structure of Atom</span><a href="ChemistryCW(NEET)/Structure of Atom.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">3. Classification of Elements and Periodicity in Properties</span><a href="ChemistryCW(NEET)/Classification of Elements.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">4. Chemical Bonding and Molecular Structure</span><a href="ChemistryCW(NEET)/Chemical Bonding and Molecular Structure.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">5. Thermodynamics</span><a href="ChemistryCW(NEET)/Thermodynamics.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">6. Chemical Equilibrium</span><a href="ChemistryCW(NEET)/Chemical Equilibrium.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">7. Ionic Equilibrium</span><a href="ChemistryCW(NEET)/Ionic Equilibrium.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">8. Redox Reactions</span><a href="ChemistryCW(NEET)/Redox Reactions.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">9. p-Block Elements (Group 13 & 14)</span><a href="ChemistryCW(NEET)/p-Block Elements (Group 13 & 14).html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">10. General Organic Chemistry</span><a href="ChemistryCW(NEET)/General Organic Chemistry.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">11. Hydrocarbons</span><a href="ChemistryCW(NEET)/Hydrocarbons.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">12. Solutions</span><a href="ChemistryCW(NEET)/Solutions.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">13. Electrochemistry</span><a href="ChemistryCW(NEET)/Electrochemistry.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">14. Chemical Kinetics</span><a href="ChemistryCW(NEET)/Chemical Kinetics.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">15. Surface Chemistry</span><a href="ChemistryCW(NEET)/Surface Chemistry.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">16. p-Block Elements (Group 15, 16, 17, 18)</span><a href="ChemistryCW(NEET)/p-Block Elements (Group 15, 16, 17, 18).html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">17. d and f Block Elements</span><a href="ChemistryCW(NEET)/d and f Block Elements.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">18. Coordination Compounds</span><a href="ChemistryCW(NEET)/Coordination Compounds.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">19. Haloalkanes and Haloarenes</span><a href="ChemistryCW(NEET)/Haloalkanes and Haloarenes.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">20. Alcohols, Phenols and Ethers</span><a href="ChemistryCW(NEET)/Alcohols, Phenols and Ethers.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">21. Aldehydes and Ketones</span><a href="ChemistryCW(NEET)/Aldehydes and Ketones.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">22. Carboxylic Acid Derivatives</span><a href="ChemistryCW(NEET)/Carboxylic Acid Derivatives.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">23. Amines</span><a href="ChemistryCW(NEET)/Amines.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">24. Practical Chemistry</span><a href="ChemistryCW(NEET)/Practical Chemistry.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">25. Biomolecules</span><a href="ChemistryCW(NEET)/Biomolecules.html">Start</a></div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Sharada Academy. All rights reserved.</p>
+    <p style="margin-top: 10px; font-size: 0.9rem;">Made with ❤️ by Team Sharada</p>
+  </footer>
+</body>
+
+</html>

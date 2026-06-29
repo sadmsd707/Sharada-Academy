@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <!-- App Brand Colors -->
+    <color name="pink_primary">#DB2777</color>
+    <color name="pink_light">#FFF1F2</color>
+    <color name="bg_slate">#F8FAFC</color>
+</resources>

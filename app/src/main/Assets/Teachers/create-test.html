@@ -1,0 +1,3554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f8fafc">
+    <title>Create Test - Sharada Academy</title>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
+            --safe-top: env(safe-area-inset-top, 0px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            background-color: #f8fafc;
+            min-height: 100vh;
+            min-height: 100dvh;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #1e293b;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+            overflow-x: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #equations-canvas {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 5vw;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(203, 213, 225, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 70px;
+        }
+
+        .logo-area {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            color: #db2777;
+            line-height: 1.2;
+        }
+
+        .logo-text .light {
+            font-weight: 300;
+            color: #1e293b;
+        }
+
+        .tagline {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        /* Hamburger */
+        .hamburger {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 28px;
+            height: 20px;
+            padding: 0;
+            z-index: 110;
+            position: relative;
+        }
+
+        .hamburger span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #db2777;
+            border-radius: 3px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform-origin: center;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: translateY(9px) rotate(45deg);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: translateY(-9px) rotate(-45deg);
+        }
+
+        /* Side navigation */
+        .side-nav {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            height: 100dvh;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: -8px 0 30px rgba(0, 0, 0, 0.08);
+            border-left: 1px solid rgba(203, 213, 225, 0.5);
+            transition: right 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-nav.active {
+            right: 0;
+        }
+
+        .side-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .side-nav ul::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .side-nav ul::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .side-nav ul::-webkit-scrollbar-thumb {
+            background: rgba(219, 39, 119, 0.3);
+            border-radius: 3px;
+        }
+
+        .side-nav ul li {
+            border-bottom: 1px solid rgba(219, 39, 119, 0.1);
+            opacity: 0;
+            transform: translateX(20px);
+            animation: slideInRight 0.5s forwards;
+        }
+
+        .side-nav.active ul li {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .side-nav ul li:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .side-nav ul li:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .side-nav ul li:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .side-nav ul li:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .side-nav ul li:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        .side-nav ul li:nth-child(6) {
+            animation-delay: 0.3s;
+        }
+
+        .side-nav ul li:nth-child(7) {
+            animation-delay: 0.35s;
+        }
+
+        .side-nav ul li:nth-child(8) {
+            animation-delay: 0.4s;
+        }
+
+        .side-nav ul li:nth-child(9) {
+            animation-delay: 0.45s;
+        }
+
+        .side-nav ul li:nth-child(10) {
+            animation-delay: 0.5s;
+        }
+
+        .side-nav ul li:nth-child(11) {
+            animation-delay: 0.55s;
+        }
+
+        .side-nav ul li:nth-child(12) {
+            animation-delay: 0.6s;
+        }
+
+        .side-nav ul li:nth-child(13) {
+            animation-delay: 0.65s;
+        }
+
+        .side-nav ul li:first-child {
+            margin-top: 70px;
+        }
+
+        .side-nav ul li a {
+            display: block;
+            color: #1e293b;
+            text-decoration: none;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: transparent;
+        }
+
+        .side-nav ul li a:hover,
+        .side-nav ul li a.nav-active {
+            background: rgba(219, 39, 119, 0.05);
+            border-left-color: #db2777;
+            color: #db2777;
+            padding-left: 32px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Main content */
+        .main-content {
+            flex: 1;
+            padding: 24px 5vw 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        /* Glass cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+            padding: 28px 24px;
+        }
+
+        /* Welcome card – light pink */
+        .welcome-card {
+            background: rgba(252, 231, 243, 0.7);
+            border-color: rgba(219, 39, 119, 0.2);
+            text-align: center;
+            padding: 36px 24px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .welcome-card h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-card p {
+            font-size: 1.1rem;
+            color: #475569;
+        }
+
+        /* Form styles */
+        .form-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .form-icon {
+            font-size: 2.5rem;
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            color: white;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .form-subtitle {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-control {
+            padding: 14px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.9);
+            color: #1e293b;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #db2777;
+            box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.15);
+            background: white;
+        }
+
+        .form-control::placeholder {
+            color: #94a3b8;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        select.form-control {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23db2777' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .field-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        /* Custom Multiselect styles */
+        .custom-multiselect {
+            position: relative;
+            width: 100%;
+        }
+
+        .multiselect-select-box {
+            min-height: 48px;
+            padding: 10px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .multiselect-select-box:hover {
+            border-color: #db2777;
+        }
+
+        .custom-multiselect.active .multiselect-select-box {
+            border-color: #db2777;
+            box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.15);
+        }
+
+        .placeholder-text {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            user-select: none;
+        }
+
+        .selected-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .chip {
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+            border: 1px solid rgba(219, 39, 119, 0.2);
+            color: #db2777;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 5px rgba(219, 39, 119, 0.05);
+            transition: all 0.2s;
+        }
+
+        .chip:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(219, 39, 119, 0.1);
+        }
+
+        .chip-remove {
+            cursor: pointer;
+            color: #db2777;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+        }
+
+        .chip-remove:hover {
+            background: #db2777;
+            color: white;
+        }
+
+        .multiselect-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(203, 213, 225, 0.7);
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            max-height: 280px;
+            animation: slideInUpShort 0.2s ease;
+        }
+
+        .multiselect-dropdown.active {
+            display: flex;
+        }
+
+        .multiselect-search {
+            padding: 10px 14px;
+            border: none;
+            border-bottom: 1px solid #e2e8f0;
+            background: transparent;
+            font-size: 0.92rem;
+            outline: none;
+            font-family: inherit;
+            color: #1e293b;
+        }
+
+        .multiselect-search::placeholder {
+            color: #94a3b8;
+        }
+
+        .multiselect-options {
+            overflow-y: auto;
+            flex: 1;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .multiselect-options::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .multiselect-options::-webkit-scrollbar-thumb {
+            background: rgba(219, 39, 119, 0.2);
+            border-radius: 3px;
+        }
+
+        .multiselect-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            user-select: none;
+        }
+
+        .multiselect-option:hover {
+            background: rgba(219, 39, 119, 0.05);
+        }
+
+        .multiselect-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #db2777;
+            cursor: pointer;
+        }
+
+        .multiselect-option span {
+            color: #334155;
+            font-size: 0.92rem;
+            font-weight: 500;
+        }
+
+        .arrow {
+            color: #db2777;
+            font-size: 0.75rem;
+            transition: transform 0.2s;
+            user-select: none;
+        }
+
+        .custom-multiselect.active .arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+            text-decoration: none;
+            font-family: inherit;
+            min-height: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(219, 39, 119, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #be185d, #db2777);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            padding-top: 25px;
+            border-top: 2px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+
+        /* Question section */
+        .question-section {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+            padding: 30px;
+            animation: fadeInUp 0.6s ease;
+            animation-delay: 0.2s;
+            animation-fill-mode: both;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .question-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .question-action-btn {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .question-action-btn:hover {
+            border-color: #db2777;
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(219, 39, 119, 0.1);
+        }
+
+        .question-action-icon {
+            font-size: 2.5rem;
+        }
+
+        .question-action-text {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1.1rem;
+        }
+
+        /* Test preview modal */
+        .test-preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .test-preview-modal.active {
+            display: flex;
+        }
+
+        .test-preview-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            animation: slideInUp 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .test-preview-header {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .test-preview-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .test-preview-body {
+            padding: 24px;
+        }
+
+        .test-preview-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .preview-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .preview-value {
+            color: #1e293b;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .test-instructions-preview {
+            background: rgba(252, 231, 243, 0.5);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid #db2777;
+        }
+
+        .test-instructions-preview h4 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .test-instructions-preview p {
+            color: #475569;
+        }
+
+        /* Success message */
+        .success-message {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #10b981;
+            color: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 3000;
+            opacity: 0;
+            transform: translateY(100px);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            font-weight: 600;
+        }
+
+        .success-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .auto-save-indicator {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: #db2777;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(219, 39, 119, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 3000;
+            opacity: 0;
+            transform: translateY(100px);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .auto-save-indicator.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Footer */
+        .site-footer {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            margin-top: auto;
+            text-align: center;
+            width: 100%;
+            padding-bottom: 16px;
+        }
+
+        .site-footer .copyright {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .site-footer .love {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            z-index: 4000;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideInRight 0.3s ease, fadeOut 0.3s ease 3s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUpShort {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+            .app-header {
+                padding: 14px 20px;
+            }
+
+            .main-content {
+                padding: 16px;
+                gap: 24px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .question-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- Examin8 Question Builder Styles --- */
+        .compiled-questions-list {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .question-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(219, 39, 119, 0.05);
+            border-color: #db2777;
+        }
+        .q-number-badge {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            color: white;
+            font-weight: 800;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            box-shadow: 0 3px 8px rgba(219, 39, 119, 0.2);
+        }
+        .q-body-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .q-card-text {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            word-wrap: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .q-card-meta {
+            font-size: 0.78rem;
+            color: #64748b;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-weight: 600;
+        }
+        .q-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .q-action-icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: #475569;
+            font-size: 0.85rem;
+        }
+        .q-action-icon-btn:hover {
+            background: #f1f5f9;
+            color: #db2777;
+            border-color: #db2777;
+        }
+        .q-action-icon-btn.delete:hover {
+            background: #fee2e2;
+            color: #ef4444;
+            border-color: #fecaca;
+        }
+        
+        /* Sliding manual selector drawer */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 2500;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 550px;
+            max-width: 95vw;
+            height: 100vh;
+            height: 100dvh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.12);
+            z-index: 2600;
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .drawer.active {
+            right: 0;
+        }
+        .drawer-header {
+            padding: 20px 24px;
+            background: #fafbfc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .drawer-title {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #1e293b;
+        }
+        .drawer-close {
+            background: #e2e8f0;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            color: #64748b;
+            font-weight: bold;
+            transition: all 0.15s;
+        }
+        .drawer-close:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .drawer-body::-webkit-scrollbar {
+            width: 5px;
+        }
+        .drawer-body::-webkit-scrollbar-thumb {
+            background: rgba(219, 39, 119, 0.2);
+            border-radius: 3px;
+        }
+        .drawer-search-bar {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            font-family: inherit;
+        }
+        .drawer-search-bar:focus {
+            outline: none;
+            border-color: #db2777;
+            box-shadow: 0 0 0 3px rgba(219,39,119,0.1);
+        }
+        .bank-question-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .bank-question-item:hover {
+            border-color: #db2777;
+            background: rgba(253, 242, 248, 0.4);
+        }
+        .bank-question-item.selected {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .bank-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #db2777;
+            cursor: pointer;
+            margin-top: 3px;
+        }
+        .bank-question-item.selected .bank-checkbox {
+            accent-color: #10b981;
+        }
+        .drawer-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e2e8f0;
+            background: #fafbfc;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+    <canvas id="equations-canvas" aria-hidden="true" role="presentation"></canvas>
+
+    <div class="content-layer">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-text">SHARADA <span class="light">ACADEMY</span></div>
+                <div class="tagline">Create Test</div>
+            </div>
+            <button class="hamburger" id="hamburger" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </header>
+
+        <!-- Side Navigation -->
+        <div class="side-nav" id="sideNav">
+            <style>
+                .side-nav {
+                    position: fixed !important;
+                    top: 0 !important;
+                    right: -320px !important;
+                    width: 300px !important;
+                    height: 100vh !important;
+                    height: 100dvh !important;
+                    background: rgba(255, 255, 255, 0.95) !important;
+                    backdrop-filter: blur(16px) !important;
+                    -webkit-backdrop-filter: blur(16px) !important;
+                    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.08) !important;
+                    border-left: 1px solid rgba(203, 213, 225, 0.5) !important;
+                    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                    z-index: 1000 !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    padding-top: 80px !important;
+                    box-sizing: border-box !important;
+                }
+                body.dark-mode .side-nav {
+                    background: rgba(15, 23, 42, 0.95) !important;
+                    border-left-color: rgba(51, 65, 85, 0.5) !important;
+                }
+                .side-nav.active {
+                    right: 0 !important;
+                }
+                .side-nav ul {
+                    list-style: none !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    flex: 1 !important;
+                    overflow-y: auto !important;
+                }
+                .side-nav ul li {
+                    border-bottom: 1px solid rgba(219, 39, 119, 0.08) !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    opacity: 1 !important;
+                    transform: none !important;
+                }
+                .side-nav ul li a {
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 14px !important;
+                    color: #1e293b !important;
+                    text-decoration: none !important;
+                    padding: 16px 24px !important;
+                    font-size: 0.95rem !important;
+                    font-weight: 600 !important;
+                    border-left: 4px solid transparent !important;
+                    transition: all 0.25s ease !important;
+                    background: transparent !important;
+                    box-sizing: border-box !important;
+                }
+                body.dark-mode .side-nav ul li a {
+                    color: #f1f5f9 !important;
+                }
+                .side-nav ul li a:hover,
+                .side-nav ul li a.active-nav,
+                .side-nav ul li a.nav-active {
+                    background: rgba(219, 39, 119, 0.05) !important;
+                    border-left-color: #db2777 !important;
+                    color: #db2777 !important;
+                    padding-left: 32px !important;
+                }
+                .side-nav .nav-icon {
+                    font-size: 1.1rem !important;
+                    width: 24px !important;
+                    text-align: center !important;
+                    flex-shrink: 0 !important;
+                    transition: transform 0.25s ease !important;
+                    color: inherit !important;
+                    display: inline-block !important;
+                }
+                .side-nav ul li a:hover .nav-icon {
+                    transform: scale(1.15) !important;
+                }
+            </style>
+            <ul>
+                <li><a href="teacher-dashboard.html" class=""><i class="fa-solid fa-chart-simple nav-icon"></i>Dashboard</a></li>
+                <li><a href="teacher-classes.html" class=""><i class="fa-solid fa-school nav-icon"></i>My Classes</a></li>
+                <li><a href="attendance.html" class=""><i class="fa-solid fa-calendar-days nav-icon"></i>Attendance</a></li>
+                <li><a href="announcements.html" class=""><i class="fa-solid fa-bullhorn nav-icon"></i>Announcements</a></li>
+                <li><a href="create-test.html" class="active-nav nav-active"><i class="fa-solid fa-pen-clip nav-icon"></i>Create Test</a></li>
+                <li><a href="my-tests.html" class=""><i class="fa-solid fa-file-signature nav-icon"></i>My Tests</a></li>
+                <li><a href="sitting-arrangement.html" class=""><i class="fa-solid fa-chair nav-icon"></i>Sitting Arrangement</a></li>
+                <li><a href="omr-scanner.html" class=""><i class="fa-solid fa-camera nav-icon"></i>OMR Scanner</a></li>
+                <li><a href="teacher-scores.html" class=""><i class="fa-solid fa-chart-line nav-icon"></i>Student Scores</a></li>
+                <li><a href="add-student.html" class=""><i class="fa-solid fa-user-graduate nav-icon"></i>Add Student</a></li>
+                <li><a href="fees-section.html" class=""><i class="fa-solid fa-credit-card nav-icon"></i>Fees Section</a></li>
+                <li><a href="teacher-parent.html" class=""><i class="fa-solid fa-people-group nav-icon"></i>Parent Section</a></li>
+                <li><a href="teacher-resources.html" class=""><i class="fa-solid fa-book nav-icon"></i>Resources</a></li>
+                <li><a href="add-questions.html" class=""><i class="fa-solid fa-circle-question nav-icon"></i>Add New Questions</a></li>
+                <li><a href="my-account.html" class=""><i class="fa-solid fa-user-gear nav-icon"></i>My Account</a></li>
+                <li><a href="../role-selection.html" class="" onclick="logout(event); return false;"><i class="fa-solid fa-right-from-bracket nav-icon"></i>Logout</a></li>
+            </ul>
+        </div>
+        <div class="overlay" id="overlay"></div>
+
+        <!-- Test Preview Modal -->
+        <div class="test-preview-modal" id="testPreviewModal">
+            <div class="test-preview-content">
+                <div class="test-preview-header">
+                    <h3>Test Preview</h3>
+                    <button class="close-modal" onclick="closeTestPreview()">×</button>
+                </div>
+                <div class="test-preview-body" id="testPreviewContent"></div>
+            </div>
+        </div>
+
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage">
+            <span>✅</span>
+            <span id="successText">Test created successfully!</span>
+        </div>
+
+        <!-- Auto-save Indicator -->
+        <div class="auto-save-indicator" id="autoSaveIndicator">
+            <span>💾</span>
+            <span>Data saved automatically</span>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Welcome Card -->
+            <div class="glass-card welcome-card">
+                <h2 id="pageTitle">Create <span class="gradient-text">New Test</span></h2>
+                <p id="pageSubtitle">Design and schedule assessments for your students</p>
+            </div>
+
+            <!-- Form -->
+            <div class="glass-card">
+                <div class="form-header">
+                    <div class="form-icon">✏️</div>
+                    <div>
+                        <div class="form-title" id="formMainTitle">Test Creation</div>
+                        <div class="form-subtitle" id="formSubtitle">Configure your test settings and details</div>
+                    </div>
+                </div>
+
+                <form id="createTestForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="testTitle">Test Title</label>
+                            <input type="text" id="testTitle" class="form-control"
+                                placeholder="e.g., Physics - Thermodynamics" required>
+                            <div class="field-info"><span>ℹ️</span> Enter a descriptive title</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="testClass">Select Class</label>
+                            <select id="testClass" class="form-control" onchange="onClassChange(true)" required>
+                                <option value="">Choose a class</option>
+                                <option value="11th-mhtcet-pcm">11th MHTCET (PCM)</option>
+                                <option value="11th-mhtcet-pcb">11th MHTCET (PCB)</option>
+                                <option value="11th-jee">11th JEE</option>
+                                <option value="11th-neet">11th NEET</option>
+                                <option value="12th-mhtcet-pcm">12th MHTCET (PCM)</option>
+                                <option value="12th-mhtcet-pcb">12th MHTCET (PCB)</option>
+                                <option value="12th-jee">12th JEE</option>
+                                <option value="12th-neet">12th NEET</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="subjectFormGroup" style="display: none;">
+                            <label for="testSubject">Select Subject</label>
+                            <select id="testSubject" class="form-control" onchange="onSubjectChange()" required>
+                                <option value="">Choose a subject</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="testDateTime">Scheduled Date & Time</label>
+                            <input type="datetime-local" id="testDateTime" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="testDuration">Duration (minutes)</label>
+                            <input type="number" id="testDuration" class="form-control" placeholder="e.g., 60" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="numberOfQuestions">Number of Questions</label>
+                            <input type="number" id="numberOfQuestions" class="form-control" placeholder="e.g., 30" oninput="autoCalculateTotalMarks(); saveDraft();"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="marksPerQuestion">Marks per Question</label>
+                            <input type="number" id="marksPerQuestion" class="form-control" min="0.1" step="0.1" placeholder="e.g., 4" value="4" oninput="autoCalculateTotalMarks(); saveDraft();"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="totalMarks">Total Marks</label>
+                            <input type="number" id="totalMarks" class="form-control" placeholder="e.g., 120" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="negativeMarking">Negative Marking</label>
+                            <select id="negativeMarking" class="form-control" onchange="toggleNegativeMarkValue()"
+                                required>
+                                <option value="no">No</option>
+                                <option value="yes">Yes</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="negValueFormGroup" style="display: none;">
+                            <label for="negativeMarkValue">Deduction per Wrong Answer (Marks)</label>
+                            <input type="number" id="negativeMarkValue" class="form-control" min="0" step="0.25"
+                                placeholder="e.g., 0.25" value="0.25">
+                        </div>
+                        <div class="form-group">
+                            <label for="showResultImmediately">Show Result Right After Test</label>
+                            <select id="showResultImmediately" class="form-control" required>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+
+                        <!-- Chapters Multiselect -->
+                        <div class="form-group full-width" id="chaptersFormGroup" style="display: none;">
+                            <label>Select Chapters</label>
+                            <div class="custom-multiselect" id="chaptersMultiselect">
+                                <div class="multiselect-select-box"
+                                    onclick="toggleMultiselectDropdown('chaptersMultiselect', event)">
+                                    <span class="placeholder-text" id="chaptersPlaceholder">Choose Chapters...</span>
+                                    <div class="selected-chips" id="chaptersSelectedChips"></div>
+                                    <span class="arrow">▼</span>
+                                </div>
+                                <div class="multiselect-dropdown" id="chaptersDropdown">
+                                    <input type="text" class="multiselect-search" placeholder="Search chapters..."
+                                        onkeyup="filterOptionsList('chaptersOptionsList', this.value)"
+                                        onclick="event.stopPropagation()">
+                                    <div class="multiselect-options" id="chaptersOptionsList"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Topics Multiselect -->
+                        <div class="form-group full-width" id="topicsFormGroup" style="display: none;">
+                            <label>Select Topics</label>
+                            <div class="custom-multiselect" id="topicsMultiselect">
+                                <div class="multiselect-select-box"
+                                    onclick="toggleMultiselectDropdown('topicsMultiselect', event)">
+                                    <span class="placeholder-text" id="topicsPlaceholder">Choose Topics...</span>
+                                    <div class="selected-chips" id="topicsSelectedChips"></div>
+                                    <span class="arrow">▼</span>
+                                </div>
+                                <div class="multiselect-dropdown" id="topicsDropdown">
+                                    <input type="text" class="multiselect-search" placeholder="Search topics..."
+                                        onkeyup="filterOptionsList('topicsOptionsList', this.value)"
+                                        onclick="event.stopPropagation()">
+                                    <div class="multiselect-options" id="topicsOptionsList"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="instructions">Instructions</label>
+                            <textarea id="instructions" rows="4" class="form-control"
+                                placeholder="Enter any special instructions for students"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success" id="submitButton">Create Test</button>
+                        <button type="button" class="btn btn-primary" id="updateButton" style="display:none;">Update
+                            Test</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='my-tests.html'"
+                            id="cancelButton" style="display:none;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Dynamic Syllabus & Question Builder Card (Examin8-like) -->
+            <div class="question-section" id="questionBuilderCard" style="display: none;">
+                <h3 class="section-title" style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap; gap:12px;">
+                    <span style="display:flex; align-items:center; gap:8px;">❓ Syllabus & Question Builder</span>
+                    <span id="questionCountBadge" class="chip" style="background:#fce7f3; color:#db2777; font-size:0.82rem; padding:6px 12px; margin:0;">0 / 0 Questions Compiled</span>
+                </h3>
+                <p style="color:#64748b; font-size:0.92rem; margin-bottom:20px; font-weight:500;">Lock in the exact exam questions. Match matching items automatically from the question bank using a blueprint or manually pick specific problems.</p>
+                
+                <div style="display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-primary" onclick="autoGenerateBlueprint()" id="autoGenBtn">⚡ Auto-Generate Blueprint</button>
+                    <button type="button" class="btn btn-secondary" onclick="openManualQuestionSelector()" id="manualSelectBtn">🔍 Select Questions Manually</button>
+                    <button type="button" class="btn btn-outline" onclick="previewExamPaperDirectly()" style="border:1px solid #cbd5e1; background:white; color:#334155; box-shadow:none;">👁️ Preview Exam Paper</button>
+                </div>
+
+                <!-- Questions List Grid -->
+                <div id="compiledQuestionsList" class="compiled-questions-list">
+                    <div class="empty-state" style="text-align:center; padding:40px; border:2.5px dashed #cbd5e1; border-radius:16px; color:#64748b; background: rgba(255,255,255,0.4);">
+                        <span style="font-size:2.5rem; display:block; margin-bottom:10px;">📋</span>
+                        <strong>No Questions Compiled Yet</strong>
+                        <p style="font-size:0.85rem; margin-top:4px;">Use Auto-Generate Blueprint or select manually to populate your exam paper questions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sliding Question Selector Drawer -->
+            <div class="drawer-overlay" id="drawerOverlay" onclick="closeManualQuestionSelector()"></div>
+            <div class="drawer" id="manualQuestionDrawer">
+                <div class="drawer-header">
+                    <div class="drawer-title">🔍 Select Questions</div>
+                    <button type="button" class="drawer-close" onclick="closeManualQuestionSelector()">×</button>
+                </div>
+                <div class="drawer-body">
+                    <input type="text" class="drawer-search-bar" id="drawerSearchBar" placeholder="Search question text..." oninput="filterDrawerQuestions()">
+                    <div id="drawerQuestionsList" style="display:flex; flex-direction:column; gap:12px;">
+                        <!-- Questions will populate dynamically -->
+                    </div>
+                </div>
+                <div class="drawer-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeManualQuestionSelector()">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="saveManualSelection()">Confirm Selection (<span id="drawerSelectCount">0</span>)</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="copyright">&copy; 2026 Sharada Academy. All rights reserved.</div>
+            <div class="love">Made with ❤️ by Team Sharada</div>
+        </footer>
+    </div>
+
+    <script>
+        if (localStorage.getItem("isLoggedIn") !== "true" || localStorage.getItem("userRole") !== "teacher") {
+            window.location.href = "../role-selection.html";
+        }
+        function logout(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("userRole");
+            localStorage.removeItem("currentTeacher");
+            localStorage.removeItem("teacherVerification");
+            localStorage.removeItem("username");
+            if (typeof auth !== 'undefined') {
+                auth.signOut().then(() => {
+                    window.location.href = "../role-selection.html";
+                }).catch(() => {
+                    window.location.href = "../role-selection.html";
+                });
+            } else {
+                window.location.href = "../role-selection.html";
+            }
+        }
+        // ============================
+        // Firebase Initialization
+        // ============================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXWEuA7G55nawfNUoIqr9PqGP9YGQwGnc",
+            authDomain: "soham-6d886.firebaseapp.com",
+            projectId: "soham-6d886",
+            storageBucket: "soham-6d886.firebasestorage.app",
+            messagingSenderId: "281780176229",
+            appId: "1:281780176229:web:cd1eea7bd171c14a338d8c",
+            measurementId: "G-CB1J6LQ7DJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ============================
+        // CHAPTER AND TOPICS DATABASES
+        // ============================
+        // MHT CET Physics
+        const mhtcetPhysicsTopics = {
+            "Alternating Current": ["Alternating Current, Voltage and Power", "AC Circuits", "Quality and Power Factor", "Transformers", "Parallel AC Circuits"],
+            "Atomic Physics": ["Atomic Structure", "Bohr's Atomic Model", "Atomic Spectrum"],
+            "Capacitance": ["Capacitance", "Grouping of Capacitors", "Capacitors with Dielectric", "Force and Energy stored in Capacitor", "Charging and Discharging of Capacitors"],
+            "Centre of Mass and Collision": ["Momentum", "Centre of Mass of Discrete Particles", "Centre of Mass of Continuous Mass Distribution", "Motion of Centre of Mass", "Impulse", "Collisions", "Variable Mass System"],
+            "Communication System": ["Communication System", "Propagation of EM Waves", "Modulation"],
+            "Current Electricity": ["Electric Current and Drift Velocity", "Ohm's Law and Resistance", "Combination of Resistors", "Kirchhoff's Laws", "Electrical Measuring Instruments"],
+            "Dual Nature of Matter": ["Cathode Rays and Positive Rays", "Matter Waves", "Photoelectric Effect"],
+            "Electromagnetic Induction": ["Magnetic Flux, Faraday's and Lenz law", "Induced Electric Field", "Motional and Rotational EMF", "Inductance", "Self and Mutual Inductance", "LR Circuit"],
+            "Electromagnetic Waves": ["Electromagnetic Waves and Maxwell's equations", "Electromagnetic Spectrum"],
+            "Electrostatics": ["Electric Charge and Coulomb's law", "Electric Field and Electric Field Lines", "Electric Potential and Potential Energy", "Electric Dipole", "Electric Flux and Gauss Law"],
+            "Experimental Physics": ["Experimental Physics"],
+            "Gravitation": ["Newton's Law of Gravitation", "Gravitational Field", "Acceletation Due to Gravity", "Gravitational Potential and Potential Energy", "Motion of Satellite", "Kepler Laws"],
+            "Kinetic Theory of Gases": ["Gas Laws", "Speed of Gas", "Degree of Freedom and Specific Heat", "Pressure and Energy of gas"],
+            "Laws of Motion": ["Newton's laws of Motion", "Equilibrium of Forces", "Spring Forces", "Friction force", "Non-uniform Circular Motion"],
+            "Magnetic Effects of Current": ["Biot-Savart's Law and Ampere's Circuital Law", "Magnetic Field", "Motion of Charged Particle in Magnetic Field", "Force and Torque on Current Carrying Conductor", "Magnetic Moment", "Magnetic Dipole"],
+            "Magnetic Properties of Matter": ["Algebra & Trigonometry", "Coordinate Geometry", "Basic Calculus", "Vectors Basics", "Logarithms & Exponentials"],
+            "Mathematics in Physics": ["Fundamentals of Vectors", "Addition and Subtraction of Vectors", "Multiplication of Vectors", "Errors of Measurement"],
+            "Mechanical Properties of Fluids": ["Pressure and Thrust", "Pascal's Law", "Aechmidies Principle", "Hydrodynamics", "Efflux of Liquid", "Surface Tension", "Viscosity"],
+            "Mechanical Properties of Solids": ["Elasticity", "Young's Modulus and Breaking Stress", "Bulk Modulas", "Shearing Stress", "Work Done in Stretching a Wire"],
+            "Motion in One Dimension": ["Rest of Motion", "Uniform Motion", "Non-Uniform Motion", "Relative Motion", "Motion Under Gravity", "Graphs of Motion in One Dimension"],
+            "Motion in Two Dimension": ["Projectile Motion", "Relative Motion", "Uniform Circular Motion"],
+            "Nuclear Physics": ["Nuclear structure", "Nuclear energy", "Radioactivity", "Nuclear reactions"],
+            "Oscillations": ["Simple Harmonic Motion", "Energy of Simple Hormonic Motion", "Time Period and Frequency", "Applications of SHM", "Superposition of SHM's and Resonance", "Angular Oscillations"],
+            "Ray Optics": ["Reflection of Light from Plane Mirror", "Mirror Formula, Reflection in Spherical Mirror", "Critical angle and total internal reflection", "Refraction of light from plane surface", "Lens Formula, Refraction of light from curved surface", "Combination of Lens and Mirrors", "Prism and Dispersion of Light", "Optical Instruments", "Human eye"],
+            "Rotation Motion": ["Momentum of Inertia of Rigid Bodies", "Torque", "Rotational Kinematics", "Angular Momentum and Angular impulse", "Rolling without Slipping", "Combination of Translation and Rotation"],
+            "Semiconductors": ["Energy Bands in Solids", "Semiconductors", "Diodes", "Rectifier", "Special purpose diodes", "Junction Transistors", "Logic gates"],
+            "Thermal Properties of Matter": ["Thermometry", "Thermal Expansion", "Calorimetry", "Conduction", "Convection", "Radiation"],
+            "Thermodynamics": ["Thermodynamic Systems", "First Law of Thermodynamics", "Thermodynamic Processes", "Heat Engine, Refrigerator and Second Law of Thermodynamics"],
+            "Units and Dimensions": ["Units", "Dimensions"],
+            "Wave Optics": ["Wave Theory and Wavefronts", "Interference of Light", "Youngs Double Slit Experiment", "Diffraction of Light", "Polarization of Light"],
+            "Waves and Sound": ["Basic of Mechanical Waves", "Travelling Waves", "Interference and Superposition of Waves", "Stationary Waves", "Vibration of String", "Organ Pipe (Vibration of Air Column)", "Beats", "Doppler's Effect", "Speed of Sound Waves", "Properties of Sound Waves"],
+            "Work, Power & Energy": ["Work Done", "Energy", "Power", "Circular Motion"]
+        };
+
+        // MHT CET Chemistry
+        const mhtcetChemistryTopics = {
+            "Alcohol, Phenols and Ethers": ["Preparation and Properties of Alcohols", "Reactions of Alcohols", "Preparation of Phenols", "Reactions of Phenol", "Preparation of Ethers", "Reactions of Ethers", "Dihydric alcohols", "Preparation and Reactions of Glycol", "Methods of Preparation of Carbonyl Compounds", "Reactions of Carbonyl Compounds", "Tests for Aldehyde and Ketones", "Properties of Phenol"],
+            "Aldehydes Ketones": ["Method of preparation for both aldehydes and ketones", "Method of preparation for Aldehydes", "Method of preparation for Ketones", "Chemical reactions for aldehydes and ketones", "Reactions for aldehydes", "Reactions for ketones", "Tests for aldehyde and ketones", "Method of Preparation for Both Aldehydes and Ketones", "Tests for Aldehyde and Ketones"],
+            "Amines": ["Preparation and Properties of Amines", "Separation of mixture of amines", "Preparation and Properties of Amides", "Preparation and Properties of Cyanides", "Preparation and Properties of Isocyanides"],
+            "Biomolecules": ["Carbohydrates", "Preparation and Reactions of Glucose", "Disaccharides and Polysaccharides", "Properties and Preparation of Amino Acids", "Proteins", "Nucleic Acids", "Vitamins", "Fats"],
+            "Carboxylic Acid Derivatives": ["Preparation and Properties of Carboxylic Acids", "Reaction Involving Cleavage of \u2013OH Group", "Reactions Involving Acid Group", "Abnormal Behaviour of Formic Acid", "Preparation and Properties of Acid Derivatives", "Preparation and Properties of Esters"],
+            "Chemical Bonding and Molecular Structure": ["Covalent and Co-ordinate Bonding", "Hybridisation and VSEPR Theory", "Molecular Orbital Theory", "Ionic bond", "Polarization", "Properties of ionic compounds", "Dipole moment", "Van Der Waals Forces, Hydrogen Bonding and Metallic Bonding"],
+            "Chemical Equilibrium": ["Law of Mass Action, Equilibrium Constant (Kc and Kp) and its Application", "Le chatelier's principle"],
+            "Chemical Kinetics": ["Rate of reaction", "Rate law and rate constant", "Integrated rate laws", "Methods to determine order of reaction", "Parallel and Sequencial rate laws", "Arrhenius theory"],
+            "Chemistry in Everyday Life": ["Drugs and It's Classification", "Cleansing Agents", "Enzymes and Receptors", "Artificial Sweetening Agents and Food Preservatives"],
+            "Classification of Elements and Periodicity in Properties": ["Earlier attempts of periodic classification", "Modern periodic table", "Periodic properties"],
+            "Coordination Compounds": ["Terminology of coordination compounds", "Nomenclature of coordination compounds", "Isomerism of coordination compounds", "Werner's theory and Valence Bond Theory", "Crystal Field Theory", "Stability of complex ion", "Carbonyl Compounds"],
+            "D and F Block Elements": ["Properties of D-block elements", "Compounds of Transition Metals", "F-Block elements"],
+            "Electrochemistry": ["Cells and Electrode Potential, Nernst Equation", "Types of half cells", "Concentration cell", "Commercial Cells and Batteries", "Corrosion", "Conductance and Conductivity"],
+            "Environmental Chemistry": ["Air Pollution", "Introduction to Nanochemistry", "Water Pollution", "Land Pollution", "Control of environmental pollution"],
+            "General Organic Chemistry": ["IUPAC Nomenclature", "Classification of organic compounds", "Bond Cleavage", "Reaction Intermediates", "Electron displacement effects", "Conjugation and Aromaticity", "Attacking reagents", "Isomerism of Organic Compounds", "Purification of Organic Compounds"],
+            "General Principles and Processes of Isolation of Elements": ["Minerals and ores", "Concentration of the Ore", "Refining of Crude Metal", "Flux and Refractory materials", "Extraction of Metals"],
+            "Haloalkanes and Haloarenes": ["Preparation and Properties of Monohalides", "Preparation and Properties of Geminal and Vicinal Dihalides", "Preparation and Properties of Aryl Halides", "Grignard Reagent"],
+            "Hydrocarbons": ["Properties and Preparation of Alkanes", "Reactions of alkanes", "Properties and Preparation of Alkenes", "Reactions of alkenes", "Reactions of alkynes", "Preparation and Reactions of cycloalkanes and cycloalkenes", "Preparation and Properties of Benzene", "Reactions of Benzene", "Reactions of aromatic compounds", "Properties and Preparation of Alkynes"],
+            "Hydrogen": ["Preparation and Properties of Hydrogen", "Hydrides", "Preparation and Properties of Hydrogen Peroxide", "Chemical properties of hydrogen peroxide", "Preparation and Properties of Water", "Chemical properties of heavy water"],
+            "Ionic Equilibrium": ["Theories of Acids and Bases", "Ionic Product of Water", "PH of solutions", "Salt Hydrolysis", "Buffer solutions", "Solubility"],
+            "P Block Elements (Group 13 & 14)": ["Boron and Its Compounds", "Aluminium and Its Compounds", "Carbon and Its Compounds", "Silicon and Its Compounds", "Tin and Lead Containing Compounds"],
+            "P Block Elements (Group 15,16, 17 & 18)": ["Nitrogen and Its Compounds", "Phosphorus and Its Compounds", "Oxygen and Its Compounds", "Sulphur and Its Compounds", "Halogens and Its Compounds", "Noble Gases"],
+            "Polymers": ["Classification of Polymers", "Preparation and Properties of Polymers"],
+            "Practical Chemistry": ["Radicals", "Preliminary Tests"],
+            "Redox Reactions": ["Oxidation and Reduction Reactions", "Types of redox reactions", "Oxidation number", "Balancing of redox reactions", "Equivalence concept", "Redox titration"],
+            "S Block Elements": ["General Characteristics of Alkali Metals", "Compounds of Alkali Metals", "Alkaline Earth Metals", "Compounds of Alkaline Earth Metals", "Properties of S-block elements"],
+            "Solid State": ["Properties and Types of Solids", "Crystal Structure of Solids", "Cubic system", "Ionic structure", "Stoichiometric defects", "Non-stoichiometric defects", "Electrical and Magnetic properties"],
+            "Solutions": ["Solubility and Concentration of Solutions", "Vapour pressure and raoult's law", "Henry's law", "Colligative Properties and Abnormal Molecular Masses"],
+            "Some Basic Concepts of Chemistry": ["Laws of chemical combination", "Mole concept", "Quantitative measures in chemical equations", "Concentration terms", "Significant Figures"],
+            "States of Matter": ["Gas laws and Ideal Gas Equation", "Mixture of gases", "Kinetic theory of gases", "Real Gases and Van der Waal's Equation", "Critical phenomena and liquefaction"],
+            "Structure of Atom": ["Atomic Models", "Atomic Mass and Atomic Size", "Bohr's model", "Hydrogen spectrum", "Dual Behaviour of Matter and Heisenberg Uncertainty Principle", "Quantum mechanical model", "Electronic configuration"],
+            "Surface Chemistry": ["Adsorption", "Adsorption isotherms", "Catalysis and Theories of Catalysis", "Colloids", "Preparation and Purification of colloids", "Properties of colloidal solution", "Emulsions and Gels", "Nanostructures"],
+            "Thermodynamics (C)": ["System and surrounding", "First Law and Basic Fundamentals of Thermodynamics", "Laws of Thermochemistry and Enthalpy Change", "Entropy and Second law of thermodynamics", "Third law of thermodynamics"]
+        };
+
+        // MHT CET Mathematics
+        const mhtcetMathematicsTopics = {
+            "Application Of Derivative": ["Tangent and Normal", "Monotonicity (Increasing / Decreasing function)", "Maxima and Minima of a Function", "Mean Value Theorem", "Rate Measure & Approximations", "Rolle's Theorem & Lagrange's Mean Value Theorem"],
+            "Area Under Curves": ["Area between curves", "Curve sketching", "Miscellaneous area problems"],
+            "Basic of Mathematics": ["Ratio and Proportion", "Logarithm", "Inequalities"],
+            "Binomial Theorem": ["Properties of Binomial Coefficients", "Series involving Product of Coefficients", "Sum of Series"],
+            "Circle": ["General Equation of 2nd degree curve", "Equation of Circle & its intercept", "Position of point", "line and circle", "Tangent to circle", "Pair of Tangents", "Chord of Contact", "Chord with given Middle Point", "Intersection of Circles", "Common Tangents", "Common Chord", "Family of Circle", "Coaxial systems of circles", "Locus"],
+            "Complex Number": ["Power of iota", "Algebra of complex numbers", "Conjugate, modulus and argument", "Polar and Euler Form", "De Moivres Theorem", "Cube Root of Unity", "Locus Based on Distance Formula", "Geometry of Complex Number"],
+            "Continutity And Differentiability": ["Continuity", "Differentiability"],
+            "Definite Integration": ["Definite Integration by Parts", "Definite Integration by Substitution", "Properties of Definite Integration", "Properties of Periodic Functions", "Definite Integration by Reduction Formula", "Miscellaneous", "Leibnitz Rule of Differentiation"],
+            "Determinants": ["Expansion of Determinants", "Multiplication of Determinants", "System of Linear Equations", "Miscellaneous"],
+            "Differential Equations": ["Order and Degree", "Formation of Differential Equation", "Variable Separable Form", "Homogeneous DE", "Linear Differential Equation", "Exact Forms", "Orthogonal Trajectory", "Applications of DE", "Variable Separable form"],
+            "Differentiation": ["Differentiation of composite functions", "Differentiation of implicit functions", "Parametric differentiation", "Logarithmic differentiation", "Derivative of f(x) wrt g(x)", "Differentiation of Inverse Trigonometric Functions", "Derivative of function and its inverse", "Higher order derivatives", "Functional Equation"],
+            "Ellipse": ["Equation of Ellipse", "Tangent to ellipse", "Common Tangent", "Normal to ellipse", "Diameter to ellipse", "Line and ellipse"],
+            "Functions": ["Domain", "Range", "Odd and Even Functions", "Periodicity", "Composite Function", "Types of Function (Mapping)", "Inverse of a Function", "Functional Equation", "Definition of Function", "Number of Solutions", "Identical Functions"],
+            "Heights And Distances": ["Heights and Distances"],
+            "Hyperbola": ["General Equation of 2nd degree curve", "Equation of hyperbola", "Normal to hyperbola", "Rectangular hyperbola", "Tangent to hyperbola"],
+            "Indefinite Integration": ["Fundamental of Indefinite Integration", "Integration by Substitution", "Integration by Parts", "Integration using Partial Fraction", "Integration using Reduction Formula", "Miscellaneous Forms"],
+            "Inverse Trigonometric Function": ["Principal Value and Basics", "T inverse T property", "Converting one Inverse T function to other Inverse T", "Sum of complementary angles", "Sum and difference of angles", "Multiple Angles", "Infinite Series"],
+            "Limits": ["Existance of Limit", "Algebraic and Rational Limits", "Trigonometric and Inverse Trigonometric limits", "Exponential and logarithmic limits", "Special Forms", "Miscellaneous"],
+            "Linear Programming": ["Linear Programming"],
+            "Mathematical Induction": ["Mathematical Induction"],
+            "Mathematical Reasoning": ["Mathematical Reasoning"],
+            "Matrices": ["Formation and Basic of Matrix", "Basic Algebra of Matrices", "Product of Matrices", "Adjoint and its Properties", "Inverse of a Matrix", "Rank of Matrix", "Symmetric & Skew Symmetric Matrices"],
+            "Pair Of Line": ["homogeneous equation of second degree", "Pair of lines through origin", "Angle between lines", "combined equation of angle bisector", "general equation of second degree", "Condition for 2nd degree equation to represent pair of straight lines", "point of intersection of pair of straight lines"],
+            "Parabola": ["standard equation of parabola", "Position of point", "Tangent to Parabola", "Common Tangent", "Normal to Parabola", "Locus", "Line and parabola"],
+            "Permutation and Combination": ["Factorial", "Permutation", "Combination", "Arrangement under Constraint", "Circular Permutation", "Selection of one or more item", "Division of Identical items"],
+            "Probability": ["Classical Definition of Probability", "Addition and Subtraction Theorems", "Conditional Probability and Multiplication Theorem", "Independent Events", "Total Probability", "Baye's Theorem", "Bernoulli Trial and Binomial Distribution", "Random variable and its Probability Distribution", "Random Variable and its Probability Distribution"],
+            "Properties of Triangles": ["Sine Rule and its application", "Cosine Rule and Projection Formula", "Napiers Analogy, Area of Triangle & Half angle Formulae", "Circle Connected to Triangle", "Circle and Polygon"],
+            "Quadratic Equation": ["Relation between Roots and Coefficients", "Location of Roots", "N degree equation", "Range of Quadratic Function", "Descartes Rule of Sign"],
+            "Sequence and Series": ["Arithmetic Progression", "Geometric Progression", "Mixed Question on AP and GP", "Harmonic Progression", "Arithmetic Geometric Progression", "Summation of Series"],
+            "Sets & Relations": ["Questions on Venn Diagram", "Questions on number of relations and sets"],
+            "Statistics": ["Statistics", "Mean", "Relation Between Mean, Median and Mode", "Measures of Dispersion", "Mean Square Deviation", "Relation Between Variance and Mean Deviation"],
+            "Straight Line": ["Coordinate System", "Basic Forms of Straight Line", "Angle between Lines", "Derived Forms of Line", "Position of a point", "Point and Line", "Concurrency & Family of Lines", "Locus", "Angle bisector"],
+            "Three Dimensional Geometry": ["Basics of point in 3 dimension", "Direction Cosines and Direction Ratios", "Line in Space", "Plane in Space", "Line and Plane"],
+            "Trigonometric Equations": ["Basic", "Solving Trigonometric Equation", "Solving Trigonometric Inequalities"],
+            "Trigonometric Ratios and Identities": ["Measurement of Angles", "Basic Identities & T Ratios", "Sum and Difference & Multiple angle Formula", "Transformation Formulas", "T-Ratios of Multiple & sub multiple angles", "Maximum and Minimum Values", "Sum of three of more angles", "Trigonometric Series", "Number of Solutions"],
+            "Vector Algebra": ["Algebra of Vectors", "Product of 2 vectors", "Scalar Triple Product", "Vector Triple Product"]
+        };
+
+        // NEET topic data
+        const neetPhysicsRaw = [
+            { "chapter": "Mathematics in Physics", "topics": ["Fundamentals of Vectors", "Addition and Subtraction of Vectors", "Multiplication of Vectors", "Errors of Measurement"] },
+            { "chapter": "Units and Dimensions", "topics": ["Units", "Dimensions"] },
+            { "chapter": "Motion in One Dimension", "topics": ["Rest and Motion", "Uniform Motion", "Non-Uniform Motion", "Relative Motion", "Motion Under Gravity", "Graphs of Motion in One Dimension"] },
+            { "chapter": "Motion in Two Dimensions", "topics": ["Projectile Motion", "Relative Motion", "Uniform Circular Motion"] },
+            { "chapter": "Laws of Motion", "topics": ["Newton's Laws of Motion", "Equilibrium of Forces", "Spring Forces", "Friction Force", "Non-uniform Circular Motion"] },
+            { "chapter": "Work, Power and Energy", "topics": ["Work Done", "Energy", "Power", "Circular Motion"] },
+            { "chapter": "Center of Mass, Momentum and Collision", "topics": ["Momentum", "Centre of Mass of Discrete Particles", "Centre of Mass of Continuous Mass Distribution", "Motion of Centre of Mass", "Impulse", "Collisions", "Variable Mass System"] },
+            { "chapter": "Rotational Motion", "topics": ["Moment of Inertia of Rigid Bodies", "Torque", "Rotational Kinematics", "Angular Momentum and Angular Impulse", "Rolling without Slipping", "Combination of Translation and Rotation"] },
+            { "chapter": "Gravitation", "topics": ["Newton's Law of Gravitation", "Gravitational Field", "Acceleration Due to Gravity", "Gravitational Potential and Potential Energy", "Motion of Satellite", "Kepler's Laws"] },
+            { "chapter": "Mechanical Properties of Solids", "topics": ["Elasticity", "Young's Modulus and Breaking Stress", "Bulk Modulus", "Shearing Stress", "Work Done in Stretching a Wire"] },
+            { "chapter": "Mechanical Properties of Fluids", "topics": ["Pressure and Thrust", "Pascal's Law", "Archimedes' Principle", "Hydrodynamics", "Efflux of Liquid", "Surface Tension", "Viscosity"] },
+            { "chapter": "Thermal Properties of Matter", "topics": ["Thermometry", "Thermal Expansion", "Calorimetry", "Conduction", "Convection", "Radiation"] },
+            { "chapter": "Thermodynamics", "topics": ["Thermodynamic Systems", "First Law of Thermodynamics", "Thermodynamic Processes", "Heat Engine, Refrigerator and Second Law of Thermodynamics"] },
+            { "chapter": "Kinetic Theory of Gases", "topics": ["Gas Laws", "Speed of Gas", "Degree of Freedom and Specific Heat", "Pressure and Energy of Gas"] },
+            { "chapter": "Oscillations", "topics": ["Simple Harmonic Motion", "Energy of Simple Harmonic Motion", "Time Period and Frequency", "Applications of SHM", "Superposition of SHMs and Resonance", "Angular Oscillations"] },
+            { "chapter": "Waves and Sound", "topics": ["Basics of Mechanical Waves", "Travelling Waves", "Interference and Superposition of Waves", "Stationary Waves", "Vibration of String", "Organ Pipe (Vibration of Air Column)", "Beats", "Doppler's Effect", "Speed of Sound Waves", "Properties of Sound Waves"] },
+            { "chapter": "Electrostatics", "topics": ["Electric Charge and Coulomb's Law", "Electric Field and Electric Field Lines", "Electric Potential and Potential Energy", "Electric Dipole", "Electric Flux and Gauss's Law"] },
+            { "chapter": "Capacitance", "topics": ["Capacitance", "Grouping of Capacitors", "Capacitors with Dielectric", "Force and Energy Stored in Capacitor", "Charging and Discharging of Capacitors"] },
+            { "chapter": "Current Electricity", "topics": ["Electric Current and Drift of Electrons", "Resistance and Resistivity", "Electric Cell or Battery", "Kirchhoff's Laws", "Electric Power and Heating Effect of Current", "Wheatstone Bridge", "Electric Instruments", "Combinations of Resistances"] },
+            { "chapter": "Magnetic Properties of Matter", "topics": ["Magnetism and Properties of Magnet", "Earth's Magnetic Field", "Magnetic Equipments", "Magnetic Materials and their Properties"] },
+            { "chapter": "Magnetic Effects of Current", "topics": ["Biot-Savart's Law and Ampere's Circuital Law", "Magnetic Field", "Motion of Charged Particle in Magnetic Field", "Force and Torque on Current Carrying Conductor", "Magnetic Moment", "Magnetic Dipole"] },
+            { "chapter": "Electromagnetic Induction", "topics": ["Magnetic Flux, Faraday's and Lenz's Law", "Induced Electric Field", "Motional and Rotational EMF", "Inductance", "Self and Mutual Inductance", "LR Circuit"] },
+            { "chapter": "Alternating Current", "topics": ["Alternating Current, Voltage and Power", "AC Circuits", "Quality and Power Factor", "Transformers", "Parallel AC Circuits"] },
+            { "chapter": "Electromagnetic Waves", "topics": ["Electromagnetic Waves and Maxwell's Equations", "Electromagnetic Spectrum"] },
+            { "chapter": "Ray Optics", "topics": ["Reflection of Light from Plane Mirror", "Mirror Formula, Reflection in Spherical Mirror", "Critical Angle and Total Internal Reflection", "Refraction of Light from Plane Surface", "Lens Formula, Refraction of Light from Curved Surface", "Combination of Lens and Mirrors", "Prism and Dispersion of Light", "Optical Instruments", "Human Eye"] },
+            { "chapter": "Wave Optics", "topics": ["Wave Theory and Wavefronts", "Interference of Light", "Young's Double Slit Experiment", "Diffraction of Light", "Polarization of Light"] },
+            { "chapter": "Atomic Physics", "topics": ["Atomic Structure", "Bohr's Atomic Model", "Atomic Spectrum"] },
+            { "chapter": "Nuclear Physics", "topics": ["Nuclear Structure", "Nuclear Energy", "Radioactivity", "Nuclear Reactions"] },
+            { "chapter": "Semiconductors", "topics": ["Energy Bands in Solids", "Semiconductors", "Diodes", "Rectifier", "Special Purpose Diodes", "Junction Transistors", "Logic Gates"] },
+            { "chapter": "Experimental Physics", "topics": ["Experimental Physics (Measurement, Screw Gauge, Vernier Calipers, etc.)"] },
+            { "chapter": "Dual Nature of Matter", "topics": ["Cathode Rays and Positive Rays", "Matter Waves", "Photoelectric Effect"] }
+        ];
+
+        const neetChemistryRaw = [
+            { "chapter": "Some Basic Concepts of Chemistry", "topics": ["Laws of chemical combination", "Mole concept", "Quantitative measures in chemical equations", "Concentration terms", "Significant Figures"] },
+            { "chapter": "Structure of Atom", "topics": ["Atomic Models", "Atomic Mass and Atomic Size", "Bohr's model", "Hydrogen spectrum", "Dual Behaviour of Matter and Heisenberg Uncertainty Principle", "Quantum mechanical model", "Electronic configuration"] },
+            { "chapter": "Classification of Elements and Periodicity in Properties", "topics": ["Earlier attempts of periodic classification", "Modern periodic table", "Periodic properties"] },
+            { "chapter": "Chemical Bonding and Molecular Structure", "topics": ["Covalent and Co-ordinate Bonding", "Hybridisation and VSEPR Theory", "Molecular Orbital Theory", "Ionic bond", "Polarization", "Properties of ionic compounds", "Dipole moment", "Van Der Waals Forces, Hydrogen Bonding and Metallic Bonding"] },
+            { "chapter": "Thermodynamics", "topics": ["System and surrounding", "First Law and Basic Fundamentals of Thermodynamics", "Laws of Thermochemistry and Enthalpy Change", "Entropy and Second law of thermodynamics", "Third law of thermodynamics"] },
+            { "chapter": "Chemical Equilibrium", "topics": ["Law of Mass Action, Equilibrium Constant (Kc and Kp) and its Application", "Le chatelier's principle"] },
+            { "chapter": "Ionic Equilibrium", "topics": ["Theories of Acids and Bases", "Ionic Product of Water", "PH of solutions", "Salt Hydrolysis", "Buffer solutions", "Solubility"] },
+            { "chapter": "Redox Reactions", "topics": ["Oxidation and Reduction Reactions", "Types of redox reactions", "Oxidation number", "Balancing of redox reactions", "Equivalence concept", "Redox titration"] },
+            { "chapter": "p-Block Elements (Group 13 & 14)", "topics": ["Boron and Its Compounds", "Aluminium and Its Compounds", "Carbon and Its Compounds", "Silicon and Its Compounds", "Tin and Lead Containing Compounds"] },
+            { "chapter": "General Organic Chemistry", "topics": ["IUPAC Nomenclature", "Classification of organic compounds", "Bond Cleavage", "Reaction Intermediates", "Electron displacement effects", "Conjugation and Aromaticity", "Attacking reagents", "Isomerism of Organic Compounds", "Purification of Organic Compounds"] },
+            { "chapter": "Hydrocarbons", "topics": ["Properties and Preparation of Alkanes", "Reactions of alkanes", "Properties and Preparation of Alkenes", "Reactions of alkenes", "Reactions of alkynes", "Preparation and Reactions of cycloalkanes and cycloalkenes", "Preparation and Properties of Benzene", "Reactions of Benzene", "Reactions of aromatic compounds", "Properties and Preparation of Alkynes"] },
+            { "chapter": "Solutions", "topics": ["Solubility and Concentration of Solutions", "Vapour pressure and raoult's law", "Henry's law", "Colligative Properties and Abnormal Molecular Masses"] },
+            { "chapter": "Electrochemistry", "topics": ["Cells and Electrode Potential, Nernst Equation", "Types of half cells", "Concentration cell", "Commercial Cells and Batteries", "Corrosion", "Conductance and Conductivity"] },
+            { "chapter": "Chemical Kinetics", "topics": ["Rate of reaction", "Rate law and rate constant", "Integrated rate laws", "Methods to determine order of reaction", "Parallel and Sequencial rate laws", "Arrhenius theory"] },
+            { "chapter": "Surface Chemistry", "topics": ["Adsorption", "Adsorption isotherms", "Catalysis and Theories of Catalysis", "Colloids", "Preparation and Purification of colloids", "Properties of colloidal solution", "Emulsions and Gels", "Nanostructures"] },
+            { "chapter": "p-Block Elements (Group 15, 16, 17, 18)", "topics": ["Nitrogen and Its Compounds", "Phosphorus and Its Compounds", "Oxygen and Its Compounds", "Sulphur and Its Compounds", "Halogens and Its Compounds", "Noble Gases"] },
+            { "chapter": "d and f Block Elements", "topics": ["Properties of D-block elements", "Compounds of Transition Metals", "F-Block elements"] },
+            { "chapter": "Coordination Compounds", "topics": ["Terminology of coordination compounds", "Nomenclature of coordination compounds", "Isomerism of coordination compounds", "Werner's theory and Valence Bond Theory", "Crystal Field Theory", "Stability of complex ion", "Carbonyl Compounds"] },
+            { "chapter": "Haloalkanes and Haloarenes", "topics": ["Preparation and Properties of Monohalides", "Preparation and Properties of Geminal and Vicinal Dihalides", "Preparation and Properties of Aryl Halides", "Grignard Reagent"] },
+            { "chapter": "Alcohols, Phenols and Ethers", "topics": ["Preparation and Properties of Alcohols", "Reactions of Alcohols", "Preparation of Phenols", "Reactions of Phenol", "Preparation of Ethers", "Reactions of Ethers", "Dihydric alcohols", "Preparation and Reactions of Glycol", "Methods of Preparation of Carbonyl Compounds", "Reactions of Carbonyl Compounds", "Tests for Aldehyde and Ketones", "Properties of Phenol"] },
+            { "chapter": "Aldehydes and Ketones", "topics": ["Method of preparation for both aldehydes and ketones", "Method of preparation for Aldehydes", "Method of preparation for Ketones", "Chemical reactions for aldehydes and ketones", "Reactions for aldehydes", "Reactions for ketones", "Tests for aldehyde and ketones", "Method of Preparation for Both Aldehydes and Ketones", "Tests for Aldehyde and Ketones"] },
+            { "chapter": "Carboxylic Acid Derivatives", "topics": ["Preparation and Properties of Carboxylic Acids", "Reaction Involving Cleavage of \u2013OH Group", "Reactions Involving Acid Group", "Abnormal Behaviour of Formic Acid", "Preparation and Properties of Acid Derivatives", "Preparation and Properties of Esters"] },
+            { "chapter": "Amines", "topics": ["Preparation and Properties of Amines", "Separation of mixture of amines", "Preparation and Properties of Amides", "Preparation and Properties of Cyanides", "Preparation and Properties of Isocyanides"] },
+            { "chapter": "Practical Chemistry", "topics": ["Radicals", "Preliminary Tests"] },
+            { "chapter": "Biomolecules", "topics": ["Carbohydrates", "Preparation and Reactions of Glucose", "Disaccharides and Polysaccharides", "Properties and Preparation of Amino Acids", "Proteins", "Nucleic Acids", "Vitamins", "Fats"] }
+        ];
+
+        const neetBotanyRaw = [
+            { "chapter": "The Living World", "topics": ["Diversity in the Living World and Nomenclature", "Taxonomic Categories (Species, Genus, Family, etc.)", "Taxonomic Aids (Herbarium, Botanical Gardens, Museum, Zoological Parks)", "Key and Other Taxonomic Tools"] },
+            { "chapter": "Biological Classification", "topics": ["Kingdom Monera (Bacteria, Archaebacteria, Eubacteria)", "Kingdom Protista (Chrysophytes, Dinoflagellates, Euglenoids, Slime Moulds, Protozoans)", "Kingdom Fungi (Phycomycetes, Ascomycetes, Basidiomycetes, Deuteromycetes)", "Viruses, Viroids, Prions, and Lichens"] },
+            { "chapter": "Plant Kingdom", "topics": ["Algae (Chlorophyceae, Phaeophyceae, Rhodophyceae)", "Bryophytes (Liverworts and Mosses)", "Pteridophytes (Homosporous and Heterosporous)", "Gymnosperms and Angiosperms (Life Cycles)"] },
+            { "chapter": "Animal Kingdom", "topics": ["Basis of Classification (Symmetry, Coelom, Segment, etc.)", "Non-Chordates Phyla (Porifera to Echinodermata)", "Hemichordata and Chordata", "Classes of Vertebrates"] },
+            { "chapter": "Morphology of Flowering Plants", "topics": ["Root and Stem (Types and Modifications)", "Leaf (Venation, Phyllotaxy, and Modifications)", "Inflorescence and Flower (Parts of a Flower)", "Fruit, Seed, and Semi-Technical Description of Families (Fabaceae, Solanaceae, Liliaceae)"] },
+            { "chapter": "Anatomy of Flowering Plants", "topics": ["Meristematic and Permanent Tissues", "Tissue System (Epidermal, Ground, and Vascular)", "Anatomy of Dicotyledonous and Monocotyledonous Roots & Stems", "Secondary Growth in Dicot Stems and Roots"] },
+            { "chapter": "Cell Cycle and Cell Division", "topics": ["Phases of Cell Cycle (Interphase, G1, S, G2)", "Mitosis (Prophase, Metaphase, Anaphase, Telophase and Significance)", "Meiosis I (Prophase I subphases: Leptotene, Zygotene, Pachytene, Diplotene, Diakinesis)", "Meiosis II and Significance of Meiosis"] },
+            { "chapter": "Cell: The Unit of Life", "topics": ["Cell Theory and Prokaryotic vs Eukaryotic Cells", "Cell Membrane and Cell Wall Structure", "Endomembrane System (ER, Golgi, Lysosomes, Vacuoles)", "Mitochondria, Plastids, Ribosomes, and Nucleus"] },
+            { "chapter": "Plant Growth and Development", "topics": ["Growth Phases and Rate of Plant Growth", "Differentiation, Dedifferentiation, and Redifferentiation", "Plant Growth Regulators (Auxins, Gibberellins, Cytokinins, Ethylene, ABA)", "Photoperiodism and Vernalization"] },
+            { "chapter": "Respiration in Plants", "topics": ["Glycolysis (EMP Pathway)", "Aerobic Respiration (TCA Cycle / Krebs Cycle)", "Electron Transport System (ETS) and Oxidative Phosphorylation", "Amphibolic Pathway and Respiratory Quotient (RQ)"] },
+            { "chapter": "Photosynthesis in Higher Plants", "topics": ["Light Reaction (Absorption, Water Splitting, Cyclic & Non-cyclic Photo-phosphorylation)", "Chemiosmotic Hypothesis", "Dark Reaction / Carbon Fixation (C3 Pathway / Calvin Cycle)", "C4 Pathway (Kranz Anatomy) and Photorespiration"] },
+            { "chapter": "Sexual Reproduction in Flowering Plants", "topics": ["Flower structure and Pre-fertilization Events (Microsporogenesis & Megasporogenesis)", "Pollination (Types, Agencies, and Outbreeding Devices)", "Double Fertilization", "Post-fertilization Events (Endosperm, Embryo, Seed development, Apomixis & Polyembryony)"] },
+            { "chapter": "Biomolecules", "topics": ["Chemical Analysis and Primary/Secondary Metabolites", "Macromolecules (Proteins, Polysaccharides, Nucleic Acids)", "Structure of Proteins and Nucleic Acids", "Enzymes (Properties, Mechanism of Action, Classification, Co-factors)"] },
+            { "chapter": "Biodiversity and Its Conservation", "topics": ["Levels of Biodiversity and Patterns of Biodiversity", "Importance of Biodiversity and Loss of Biodiversity", "In-situ Conservation (National Parks, Biosphere Reserves, Sanctuaries)", "Ex-situ Conservation (Botanical Gardens, Seed Banks, Cryopreservation)"] },
+            { "chapter": "Ecosystem", "topics": ["Ecosystem Structure and Function", "Productivity and Decomposition", "Energy Flow (Food Chains, Food Web, Ecological Pyramids)", "Ecological Succession and Nutrient Cycling"] }
+        ];
+
+        const neetZoologyRaw = [
+            { "chapter": "Structural Organisation in Animals", "topics": ["Epithelial Tissue", "Connective, Muscular, and Nervous Tissues", "Morphology and Anatomy of Cockroach", "Morphology and Anatomy of Earthworm/Frog"] },
+            { "chapter": "Chemical Coordination and Integration", "topics": ["Endocrine Glands and Hormones", "Human Endocrine System", "Mechanism of Hormone Action", "Hormonal Disorders"] },
+            { "chapter": "Body Fluids and Circulation", "topics": ["Blood Composition and Coagulation", "Lymph and Tissue Fluid", "Human Circulatory System and Cardiac Cycle", "Regulation of Cardiac Activity and Disorders"] },
+            { "chapter": "Neural Control and Coordination", "topics": ["Neuron as Structural and Functional Unit", "Central Nervous System (Brain and Spinal Cord)", "Reflex Action and Sensory Organs", "Generation and Conduction of Nerve Impulse"] },
+            { "chapter": "Excretory Products and their Elimination", "topics": ["Modes of Excretion and Human Excretory System", "Mechanism of Urine Formation", "Regulation of Kidney Function", "Role of Other Organs in Excretion and Disorders"] },
+            { "chapter": "Breathing and Exchange of Gases", "topics": ["Respiratory Organs and Human Respiratory System", "Mechanism of Breathing and Respiratory Volumes", "Exchange and Transport of Gases", "Regulation of Respiration and Disorders"] },
+            { "chapter": "Locomotion and Movement", "topics": ["Types of Movement and Muscle Contraction", "Structure of Contractile Proteins", "Human Skeletal System (Axial and Appendicular)", "Joints and Disorders of Muscular & Skeletal System"] },
+            { "chapter": "Reproductive Health", "topics": ["Reproductive Health - Problems and Strategies", "Population Explosion and Birth Control", "Sexually Transmitted Diseases (STDs)", "Infertility and Assisted Reproductive Technologies (ART)"] },
+            { "chapter": "Human Reproduction", "topics": ["Male Reproductive System", "Female Reproductive System", "Gametogenesis (Spermatogenesis & Oogenesis)", "Menstrual Cycle, Fertilization, and Embryonic Development"] },
+            { "chapter": "Molecular Basis of Inheritance", "topics": ["DNA as Genetic Material and Structure of Polynucleotide Chain", "Packaging of DNA and DNA Replication", "Transcription and Genetic Code", "Translation and Regulation of Gene Expression (Lac Operon)"] },
+            { "chapter": "Principles of Inheritance and Variation", "topics": ["Mendel's Laws of Inheritance", "Inheritance of One and Two Genes", "Sex Determination and Linkage/Recombination", "Genetic Disorders and Pedigree Analysis"] },
+            { "chapter": "Evolution", "topics": ["Origin of Life and Evidences of Evolution", "Theories of Evolution (Darwinism, Lamarckism, Mutation Theory)", "Mechanism of Evolution (Hardy-Weinberg Principle)", "Human Evolution"] },
+            { "chapter": "Human Health and Diseases", "topics": ["Common Diseases in Humans (Bacterial, Viral, Protozoan, Fungal)", "Immunity (Innate and Acquired, Active and Passive)", "AIDS and Cancer", "Drug and Alcohol Abuse"] },
+            { "chapter": "Microbes in Human Welfare", "topics": ["Microbes in Household Products and Industrial Products", "Microbes in Sewage Treatment and Biogas Production", "Microbes as Biocontrol Agents", "Microbes as Biofertilizers"] },
+            { "chapter": "Biotechnology and Its Applications", "topics": ["Biotechnology Applications in Agriculture (Bt Crops, RNAi)", "Biotechnology Applications in Medicine (Insulin, Gene Therapy)", "Transgenic Animals", "Ethical Issues and Biopiracy"] },
+            { "chapter": "Biotechnology - Principles and Processes", "topics": ["Principles of Biotechnology (Genetic Engineering)", "Tools of Recombinant DNA Technology (Restriction Enzymes, PCR)", "Processes of Recombinant DNA Technology", "Downstream Processing"] },
+            { "chapter": "Organisms and Populations", "topics": ["Organism and Its Environment (Abiotic Factors)", "Responses to Abiotic Factors and Adaptations", "Population Attributes (Age Pyramids, Growth Models)", "Population Interactions (Mutualism, Competition, Predation, Parasitism)"] }
+        ];
+
+        // JEE topic data
+        const jeePhysicsRaw = [
+            { "chapter": "Alternating Current", "topics": ["Alternating Current, Voltage and Power", "AC Circuits", "Quality and Power Factor", "Transformers", "Parallel AC Circuits"] },
+            { "chapter": "Atomic Physics", "topics": ["Atomic Models", "Atomic Structure", "Bohr's Atomic Model", "Atomic Spectrum"] },
+            { "chapter": "Capacitance", "topics": ["Capacitance", "Grouping of Capacitors", "Capacitors with Dielectric", "Force and Energy stored in Capacitor", "Charging and Discharging of Capacitors"] },
+            { "chapter": "Center of Mass Momentum and Collision", "topics": ["Momentum", "Centre of Mass of Discrete Particles", "Centre of Mass of Continuous Mass Distribution", "Motion of Centre of Mass", "Impulse", "Collisions", "Variable Mass System"] },
+            { "chapter": "Current Electricity", "topics": ["Electric Current and Drift of Electrons", "Resistance and Resistivity", "Combination of Resistances", "Electric Cell or Battery", "Kirchoffs Laws", "Electric Power and Heating Effect of Current", "Wheatstone Bridge", "Electric Instruments"] },
+            { "chapter": "Dual Nature of Matter", "topics": ["Cathode Rays and Positive Rays", "Matter Waves", "Photoelectric Effect"] },
+            { "chapter": "Electromagnetic Induction", "topics": ["Magnetic Flux, Faraday's and Lenz law", "Induced Electric Field", "Motional and Rotational EMF", "Inductance", "Self and Mutual Inductance", "LR Circuit"] },
+            { "chapter": "Electromagnetic Waves", "topics": ["Electromagnetic Waves and Maxwell's equations", "Electromagnetic Spectrum", "X-Rays"] },
+            { "chapter": "Electrostatics", "topics": ["Electric Charge and Coulomb's law", "Electric Field and Electric Field Lines", "Electric Potential and Potential Energy", "Electric Dipole", "Electric Flux and Gauss Law"] },
+            { "chapter": "Experimental Physics", "topics": ["Experimental Physics", "Vernier Callipers"] },
+            { "chapter": "Gravitation", "topics": ["Newton's Law of Gravitation", "Gravitational field", "Acceleration Due to Gravity", "Work done", "Gravitational potential and Potential Energy", "Motion of satellite", "Kepler laws"] },
+            { "chapter": "Kinetic Theory of Gases", "topics": ["Gas Laws", "Speed of Gas", "Degree of Freedom and Specific Heat", "Pressure and Energy of gas"] },
+            { "chapter": "Laws of Motion", "topics": ["Newton's laws of motion", "Equilibrium of Forces", "Spring force", "Frictional force", "Non-uniform Circular Motion"] },
+            { "chapter": "Magnetic Effects of Current", "topics": ["Biot-Savart's Law and Ampere's Circuital Law", "Magnetic Field", "Motion of Charged Particle in Magnetic Field", "Force and Torque on Current Carrying Conductor", "Magnetic Moment", "Magnetic Dipole"] },
+            { "chapter": "Magnetic Properties of Matter", "topics": ["Magnetism and Properties of Magnet", "Magnetic Equipments", "Magnetic Materials and their Properties"] },
+            { "chapter": "Mathematics in Physics", "topics": ["Fundamentals of Vectors", "Addition and Subtraction of Vectors", "Multiplication of Vectors", "Errors of Measurement", "Significant numbers"] },
+            { "chapter": "Mechanical Properties of Fluids", "topics": ["Pressure and Thrust", "Pascal's Law", "Aechmidies Principle", "Hydrodynamics", "Efflux of Liquid", "Surface Tension", "Viscosity"] },
+            { "chapter": "Mechanical Properties of Solids", "topics": ["Elasticity", "Young's Modulus and Breaking Stress", "Bulk Modulus", "Shearing stress", "Work Done in Stretching a Wire"] },
+            { "chapter": "Motion In One Dimension", "topics": ["Rest and Motion", "Uniform Motion", "Graphs of motion in one dimension", "Non-uniform Motion", "Relative Motion", "Motion Under Gravity"] },
+            { "chapter": "Motion In Two Dimensions", "topics": ["Relative motion", "Projectile motion", "Uniform Circular Motion"] },
+            { "chapter": "Nuclear Physics", "topics": ["Nuclear structure", "Nuclear energy", "Nuclear reactions"] },
+            { "chapter": "Oscillations", "topics": ["Simple Harmonic Motion", "Energy of Simple Hormonic Motion", "Time Period and Frequency", "Applications of SHM", "Superposition of SHM's and Resonance", "Angular Oscillations"] },
+            { "chapter": "Ray Optics", "topics": ["Reflection of Light from Plane Mirror", "Mirror Formula, Reflection in Spherical Mirror", "Critical angle and total internal reflection", "Refraction of light from plane surface", "Lens Formula, Refraction of light from curved surface", "Combination of Lens and Mirrors", "Prism and Dispersion of Light", "Optical Instruments", "Human eye"] },
+            { "chapter": "Rotational Motion", "topics": ["Moment of inertia of rigid bodies", "Torque", "Rotational kinematics", "Angular momentum and Angular impulse", "Rolling without Slipping", "Combination of translation and rotation", "Collisions in rotation"] },
+            { "chapter": "Semiconductors", "topics": ["Energy Bands in Solids", "Semiconductors", "Diodes", "Logic Gates", "Rectifier", "Special purpose diodes"] },
+            { "chapter": "Thermal Properties of Matter", "topics": ["Thermometry", "Thermal Expansion", "Calorimetry", "Conduction", "Radiation"] },
+            { "chapter": "Thermodynamics", "topics": ["Thermodynamic Systems", "First Law of Thermodynamics", "Thermodynamic Processes", "Heat Engine, Refrigerator and Second Law of Thermodynamics"] },
+            { "chapter": "Units and Dimensions", "topics": ["Units", "Dimensions", "Errors of Measurement"] },
+            { "chapter": "Wave Optics", "topics": ["Wave Theory and Wavefronts", "Interference of Light", "Young's Double Slit Experiment", "Special Cases in YDSE", "Diffraction of Light", "Polarization of Light"] },
+            { "chapter": "Waves and Sound", "topics": ["Basics of Mechanical Waves", "Travelling Waves", "Interference and Superposition of Waves", "Stationary waves", "Vibration of String", "Organ Pipe (Vibration of Air Column)", "Beats", "Speed of Sound Waves", "Properties of Sound Waves"] },
+            { "chapter": "Work Power Energy", "topics": ["Work done", "Energy", "Power", "Circular motion"] }
+        ];
+
+        const jeeChemistryRaw = [
+            { "chapter": "Alcohols, Phenols and Ethers", "topics": ["Preparation and Properties of Alcohols", "Reactions of Alcohols", "Preparation of Phenols", "Reactions of Phenol", "Tests for aldehyde and ketones", "Preparation of Ethers", "Reactions of Ethers", "Preparation of Oxiranes", "Reactions of Oxiranes", "Dihydric alcohols", "Preparation and Reactions of Glycol", "Reactions of Carbonyl Compounds", "Tests for Aldehyde and Ketones", "Properties of Phenol"] },
+            { "chapter": "Aldehydes and Ketones", "topics": ["Method of preparation for both aldehydes and ketones", "Method of preparation for Aldehydes", "Method of preparation for Ketones", "Chemical reactions for aldehydes and ketones", "Reactions for aldehydes", "Tests for aldehyde and ketones"] },
+            { "chapter": "Amines", "topics": ["Preparation and Properties of Amines", "Separation of mixture of amines", "Preparation and Properties of Amides", "Preparation and Properties of Cyanides", "Preparation and Properties of Isocyanides"] },
+            { "chapter": "Biomolecules", "topics": ["Disaccharides and Polysaccharides", "Carbohydrates", "Preparation and Reactions of Glucose", "Properties and Preparation of Amino Acids", "Proteins", "Nucleic Acids", "Vitamins"] },
+            { "chapter": "Carboxylic Acid Derivatives", "topics": ["Reactions Involving Acid Group", "Preparation and Properties of Carboxylic Acids", "Reaction Involving Cleavage of -OH Group", "Preparation and Properties of Acid Derivatives", "Preparation and Properties of Esters"] },
+            { "chapter": "Chemical Bonding and Molecular Structure", "topics": ["Covalent and Co-ordinate Bonding", "Hybridisation and VSEPR Theory", "Molecular Orbital Theory", "Ionic bond", "Polarization", "Properties of ionic compounds", "Dipole moment", "Van Der Waals Forces, Hydrogen Bonding and Metallic Bonding"] },
+            { "chapter": "Chemical Equilibrium", "topics": ["Law of Mass Action, Equilibrium Constant (Kc and Kp) and its Application", "Le chatelier's principle"] },
+            { "chapter": "Chemical Kinetics", "topics": ["Rate of reaction", "Rate law and rate constant", "Integrated rate laws", "Methods to determine order of reaction", "Parallel and Sequencial rate laws", "Arrhenius theory"] },
+            { "chapter": "Classification of Elements and Periodicity", "topics": ["Earlier attempts of periodic classification", "Modern periodic table", "Periodic properties"] },
+            { "chapter": "Coordination Compounds", "topics": ["Terminology of coordination compounds", "Nomenclature of coordination compounds", "Isomerism of coordination compounds", "Werner's theory and Valence Bond Theory", "Crystal Field Theory", "Stability of complex ion", "Carbonyl Compounds"] },
+            { "chapter": "d and f Block Elements", "topics": ["Properties of D-block elements", "Compounds of Transition Metals", "F-Block elements"] },
+            { "chapter": "Electrochemistry", "topics": ["Cells and Electrode Potential, Nernst Equation", "Types of half cells", "Concentration cell", "Commercial Cells and Batteries", "Corrosion", "Conductance and Conductivity"] },
+            { "chapter": "General Organic Chemistry", "topics": ["IUPAC Nomenclature", "Classification of organic compounds", "Reaction Intermediates", "Electron displacement effects", "Conjugation and Aromaticity", "Attacking reagents", "Isomerism of Organic Compounds", "Purification of Organic Compounds", "Qualitative analysis of organic compounds", "Quantitative analysis of organic compounds"] },
+            { "chapter": "Haloalkanes and Haloarenes", "topics": ["Preparation and Properties of Monohalides", "Preparation and Properties of Geminal and Vicinal Dihalides", "Preparation and Properties of Aryl Halides", "Grignard Reagent"] },
+            { "chapter": "Hydrocarbons", "topics": ["Properties and Preparation of Alkanes", "Reactions of alkanes", "Properties and Preparation of Alkenes", "Reactions of alkenes", "Preparation and Reactions of Conjugate Dienes", "Preparation and Reactions of cycloalkanes and cycloalkenes", "Preparation and Properties of Benzene", "Reactions of Benzene", "Reactions of aromatic compounds"] },
+            { "chapter": "Ionic Equilibrium", "topics": ["Theories of Acids and Bases", "Ionic Product of Water", "PH of solutions", "Salt Hydrolysis", "Buffer solutions", "Solubility"] },
+            { "chapter": "p Block Elements (Group 13 & 14)", "topics": ["Boron and Its Compounds", "Aluminium and Its Compounds", "Carbon and Its Compounds", "Silicon and Its Compounds", "Tin and Lead Containing Compounds"] },
+            { "chapter": "p Block Elements (Group 15, 16, 17 & 18)", "topics": ["Nitrogen and Its Compounds", "Phosphorus and Its Compounds", "Oxygen and Its Compounds", "Sulphur and Its Compounds", "Halogens and Its Compounds", "Noble Gases"] },
+            { "chapter": "Practical Chemistry", "topics": ["Preliminary Tests", "Radicals", "Identification of Acid Radicals", "Identification of Basic Radicals"] },
+            { "chapter": "Redox Reactions", "topics": ["Oxidation and Reduction Reactions", "Types of redox reactions", "Oxidation number", "Balancing of redox reactions", "Equivalence concept", "Redox titration"] },
+            { "chapter": "Solutions", "topics": ["Solubility and Concentration of Solutions", "Vapour pressure and raoult's law", "Henry's law", "Colligative Properties and Abnormal Molecular Masses"] },
+            { "chapter": "Some Basic Concepts of Chemistry", "topics": ["Laws of chemical combination", "Mole concept", "Quantitative measures in chemical equations", "Concentration terms"] },
+            { "chapter": "Structure of Atom", "topics": ["Atomic Models", "Atomic Mass and Atomic Size", "Bohr's model", "Hydrogen spectrum", "Dual Behaviour of Matter and Heisenberg Uncertainty Principle", "Quantum mechanical model", "Electronic configuration"] },
+            { "chapter": "Thermodynamics", "topics": ["System and surrounding", "First Law and Basic Fundamentals of Thermodynamics", "Laws of Thermochemistry and Enthalpy Change", "Entropy and Second law of thermodynamics", "Third law of thermodynamics", "Carnot engine"] }
+        ];
+
+        const jeeMathsRaw = [
+            { "chapter": "Application of Derivatives", "topics": ["Rate Measure Error and Approximation", "Monotonicity", "Maxima Minima"] },
+            { "chapter": "Area Under Curves", "topics": ["Area of Curve along axis", "Area bounded by two curves", "Area bounded by Miscellaneous Curves"] },
+            { "chapter": "Basic of Mathematics", "topics": ["Logarithm", "Inequalities"] },
+            { "chapter": "Binomial Theorem", "topics": ["Terms of Binomial Expansion", "Remainder and Divisibility Problems", "Integral and Fractional Part of a Number", "Comparison between two numbers", "Multinomial Theorem", "Properties of Binomial Coefficients", "Sum of Series", "Binomial Theorem for Negative Index"] },
+            { "chapter": "Circle", "topics": ["General Equation of 2nd degree curve", "Equation of Circle & its intercept", "Position of point", "line and circle", "Tangent to circle", "Chord of Contact", "Chord with given Middle Point", "Intersection of Circles", "Common Tangents", "Common Chord", "Locus"] },
+            { "chapter": "Complex Number", "topics": ["Power of iota", "Algebra of complex numbers", "Conjugate, modulus and argument", "Polar and Euler Form", "Cube Root of Unity", "De Moivres Theorem", "nth roots of unity", "Rotation Theorem", "Locus Based on Distance Formula", "Geometry of Complex Number"] },
+            { "chapter": "Continuity and Differentiability", "topics": ["Continuity", "Differentiability"] },
+            { "chapter": "Definite Integration", "topics": ["Definite Integration by Parts", "Definite Integration by Substitution", "Properties of Definitive Integration", "Properties of Periodic Functions", "Leibnitz Rule of Differentiation", "Definite Integration by Reduction Formula", "Properties Involving Inequalities", "Walli's Formula", "Miscellaneous"] },
+            { "chapter": "Determinants", "topics": ["Expansion of Determinants", "Multiplication of Determinants", "Differentiation and Integration of Determinants", "System of Linear Equations", "Miscellaneous"] },
+            { "chapter": "Differential Equations", "topics": ["Order and Degree", "Variable Separable Form", "Homogeneous DE", "Linear Differential Equation", "Exact Forms", "Applications of DE"] },
+            { "chapter": "Differentiation", "topics": ["Differentiation of composite functions", "Differentiation of implicit functions", "Parametric differentiation", "Logarithmic differentiation", "Derivative of f(x) wrt g(x)", "Differentiation of Inverse Trigonometric Functions", "Derivative of function and its inverse", "Higher order derivatives", "Functional Equation", "Differentiation of determinants"] },
+            { "chapter": "Ellipse", "topics": ["General Equation of 2nd degree curve", "Equation of Ellipse", "Position of point", "Auxillary Circle", "Chord of ellipse", "Line and ellipse", "Chord of Contact", "Reflection property", "Chord with given Middle Point", "Locus"] },
+            { "chapter": "Functions", "topics": ["Domain", "Range", "Odd and Even Functions", "Periodicity", "Composite Function", "Types of Function (Mapping)", "Inverse of a Function", "Functional Equation", "Definition of Function", "Number of Solutions"] },
+            { "chapter": "Hyperbola", "topics": ["Equation of hyperbola", "Line and hyperbola", "Chord with given Middle Point", "Locus", "Rectangular hyperbola", "Mixed Questions of Ellipse and Hyperbola"] },
+            { "chapter": "Indefinite Integration", "topics": ["Integration by Substitution", "Integration by Parts", "Integration using Partial Fraction", "Miscellaneous Forms"] },
+            { "chapter": "Inverse Trigonometric Functions", "topics": ["Principal Value and Basics", "T inverse T property", "Converting one Inverse T function to other Inverse T", "Sum of complementary angles", "Sum And Difference Of Angles", "Multiple Angles", "Infinite Series"] },
+            { "chapter": "Limits", "topics": ["Existance of Limit", "Algebraic and Rational Limits", "Trigonometric and Inverse Trigonometric limits", "Exponential and logarithmic limits", "Special Forms", "Miscellaneous"] },
+            { "chapter": "Matrices", "topics": ["Formation and Basic of Matrix", "Basic Algebra of Matrices", "Product of Matrices", "Trace of a Matrix", "Symmetric & Skew Symmetric Matrices", "Types of Matrices", "Adjoint and its Properties", "Inverse of a Matrix", "Rank of Matrix"] },
+            { "chapter": "Parabola", "topics": ["General Equation of 2nd degree curve", "standard equation of parabola", "Chord of parabola", "Line and parabola", "Chord of Contact", "Locus", "Properties of Tangent", "Chord with given Middle Point"] },
+            { "chapter": "Permutation Combination", "topics": ["Factorial", "Permutation", "Combination", "Arrangement under Constraint", "Circular Permutation", "Selection of one or more item", "Division and Distribution of Distinct Items", "Division of Identical items", "Summation of Numbers", "Rearrangement", "Geometric Permutation", "Exponent of prime"] },
+            { "chapter": "Probability", "topics": ["Classical Definition of Probability", "Addition and Subtraction Theorems", "Conditional Probability and Multiplication Theorem", "Independent Events", "Total Probability", "Baye's Theorem", "Random Variable and its Probability Distribution", "Geometric Probability"] },
+            { "chapter": "Quadratic Equation", "topics": ["Relation between Roots and Coefficients", "Common Roots", "Graph and Sign of Quadratic", "Range of Quadratic Function", "Location of Roots", "N degree equation", "Descartes Rule of Sign"] },
+            { "chapter": "Sequences and Series", "topics": ["Arithmetic Progression", "Geometric Progression", "Mixed Question on AP and GP", "Harmonic Progression", "Means", "Summation of Series", "Inequalities"] },
+            { "chapter": "Sets and Relations", "topics": ["Questions on Symmetric Transitive and Reflexive Properties", "Questions on Venn Diagram", "Questions on number of relations and sets"] },
+            { "chapter": "Statistics", "topics": ["Statistics", "Mean", "Median", "Mode", "Relation Between Mean, Median and Mode", "Measures of Dispersion", "Mean Square Deviation", "Relation Between Variance and Mean Deviation"] },
+            { "chapter": "Straight Lines", "topics": ["Coordinate System", "Basic Forms of Straight Line", "Angle between Lines", "Derived Forms of Line", "Position of a point", "Point and Line", "Concurrency & Family of Lines", "Locus"] },
+            { "chapter": "Three Dimensional Geometry", "topics": ["Basics of point in 3 dimension", "Direction Cosines and Direction Ratios", "Line in Space"] },
+            { "chapter": "Trigonometric Ratios & Identities", "topics": ["Measurement of Angles", "Basic Identities & T Ratios", "Sum and Difference & Multiple angle Formula", "Transformation Formulas", "T-Ratios of Multiple & sub multiple angles", "Maximum and Minimum Values", "Trigonometric Series", "Number of Solutions"] },
+            { "chapter": "Vector Algebra", "topics": ["Algebra of Vectors", "Product of 2 vectors", "Scalar Triple Product", "Vector Triple Product"] }
+        ];
+
+        function arrayToTopicObj(arr) {
+            const obj = {};
+            arr.forEach(item => { obj[item.chapter] = item.topics; });
+            return obj;
+        }
+        const neetPhysicsTopics = arrayToTopicObj(neetPhysicsRaw);
+        const neetChemistryTopics = arrayToTopicObj(neetChemistryRaw);
+        const neetBotanyTopics = arrayToTopicObj(neetBotanyRaw);
+        const neetZoologyTopics = arrayToTopicObj(neetZoologyRaw);
+        const jeePhysicsTopics = arrayToTopicObj(jeePhysicsRaw);
+        const jeeChemistryTopics = arrayToTopicObj(jeeChemistryRaw);
+        const jeeMathsTopics = arrayToTopicObj(jeeMathsRaw);
+
+        function getChapterListFor(course, subject) {
+            if (course === 'NEET') {
+                if (subject === 'Physics') return Object.keys(neetPhysicsTopics);
+                if (subject === 'Chemistry') return Object.keys(neetChemistryTopics);
+                if (subject === 'Botany') return Object.keys(neetBotanyTopics);
+                if (subject === 'Zoology') return Object.keys(neetZoologyTopics);
+                if (subject === 'Biology') return [...Object.keys(neetBotanyTopics), ...Object.keys(neetZoologyTopics)];
+                return null;
+            }
+            if (course === 'JEE') {
+                if (subject === 'Physics') return Object.keys(jeePhysicsTopics);
+                if (subject === 'Chemistry') return Object.keys(jeeChemistryTopics);
+                if (subject === 'Mathematics') return Object.keys(jeeMathsTopics);
+                return null;
+            }
+            if (course === 'MHT CET') {
+                if (subject === 'Physics') return Object.keys(mhtcetPhysicsTopics);
+                if (subject === 'Mathematics') return Object.keys(mhtcetMathematicsTopics);
+                if (subject === 'Chemistry') return Object.keys(mhtcetChemistryTopics);
+                if (subject === 'Botany') return Object.keys(neetBotanyTopics);
+                if (subject === 'Zoology') return Object.keys(neetZoologyTopics);
+                if (subject === 'Biology') return [...Object.keys(neetBotanyTopics), ...Object.keys(neetZoologyTopics)]; // fallback combined
+                return null;
+            }
+            return null;
+        }
+
+        function getTopicsForChapter(course, subject, chapter) {
+            if (course === 'NEET' || (course === 'MHT CET' && (subject === 'Biology' || subject === 'Botany' || subject === 'Zoology'))) {
+                if (subject === 'Physics' && neetPhysicsTopics[chapter]) return neetPhysicsTopics[chapter];
+                if (subject === 'Chemistry' && neetChemistryTopics[chapter]) return neetChemistryTopics[chapter];
+                if (subject === 'Botany' && neetBotanyTopics[chapter]) return neetBotanyTopics[chapter];
+                if (subject === 'Zoology' && neetZoologyTopics[chapter]) return neetZoologyTopics[chapter];
+                if (subject === 'Biology') {
+                    return (neetBotanyTopics[chapter] || neetZoologyTopics[chapter] || null);
+                }
+                return null;
+            }
+            if (course === 'JEE') {
+                if (subject === 'Physics' && jeePhysicsTopics[chapter]) return jeePhysicsTopics[chapter];
+                if (subject === 'Chemistry' && jeeChemistryTopics[chapter]) return jeeChemistryTopics[chapter];
+                if (subject === 'Mathematics' && jeeMathsTopics[chapter]) return jeeMathsTopics[chapter];
+                return null;
+            }
+            if (course === 'MHT CET') {
+                if (subject === 'Physics' && mhtcetPhysicsTopics[chapter]) return mhtcetPhysicsTopics[chapter];
+                if (subject === 'Chemistry' && mhtcetChemistryTopics[chapter]) return mhtcetChemistryTopics[chapter];
+                if (subject === 'Mathematics' && mhtcetMathematicsTopics[chapter]) return mhtcetMathematicsTopics[chapter];
+                return null;
+            }
+            return null;
+        }
+
+        // ============================
+        // Daily Teacher Verification
+        // ============================
+        let teacherData = null;
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                localStorage.removeItem("teacherVerification");
+                window.location.href = "../role-selection.html";
+                return;
+            }
+            const cached = JSON.parse(localStorage.getItem("teacherVerification"));
+            const today = new Date().toISOString().split('T')[0];
+            if (cached && cached.uid === user.uid && cached.date === today) {
+                teacherData = cached.teacherData || null;
+                initPage();
+                return;
+            }
+            try {
+                const docSnap = await db.collection("teachers").doc(user.uid).get();
+                if (docSnap.exists && docSnap.data().role === "teacher") {
+                    teacherData = docSnap.data();
+                    localStorage.setItem("teacherVerification", JSON.stringify({
+                        uid: user.uid,
+                        date: today,
+                        teacherData
+                    }));
+                    initPage();
+                } else {
+                    localStorage.removeItem("teacherVerification");
+                    auth.signOut();
+                    window.location.href = "../role-selection.html";
+                }
+            } catch (err) {
+                console.error(err);
+                localStorage.removeItem("teacherVerification");
+                auth.signOut();
+                window.location.href = "../role-selection.html";
+            }
+        });
+
+        // ============================
+        // Page Initialization
+        // ============================
+        const form = document.getElementById('createTestForm');
+        const submitButton = document.getElementById('submitButton');
+        const updateButton = document.getElementById('updateButton');
+        const cancelButton = document.getElementById('cancelButton');
+        let editingTestId = null;
+
+        // Custom Multiselect Selections state
+        let selectedChapters = [];
+        let selectedTopics = [];
+
+        // Examin8 global states
+        let compiledQuestions = [];
+        let bankQuestions = [];
+        let selectedQuestionsMap = {};
+        let tempSelectedMap = {};
+
+        async function initPage() {
+            // Set min datetime to today
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('testDateTime').min = now.toISOString().slice(0, 16);
+
+            await loadDraft();
+
+            const editId = localStorage.getItem('editTestId');
+            if (editId) {
+                await loadTestForEditing(editId);
+                localStorage.removeItem('editTestId');
+            }
+
+            let autoSaveTimeout;
+            document.querySelectorAll('#createTestForm input, #createTestForm select, #createTestForm textarea').forEach(input => {
+                input.addEventListener('input', () => {
+                    clearTimeout(autoSaveTimeout);
+                    autoSaveTimeout = setTimeout(saveDraft, 2000);
+                });
+            });
+
+            // Close dropdowns on clicking outside
+            document.addEventListener('click', (e) => {
+                document.querySelectorAll('.custom-multiselect').forEach(el => {
+                    if (!el.contains(e.target)) {
+                        el.classList.remove('active');
+                        el.querySelector('.multiselect-dropdown').classList.remove('active');
+                    }
+                });
+            });
+
+            setupHamburger();
+            addRippleEffect();
+            updateBuilderVisibility();
+        }
+
+        // ============================
+        // Class and Subject Cascades
+        // ============================
+        function getCourseFromClass(cls) {
+            if (cls.includes('jee')) return 'JEE';
+            if (cls.includes('neet')) return 'NEET';
+            if (cls.includes('mhtcet')) return 'MHT CET';
+            return '';
+        }
+
+        function onClassChange(setDefaults = false) {
+            const cls = document.getElementById("testClass").value;
+            const subjectGroup = document.getElementById("subjectFormGroup");
+            const subjectSelect = document.getElementById("testSubject");
+
+            // Reset dynamic fields
+            subjectGroup.style.display = "none";
+            document.getElementById("chaptersFormGroup").style.display = "none";
+            document.getElementById("topicsFormGroup").style.display = "none";
+            selectedChapters = [];
+            selectedTopics = [];
+            compiledQuestions = [];
+            selectedQuestionsMap = {};
+            updateChips('chapters');
+            updateChips('topics');
+            renderCompiledQuestions();
+            updateBuilderVisibility();
+
+            if (!cls) return;
+
+            if (setDefaults) {
+                if (cls.includes('jee')) {
+                    document.getElementById('numberOfQuestions').value = 75;
+                    document.getElementById('marksPerQuestion').value = 4;
+                    document.getElementById('negativeMarking').value = 'yes';
+                    toggleNegativeMarkValue();
+                    document.getElementById('negativeMarkValue').value = 1;
+                } else if (cls.includes('neet')) {
+                    document.getElementById('numberOfQuestions').value = 180;
+                    document.getElementById('marksPerQuestion').value = 4;
+                    document.getElementById('negativeMarking').value = 'yes';
+                    toggleNegativeMarkValue();
+                    document.getElementById('negativeMarkValue').value = 1;
+                } else if (cls.includes('pcb')) {
+                    document.getElementById('numberOfQuestions').value = 200;
+                    document.getElementById('marksPerQuestion').value = 1;
+                    document.getElementById('negativeMarking').value = 'no';
+                    toggleNegativeMarkValue();
+                } else if (cls.includes('pcm')) {
+                    document.getElementById('numberOfQuestions').value = 150;
+                    document.getElementById('marksPerQuestion').value = 1;
+                    document.getElementById('negativeMarking').value = 'no';
+                    toggleNegativeMarkValue();
+                }
+                autoCalculateTotalMarks();
+            }
+
+            subjectGroup.style.display = "flex";
+            subjectSelect.innerHTML = '<option value="">Choose a subject</option>';
+
+            const course = getCourseFromClass(cls);
+            let subjects = [];
+            if (course === 'JEE' || cls.includes('pcm')) {
+                subjects = ["Physics", "Chemistry", "Mathematics"];
+            } else if (course === 'NEET' || cls.includes('pcb')) {
+                subjects = ["Physics", "Chemistry", "Biology", "Botany", "Zoology"];
+            }
+
+            subjects.forEach(sub => {
+                const opt = document.createElement("option");
+                opt.value = sub;
+                opt.textContent = sub;
+                subjectSelect.appendChild(opt);
+            });
+            toggleNegativeMarkValue();
+            saveDraft();
+        }
+
+        function onSubjectChange() {
+            const cls = document.getElementById("testClass").value;
+            const sub = document.getElementById("testSubject").value;
+            const chaptersGroup = document.getElementById("chaptersFormGroup");
+            const chaptersList = document.getElementById("chaptersOptionsList");
+
+            // Reset chapters and topics selections
+            chaptersGroup.style.display = "none";
+            document.getElementById("topicsFormGroup").style.display = "none";
+            selectedChapters = [];
+            selectedTopics = [];
+            compiledQuestions = [];
+            selectedQuestionsMap = {};
+            updateChips('chapters');
+            updateChips('topics');
+            renderCompiledQuestions();
+            updateBuilderVisibility();
+
+            if (!cls || !sub) return;
+
+            chaptersGroup.style.display = "flex";
+            chaptersList.innerHTML = "";
+
+            const course = getCourseFromClass(cls);
+            const chapters = getChapterListFor(course, sub);
+
+            if (chapters && chapters.length > 0) {
+                chapters.sort().forEach(chap => {
+                    const optionDiv = document.createElement("div");
+                    optionDiv.className = "multiselect-option";
+                    optionDiv.onclick = (e) => toggleCheckboxSelection('chapters', chap, e);
+
+                    const chk = document.createElement("input");
+                    chk.type = "checkbox";
+                    chk.value = chap;
+                    chk.id = `chk_chap_${chap.replace(/\s+/g, '_')}`;
+                    chk.onclick = (e) => e.stopPropagation();
+                    chk.onchange = () => handleCheckboxChange('chapters', chk);
+
+                    const lbl = document.createElement("span");
+                    lbl.textContent = chap;
+
+                    optionDiv.appendChild(chk);
+                    optionDiv.appendChild(lbl);
+                    chaptersList.appendChild(optionDiv);
+                });
+            } else {
+                chaptersList.innerHTML = '<div style="padding:10px; color:#64748b;">No chapters available</div>';
+            }
+            saveDraft();
+        }
+
+        function updateBuilderVisibility() {
+            const builder = document.getElementById("questionBuilderCard");
+            const testClass = document.getElementById("testClass").value;
+            const testSubject = document.getElementById("testSubject").value;
+            if (testClass && testSubject && selectedChapters.length > 0 && selectedTopics.length > 0) {
+                builder.style.display = "block";
+            } else {
+                builder.style.display = "none";
+            }
+        }
+
+        // ============================
+        // Custom Multiselect Handlers
+        // ============================
+        function toggleMultiselectDropdown(containerId, event) {
+            event.stopPropagation();
+            const container = document.getElementById(containerId);
+            const dropdown = container.querySelector('.multiselect-dropdown');
+            const isActive = container.classList.contains('active');
+
+            // Close all other dropdowns
+            document.querySelectorAll('.custom-multiselect').forEach(el => {
+                el.classList.remove('active');
+                el.querySelector('.multiselect-dropdown').classList.remove('active');
+            });
+
+            if (!isActive) {
+                container.classList.add('active');
+                dropdown.classList.add('active');
+                dropdown.querySelector('.multiselect-search').focus();
+            }
+        }
+
+        function filterOptionsList(listId, query) {
+            const list = document.getElementById(listId);
+            const q = query.toLowerCase();
+            list.querySelectorAll('.multiselect-option').forEach(opt => {
+                const text = opt.querySelector('span').textContent.toLowerCase();
+                opt.style.display = text.includes(q) ? 'flex' : 'none';
+            });
+        }
+
+        function toggleCheckboxSelection(type, value, event) {
+            const chkId = type === 'chapters'
+                ? `chk_chap_${value.replace(/\s+/g, '_')}`
+                : `chk_topic_${value.replace(/\s+/g, '_')}`;
+            const chk = document.getElementById(chkId);
+            if (chk) {
+                chk.checked = !chk.checked;
+                handleCheckboxChange(type, chk);
+            }
+        }
+
+        function handleCheckboxChange(type, checkbox) {
+            const val = checkbox.value;
+            if (type === 'chapters') {
+                if (checkbox.checked) {
+                    if (!selectedChapters.includes(val)) selectedChapters.push(val);
+                } else {
+                    selectedChapters = selectedChapters.filter(x => x !== val);
+                    // Remove dependent topics
+                    const cls = document.getElementById("testClass").value;
+                    const sub = document.getElementById("testSubject").value;
+                    const course = getCourseFromClass(cls);
+                    const dependentTopics = getTopicsForChapter(course, sub, val) || [];
+                    selectedTopics = selectedTopics.filter(t => !dependentTopics.includes(t));
+                }
+                updateChips('chapters');
+                updateTopicsDropdown();
+            } else {
+                if (checkbox.checked) {
+                    if (!selectedTopics.includes(val)) selectedTopics.push(val);
+                } else {
+                    selectedTopics = selectedTopics.filter(x => x !== val);
+                }
+                updateChips('topics');
+            }
+            saveDraft();
+        }
+
+        function removeChip(type, value) {
+            const chkId = type === 'chapters'
+                ? `chk_chap_${value.replace(/\s+/g, '_')}`
+                : `chk_topic_${value.replace(/\s+/g, '_')}`;
+            const chk = document.getElementById(chkId);
+            if (chk) {
+                chk.checked = false;
+                handleCheckboxChange(type, chk);
+            } else {
+                // If checkbox element not found (e.g. topic checkbox not loaded), directly clear from state
+                if (type === 'chapters') {
+                    selectedChapters = selectedChapters.filter(x => x !== value);
+                    updateChips('chapters');
+                    updateTopicsDropdown();
+                } else {
+                    selectedTopics = selectedTopics.filter(x => x !== value);
+                    updateChips('topics');
+                }
+                saveDraft();
+            }
+        }
+
+        function updateChips(type) {
+            const container = document.getElementById(`${type}SelectedChips`);
+            const placeholder = document.getElementById(`${type}Placeholder`);
+            const list = type === 'chapters' ? selectedChapters : selectedTopics;
+
+            container.innerHTML = "";
+
+            if (list.length === 0) {
+                placeholder.style.display = "block";
+            } else {
+                placeholder.style.display = "none";
+                list.forEach(val => {
+                    const chipDiv = document.createElement("div");
+                    chipDiv.className = "chip";
+                    chipDiv.innerHTML = `<span>${val}</span><span class="chip-remove" onclick="event.stopPropagation(); removeChip('${type}', '${val.replace(/'/g, "\\'")}')">×</span>`;
+                    container.appendChild(chipDiv);
+                });
+            }
+            updateBuilderVisibility();
+        }
+
+        function updateTopicsDropdown() {
+            const cls = document.getElementById("testClass").value;
+            const sub = document.getElementById("testSubject").value;
+            const topicsGroup = document.getElementById("topicsFormGroup");
+            const topicsList = document.getElementById("topicsOptionsList");
+
+            if (selectedChapters.length === 0) {
+                topicsGroup.style.display = "none";
+                selectedTopics = [];
+                updateChips('topics');
+                return;
+            }
+
+            topicsGroup.style.display = "flex";
+            topicsList.innerHTML = "";
+
+            const course = getCourseFromClass(cls);
+            let allTopics = [];
+
+            selectedChapters.forEach(chap => {
+                const topics = getTopicsForChapter(course, sub, chap);
+                if (topics) {
+                    allTopics = [...allTopics, ...topics];
+                }
+            });
+
+            // Deduplicate topics
+            allTopics = [...new Set(allTopics)];
+
+            if (allTopics.length > 0) {
+                allTopics.sort().forEach(topic => {
+                    const optionDiv = document.createElement("div");
+                    optionDiv.className = "multiselect-option";
+                    optionDiv.onclick = (e) => toggleCheckboxSelection('topics', topic, e);
+
+                    const chk = document.createElement("input");
+                    chk.type = "checkbox";
+                    chk.value = topic;
+                    chk.id = `chk_topic_${topic.replace(/\s+/g, '_')}`;
+                    chk.checked = selectedTopics.includes(topic);
+                    chk.onclick = (e) => e.stopPropagation();
+                    chk.onchange = () => handleCheckboxChange('topics', chk);
+
+                    const lbl = document.createElement("span");
+                    lbl.textContent = topic;
+
+                    optionDiv.appendChild(chk);
+                    optionDiv.appendChild(lbl);
+                    topicsList.appendChild(optionDiv);
+                });
+            } else {
+                topicsList.innerHTML = '<div style="padding:10px; color:#64748b;">No topics available for selected chapters</div>';
+            }
+
+            // Sync chips in case some selected topics were removed by clearing their parent chapters
+            updateChips('topics');
+        }
+
+        // ============================
+        // Toggle Negative marking inputs
+        // ============================
+        function toggleNegativeMarkValue() {
+            const cls = document.getElementById("testClass").value;
+            const negSelect = document.getElementById("negativeMarking");
+            if (cls && cls.toLowerCase().includes('mhtcet')) {
+                negSelect.value = 'no';
+                negSelect.disabled = true;
+            } else {
+                negSelect.disabled = false;
+            }
+            const active = negSelect.value === 'yes';
+            document.getElementById("negValueFormGroup").style.display = active ? 'flex' : 'none';
+            saveDraft();
+        }
+
+        function autoCalculateTotalMarks() {
+            const cls = document.getElementById("testClass").value;
+            const qCount = parseInt(document.getElementById('numberOfQuestions').value) || 0;
+            if (cls.includes('pcm')) {
+                let total = 0;
+                if (qCount <= 100) {
+                    total = qCount * 1;
+                } else {
+                    total = 100 * 1 + (qCount - 100) * 2;
+                }
+                document.getElementById('totalMarks').value = total;
+                document.getElementById('marksPerQuestion').placeholder = "Split (1 & 2)";
+            } else {
+                const marksPerQ = parseFloat(document.getElementById('marksPerQuestion').value) || 0;
+                if (qCount > 0 && marksPerQ > 0) {
+                    document.getElementById('totalMarks').value = qCount * marksPerQ;
+                }
+                document.getElementById('marksPerQuestion').placeholder = "e.g., 4";
+            }
+        }
+
+        // ============================
+        // Draft Handling (Firestore)
+        // ============================
+        async function saveDraft() {
+            if (!teacherData || !auth.currentUser) return;
+            const draft = {
+                testTitle: document.getElementById('testTitle').value,
+                testClass: document.getElementById('testClass').value,
+                testSubject: document.getElementById('testSubject').value,
+                testDateTime: document.getElementById('testDateTime').value,
+                testDuration: document.getElementById('testDuration').value,
+                totalMarks: document.getElementById('totalMarks').value,
+                numberOfQuestions: document.getElementById('numberOfQuestions').value,
+                marksPerQuestion: document.getElementById('marksPerQuestion').value,
+                negativeMarking: document.getElementById('negativeMarking').value,
+                negativeMarkValue: document.getElementById('negativeMarkValue').value,
+                showResultImmediately: document.getElementById('showResultImmediately').value,
+                selectedChapters: selectedChapters,
+                selectedTopics: selectedTopics,
+                instructions: document.getElementById('instructions').value,
+                compiledQuestions: compiledQuestions,
+                lastSaved: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            try {
+                await db.collection("testDrafts").doc(auth.currentUser.uid).set(draft);
+                showAutoSaveIndicator();
+            } catch (err) {
+                console.error("Draft save failed", err);
+            }
+        }
+
+        async function loadDraft() {
+            if (!auth.currentUser) return;
+            try {
+                const doc = await db.collection("testDrafts").doc(auth.currentUser.uid).get();
+                if (doc.exists && !localStorage.getItem('editTestId')) {
+                    const data = doc.data();
+                    document.getElementById('testTitle').value = data.testTitle || '';
+                    document.getElementById('testClass').value = data.testClass || '';
+                    onClassChange();
+
+                    if (data.testSubject) {
+                        document.getElementById('testSubject').value = data.testSubject;
+                        onSubjectChange();
+
+                        if (data.selectedChapters && data.selectedChapters.length > 0) {
+                            selectedChapters = data.selectedChapters;
+                            selectedChapters.forEach(chap => {
+                                const chk = document.getElementById(`chk_chap_${chap.replace(/\s+/g, '_')}`);
+                                if (chk) chk.checked = true;
+                            });
+                            updateChips('chapters');
+                            updateTopicsDropdown();
+
+                            if (data.selectedTopics && data.selectedTopics.length > 0) {
+                                selectedTopics = data.selectedTopics;
+                                selectedTopics.forEach(topic => {
+                                    const chk = document.getElementById(`chk_topic_${topic.replace(/\s+/g, '_')}`);
+                                    if (chk) chk.checked = true;
+                                });
+                                updateChips('topics');
+                            }
+                        }
+                    }
+
+                    document.getElementById('testDateTime').value = data.testDateTime || '';
+                    document.getElementById('testDuration').value = data.testDuration || '';
+                    document.getElementById('totalMarks').value = data.totalMarks || '';
+                    document.getElementById('numberOfQuestions').value = data.numberOfQuestions || '';
+                    document.getElementById('marksPerQuestion').value = data.marksPerQuestion || '4';
+                    document.getElementById('negativeMarking').value = data.negativeMarking || 'no';
+                    toggleNegativeMarkValue();
+                    document.getElementById('negativeMarkValue').value = data.negativeMarkValue || '0.25';
+                    document.getElementById('showResultImmediately').value = data.showResultImmediately || 'yes';
+                    document.getElementById('instructions').value = data.instructions || '';
+                    
+                    if (data.compiledQuestions && data.compiledQuestions.length > 0) {
+                        compiledQuestions = data.compiledQuestions;
+                        selectedQuestionsMap = {};
+                        compiledQuestions.forEach(q => {
+                            selectedQuestionsMap[q.id] = true;
+                        });
+                        renderCompiledQuestions();
+                    }
+                    updateBuilderVisibility();
+                }
+            } catch (err) {
+                console.error("Failed to load draft", err);
+            }
+        }
+
+        async function deleteDraft() {
+            if (!auth.currentUser) return;
+            try {
+                await db.collection("testDrafts").doc(auth.currentUser.uid).delete();
+            } catch (err) {
+                console.error("Failed to delete draft", err);
+            }
+        }
+
+        // ============================
+        // Edit Mode (load from Firestore)
+        // ============================
+        async function loadTestForEditing(docId) {
+            try {
+                const doc = await db.collection("tests").doc(docId).get();
+                if (doc.exists) {
+                    const test = doc.data();
+                    editingTestId = docId;
+                    document.getElementById('pageTitle').innerHTML = 'Edit <span class="gradient-text">Test</span>';
+                    document.getElementById('formMainTitle').textContent = 'Test Editor';
+
+                    document.getElementById('testTitle').value = test.title;
+                    document.getElementById('testClass').value = test.class;
+                    onClassChange();
+
+                    if (test.subject) {
+                        document.getElementById('testSubject').value = test.subject;
+                        onSubjectChange();
+
+                        if (test.chapters && test.chapters.length > 0) {
+                            selectedChapters = test.chapters;
+                            selectedChapters.forEach(chap => {
+                                const chk = document.getElementById(`chk_chap_${chap.replace(/\s+/g, '_')}`);
+                                if (chk) chk.checked = true;
+                            });
+                            updateChips('chapters');
+                            updateTopicsDropdown();
+
+                            if (test.topics && test.topics.length > 0) {
+                                selectedTopics = test.topics;
+                                selectedTopics.forEach(topic => {
+                                    const chk = document.getElementById(`chk_topic_${topic.replace(/\s+/g, '_')}`);
+                                    if (chk) chk.checked = true;
+                                });
+                                updateChips('topics');
+                            }
+                        }
+                    }
+
+                    document.getElementById('testDateTime').value = test.scheduledDateTime || '';
+                    document.getElementById('testDuration').value = test.duration;
+                    document.getElementById('totalMarks').value = test.totalMarks;
+                    document.getElementById('numberOfQuestions').value = test.numberOfQuestions;
+                    document.getElementById('marksPerQuestion').value = test.marksPerQuestion || '4';
+                    document.getElementById('negativeMarking').value = test.negativeMarking ? 'yes' : 'no';
+                    toggleNegativeMarkValue();
+                    document.getElementById('negativeMarkValue').value = test.negativeMarkValue || '0.25';
+                    document.getElementById('showResultImmediately').value = test.showResultImmediately ? 'yes' : 'no';
+                    document.getElementById('instructions').value = test.instructions || '';
+
+                    if (test.questions && test.questions.length > 0) {
+                        compiledQuestions = test.questions;
+                        selectedQuestionsMap = {};
+                        compiledQuestions.forEach(q => {
+                            selectedQuestionsMap[q.id] = true;
+                        });
+                        renderCompiledQuestions();
+                    }
+                    updateBuilderVisibility();
+
+                    submitButton.style.display = 'none';
+                    updateButton.style.display = 'inline-flex';
+                    cancelButton.style.display = 'inline-flex';
+                }
+            } catch (err) {
+                console.error("Failed to load test", err);
+                showNotification('Failed to load test data', 'error');
+            }
+        }
+
+        // ============================
+        // Form Submit (Create/Update)
+        // ============================
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (editingTestId) {
+                updateTest();
+            } else {
+                createTest();
+            }
+        });
+
+        updateButton.addEventListener('click', updateTest);
+
+        async function createTest() {
+            if (!validateForm()) return;
+            setLoading(submitButton, true);
+            const testData = getFormData();
+            try {
+                await db.collection("tests").add({
+                    title: testData.testTitle,
+                    class: testData.testClass,
+                    subject: testData.testSubject,
+                    scheduledDateTime: testData.testDateTime,
+                    date: testData.testDateTime.split('T')[0], // support legacy date field
+                    duration: parseInt(testData.testDuration),
+                    totalMarks: parseInt(testData.totalMarks),
+                    numberOfQuestions: parseInt(testData.numberOfQuestions),
+                    marksPerQuestion: parseFloat(testData.marksPerQuestion) || 4.0,
+                    negativeMarking: testData.negativeMarking === 'yes',
+                    negativeMarkValue: testData.negativeMarking === 'yes' ? parseFloat(testData.negativeMarkValue) : 0,
+                    showResultImmediately: testData.showResultImmediately === 'yes',
+                    chapters: selectedChapters,
+                    topics: selectedTopics,
+                    instructions: testData.instructions,
+                    questions: compiledQuestions.map(q => ({
+                        id: q.id || '',
+                        text: q.text || '',
+                        type: q.type || 'mcq',
+                        course: q.course || '',
+                        subject: q.subject || '',
+                        chapter: q.chapter || '',
+                        topic: q.topic || '',
+                        options: q.options || null,
+                        correctAnswer: q.correctAnswer || '',
+                        questionImage: q.questionImage || null,
+                        solutionText: q.solutionText || null,
+                        solutionImage: q.solutionImage || null
+                    })),
+                    createdDate: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'scheduled',
+                    studentsAssigned: 0,
+                    averageScore: 0
+                });
+                await deleteDraft();
+                showSuccessMessage('Test created and scheduled successfully!');
+                setTimeout(() => window.location.href = 'my-tests.html', 1500);
+            } catch (err) {
+                console.error("Create failed", err);
+                showNotification('Failed to create test', 'error');
+            }
+            setLoading(submitButton, false);
+        }
+
+        async function updateTest() {
+            if (!editingTestId || !validateForm()) return;
+            setLoading(updateButton, true);
+            const testData = getFormData();
+            try {
+                await db.collection("tests").doc(editingTestId).update({
+                    title: testData.testTitle,
+                    class: testData.testClass,
+                    subject: testData.testSubject,
+                    scheduledDateTime: testData.testDateTime,
+                    date: testData.testDateTime.split('T')[0],
+                    duration: parseInt(testData.testDuration),
+                    totalMarks: parseInt(testData.totalMarks),
+                    numberOfQuestions: parseInt(testData.numberOfQuestions),
+                    marksPerQuestion: parseFloat(testData.marksPerQuestion) || 4.0,
+                    negativeMarking: testData.negativeMarking === 'yes',
+                    negativeMarkValue: testData.negativeMarking === 'yes' ? parseFloat(testData.negativeMarkValue) : 0,
+                    showResultImmediately: testData.showResultImmediately === 'yes',
+                    chapters: selectedChapters,
+                    topics: selectedTopics,
+                    instructions: testData.instructions,
+                    questions: compiledQuestions.map(q => ({
+                        id: q.id || '',
+                        text: q.text || '',
+                        type: q.type || 'mcq',
+                        course: q.course || '',
+                        subject: q.subject || '',
+                        chapter: q.chapter || '',
+                        topic: q.topic || '',
+                        options: q.options || null,
+                        correctAnswer: q.correctAnswer || '',
+                        questionImage: q.questionImage || null,
+                        solutionText: q.solutionText || null,
+                        solutionImage: q.solutionImage || null
+                    })),
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await deleteDraft();
+                showSuccessMessage('Test updated successfully!');
+                setTimeout(() => window.location.href = 'my-tests.html', 1500);
+            } catch (err) {
+                console.error("Update failed", err);
+                showNotification('Failed to update test', 'error');
+            }
+            setLoading(updateButton, false);
+        }
+
+        function getFormData() {
+            const isMHTCET = document.getElementById('testClass').value.toLowerCase().includes('mhtcet');
+            return {
+                testTitle: document.getElementById('testTitle').value.trim(),
+                testClass: document.getElementById('testClass').value,
+                testSubject: document.getElementById('testSubject').value,
+                testDateTime: document.getElementById('testDateTime').value,
+                testDuration: document.getElementById('testDuration').value,
+                totalMarks: document.getElementById('totalMarks').value,
+                numberOfQuestions: document.getElementById('numberOfQuestions').value,
+                marksPerQuestion: document.getElementById('marksPerQuestion').value,
+                negativeMarking: isMHTCET ? 'no' : document.getElementById('negativeMarking').value,
+                negativeMarkValue: isMHTCET ? '0' : document.getElementById('negativeMarkValue').value,
+                showResultImmediately: document.getElementById('showResultImmediately').value,
+                instructions: document.getElementById('instructions').value
+            };
+        }
+
+        function validateForm() {
+            const d = getFormData();
+            if (!d.testTitle) { showNotification('Please enter a test title', 'error'); return false; }
+            if (!d.testClass) { showNotification('Please select a class', 'error'); return false; }
+            if (!d.testSubject) { showNotification('Please select a subject', 'error'); return false; }
+            if (!d.testDateTime) { showNotification('Please select scheduled date and time', 'error'); return false; }
+            if (!d.testDuration || parseInt(d.testDuration) <= 0) { showNotification('Invalid duration', 'error'); return false; }
+            if (!d.totalMarks || parseInt(d.totalMarks) <= 0) { showNotification('Invalid total marks', 'error'); return false; }
+            if (!d.marksPerQuestion || parseFloat(d.marksPerQuestion) <= 0) { showNotification('Invalid marks per question', 'error'); return false; }
+            const numQ = parseInt(d.numberOfQuestions) || 0;
+            if (numQ <= 0) { showNotification('Invalid number of questions', 'error'); return false; }
+            if (selectedChapters.length === 0) { showNotification('Please choose at least one chapter', 'error'); return false; }
+            if (selectedTopics.length === 0) { showNotification('Please choose at least one topic', 'error'); return false; }
+            if (d.negativeMarking === 'yes' && (!d.negativeMarkValue || parseFloat(d.negativeMarkValue) < 0)) {
+                showNotification('Invalid negative marking value', 'error');
+                return false;
+            }
+            if (compiledQuestions.length === 0) {
+                showNotification('Please compile questions (using Auto-Generate or Manual Selector) before saving.', 'error');
+                return false;
+            }
+            if (compiledQuestions.length !== numQ) {
+                showNotification(`The number of compiled questions (${compiledQuestions.length}) does not match the specified Number of Questions (${numQ}).`, 'error');
+                return false;
+            }
+            return true;
+        }
+
+        function setLoading(btn, isLoading) {
+            if (isLoading) {
+                btn.dataset.originalHTML = btn.innerHTML;
+                btn.innerHTML = '<span class="loading"></span> Processing...';
+                btn.disabled = true;
+            } else {
+                btn.innerHTML = btn.dataset.originalHTML || btn.innerHTML;
+                btn.disabled = false;
+            }
+        }
+
+        function clearForm() {
+            if (confirm('Clear all fields? This cannot be undone.')) {
+                form.reset();
+                selectedChapters = [];
+                selectedTopics = [];
+                updateChips('chapters');
+                updateChips('topics');
+                document.getElementById("subjectFormGroup").style.display = "none";
+                document.getElementById("chaptersFormGroup").style.display = "none";
+                document.getElementById("topicsFormGroup").style.display = "none";
+                document.getElementById("negValueFormGroup").style.display = "none";
+                deleteDraft();
+                showNotification('Form cleared', 'success');
+            }
+        }
+
+        // ============================
+        // Preview Modal
+        // ============================
+        window.previewTest = function () {
+            if (!validateForm()) return;
+            const d = getFormData();
+            const classNameMap = {
+                '11th-mhtcet-pcm': '11th MHTCET (PCM)',
+                '11th-mhtcet-pcb': '11th MHTCET (PCB)',
+                '11th-jee': '11th JEE',
+                '11th-neet': '11th NEET',
+                '12th-mhtcet-pcm': '12th MHTCET (PCM)',
+                '12th-mhtcet-pcb': '12th MHTCET (PCB)',
+                '12th-jee': '12th JEE',
+                '12th-neet': '12th NEET'
+            };
+            const formattedDateTime = new Date(d.testDateTime).toLocaleString('en-IN', {
+                dateStyle: 'medium', timeStyle: 'short'
+            });
+            const html = `
+                <div class="test-preview-info">
+                    <div><div class="preview-label">Title</div><div class="preview-value">${d.testTitle}</div></div>
+                    <div><div class="preview-label">Class</div><div class="preview-value">${classNameMap[d.testClass] || d.testClass}</div></div>
+                    <div><div class="preview-label">Subject</div><div class="preview-value">${d.testSubject}</div></div>
+                    <div><div class="preview-label">Schedule</div><div class="preview-value">${formattedDateTime}</div></div>
+                    <div><div class="preview-label">Duration</div><div class="preview-value">${d.testDuration} min</div></div>
+                    <div><div class="preview-label">Marks</div><div class="preview-value">${d.totalMarks}</div></div>
+                    <div><div class="preview-label">Marks per Q</div><div class="preview-value">${d.marksPerQuestion}</div></div>
+                    <div><div class="preview-label">Questions</div><div class="preview-value">${d.numberOfQuestions}</div></div>
+                    <div><div class="preview-label">Negative Marking</div><div class="preview-value">${d.negativeMarking === 'yes' ? `Yes (-${d.negativeMarkValue})` : 'No'}</div></div>
+                    <div><div class="preview-label">Show Result</div><div class="preview-value">${d.showResultImmediately === 'yes' ? 'Immediately after submission' : 'Manual release'}</div></div>
+                </div>
+                <div class="test-instructions-preview" style="margin-bottom:14px;">
+                    <h4>Selected Chapters (${selectedChapters.length})</h4>
+                    <p style="font-size:0.9rem; color:#475569;">${selectedChapters.join(', ')}</p>
+                </div>
+                <div class="test-instructions-preview" style="margin-bottom:20px;">
+                    <h4>Selected Topics (${selectedTopics.length})</h4>
+                    <p style="font-size:0.85rem; color:#475569;">${selectedTopics.join(', ')}</p>
+                </div>
+                <div class="test-instructions-preview">
+                    <h4>Instructions</h4>
+                    <p>${d.instructions || 'None'}</p>
+                </div>
+                <button class="btn btn-primary" onclick="closeTestPreview()" style="margin-top:10px; width:100%;">Close</button>`;
+            document.getElementById('testPreviewContent').innerHTML = html;
+            document.getElementById('testPreviewModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeTestPreview = function () {
+            document.getElementById('testPreviewModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        };
+
+        // ============================
+        // Examin8 Test & Blueprint Engine
+        // ============================
+        async function autoGenerateBlueprint() {
+            const cls = document.getElementById("testClass").value;
+            const sub = document.getElementById("testSubject").value;
+            const numQEl = document.getElementById("numberOfQuestions");
+            const numQ = parseInt(numQEl.value);
+
+            if (!cls || !sub || selectedChapters.length === 0 || selectedTopics.length === 0) {
+                showNotification("Please select Class, Subject, Chapters, and Topics first.", "error");
+                return;
+            }
+            if (!numQ || numQ <= 0) {
+                showNotification("Please specify the 'Number of Questions' before auto-generating.", "error");
+                numQEl.focus();
+                return;
+            }
+
+            const autoGenBtn = document.getElementById("autoGenBtn");
+            setLoading(autoGenBtn, true);
+
+            try {
+                const course = getCourseFromClass(cls);
+                const querySnap = await db.collection("practice_questions")
+                    .where("course", "==", course)
+                    .where("subject", "==", sub)
+                    .get();
+
+                let allMatching = [];
+                querySnap.forEach(doc => {
+                    const q = doc.data();
+                    q.id = doc.id;
+                    const inChapters = selectedChapters.includes(q.chapter);
+                    const inTopics = selectedTopics.includes(q.topic);
+                    if (inChapters && inTopics) {
+                        allMatching.push(q);
+                    }
+                });
+
+                if (allMatching.length === 0) {
+                    showNotification("No matching questions found in the Question Bank.", "error");
+                    setLoading(autoGenBtn, false);
+                    return;
+                }
+
+                // Shuffle in-place
+                allMatching.sort(() => Math.random() - 0.5);
+
+                // Slice to numQ
+                compiledQuestions = allMatching.slice(0, numQ);
+
+                // Update selected map
+                selectedQuestionsMap = {};
+                compiledQuestions.forEach(q => {
+                    selectedQuestionsMap[q.id] = true;
+                });
+
+                renderCompiledQuestions();
+                showNotification(`Successfully auto-compiled ${compiledQuestions.length} questions!`, "success");
+                saveDraft();
+            } catch (err) {
+                console.error("Auto blueprint failed:", err);
+                showNotification("Error compiling questions: " + err.message, "error");
+            } finally {
+                setLoading(autoGenBtn, false);
+            }
+        }
+
+        async function openManualQuestionSelector() {
+            const cls = document.getElementById("testClass").value;
+            const sub = document.getElementById("testSubject").value;
+            if (!cls || !sub || selectedChapters.length === 0 || selectedTopics.length === 0) {
+                showNotification("Please select Class, Subject, Chapters, and Topics first.", "error");
+                return;
+            }
+
+            const drawer = document.getElementById("manualQuestionDrawer");
+            const overlay = document.getElementById("drawerOverlay");
+            const drawerQuestionsList = document.getElementById("drawerQuestionsList");
+
+            drawerQuestionsList.innerHTML = `<div style="text-align:center; padding: 40px;"><span class="loading" style="border-top-color:#db2777;"></span><p style="margin-top:10px; color:#64748b;">Loading Question Bank...</p></div>`;
+            
+            // Open drawer UI
+            drawer.classList.add("active");
+            overlay.classList.add("active");
+            document.body.style.overflow = "hidden";
+
+            try {
+                const course = getCourseFromClass(cls);
+                const querySnap = await db.collection("practice_questions")
+                    .where("course", "==", course)
+                    .where("subject", "==", sub)
+                    .get();
+
+                bankQuestions = [];
+                querySnap.forEach(doc => {
+                    const q = doc.data();
+                    q.id = doc.id;
+                    const inChapters = selectedChapters.includes(q.chapter);
+                    const inTopics = selectedTopics.includes(q.topic);
+                    if (inChapters && inTopics) {
+                        bankQuestions.push(q);
+                    }
+                });
+
+                // Initialize tempSelectedMap from current compiledQuestions
+                tempSelectedMap = {};
+                compiledQuestions.forEach(q => {
+                    tempSelectedMap[q.id] = true;
+                });
+
+                renderDrawerQuestions();
+            } catch (err) {
+                console.error("Failed to load drawer questions:", err);
+                drawerQuestionsList.innerHTML = `<p style="color:red; text-align:center; padding:20px;">Failed to load questions: ${err.message}</p>`;
+            }
+        }
+
+        function renderDrawerQuestions(filterQuery = "") {
+            const drawerQuestionsList = document.getElementById("drawerQuestionsList");
+            const q = filterQuery.toLowerCase().trim();
+            
+            const filtered = bankQuestions.filter(item => {
+                return !q || item.text.toLowerCase().includes(q) || item.chapter.toLowerCase().includes(q) || item.topic.toLowerCase().includes(q);
+            });
+
+            if (filtered.length === 0) {
+                drawerQuestionsList.innerHTML = `
+                    <div style="text-align:center; padding:30px; color:#64748b;">
+                        <span>🔍</span>
+                        <p style="margin-top:8px; font-size:0.9rem;">No matching questions found in bank.</p>
+                    </div>
+                `;
+                document.getElementById("drawerSelectCount").textContent = Object.keys(tempSelectedMap).filter(k => tempSelectedMap[k]).length;
+                return;
+            }
+
+            drawerQuestionsList.innerHTML = "";
+            filtered.forEach(item => {
+                const itemDiv = document.createElement("div");
+                const isSelected = !!tempSelectedMap[item.id];
+                itemDiv.className = `bank-question-item ${isSelected ? 'selected' : ''}`;
+                itemDiv.id = `drawer_item_${item.id}`;
+                
+                itemDiv.innerHTML = `
+                    <input type="checkbox" class="bank-checkbox" id="chk_drawer_${item.id}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleDrawerQuestion('${item.id}')">
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:700; color:#1e293b; font-size:0.9rem; margin-bottom:6px; word-wrap:break-word;">${item.text}</div>
+                        <div style="font-size:0.75rem; color:#64748b; font-weight:600; display:flex; gap:10px; flex-wrap:wrap;">
+                            <span>📚 ${item.chapter}</span>
+                            <span>🏷️ ${item.topic}</span>
+                        </div>
+                    </div>
+                `;
+                
+                itemDiv.onclick = () => toggleDrawerQuestion(item.id);
+                drawerQuestionsList.appendChild(itemDiv);
+            });
+
+            updateDrawerSelectCount();
+
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typesetPromise().catch(err => console.error(err));
+            }
+        }
+
+        function toggleDrawerQuestion(id) {
+            const chk = document.getElementById(`chk_drawer_${id}`);
+            const card = document.getElementById(`drawer_item_${id}`);
+            
+            if (tempSelectedMap[id]) {
+                delete tempSelectedMap[id];
+                if (chk) chk.checked = false;
+                if (card) card.classList.remove("selected");
+            } else {
+                tempSelectedMap[id] = true;
+                if (chk) chk.checked = true;
+                if (card) card.classList.add("selected");
+            }
+            updateDrawerSelectCount();
+        }
+
+        function updateDrawerSelectCount() {
+            const count = Object.keys(tempSelectedMap).filter(k => tempSelectedMap[k]).length;
+            document.getElementById("drawerSelectCount").textContent = count;
+        }
+
+        function filterDrawerQuestions() {
+            const q = document.getElementById("drawerSearchBar").value;
+            renderDrawerQuestions(q);
+        }
+
+        function closeManualQuestionSelector() {
+            const drawer = document.getElementById("manualQuestionDrawer");
+            const overlay = document.getElementById("drawerOverlay");
+            drawer.classList.remove("active");
+            overlay.classList.remove("active");
+            document.body.style.overflow = "auto";
+        }
+
+        function saveManualSelection() {
+            const selectedIds = Object.keys(tempSelectedMap).filter(k => tempSelectedMap[k]);
+            let newCompiled = [];
+            
+            compiledQuestions.forEach(q => {
+                if (tempSelectedMap[q.id]) {
+                    newCompiled.push(q);
+                }
+            });
+            
+            bankQuestions.forEach(q => {
+                if (tempSelectedMap[q.id] && !newCompiled.some(existing => existing.id === q.id)) {
+                    newCompiled.push(q);
+                }
+            });
+
+            compiledQuestions = newCompiled;
+            selectedQuestionsMap = { ...tempSelectedMap };
+            
+            renderCompiledQuestions();
+            closeManualQuestionSelector();
+            showNotification(`Compiled list updated with ${compiledQuestions.length} questions.`, "success");
+            saveDraft();
+        }
+
+        function renderCompiledQuestions() {
+            const listContainer = document.getElementById("compiledQuestionsList");
+            const countBadge = document.getElementById("questionCountBadge");
+            
+            const numQ = parseInt(document.getElementById("numberOfQuestions").value) || 0;
+            countBadge.textContent = `${compiledQuestions.length} / ${numQ} Questions Compiled`;
+            
+            if (compiledQuestions.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state" style="text-align:center; padding:40px; border:2.5px dashed #cbd5e1; border-radius:16px; color:#64748b; background: rgba(255,255,255,0.4);">
+                        <span style="font-size:2.5rem; display:block; margin-bottom:10px;">📋</span>
+                        <strong>No Questions Compiled Yet</strong>
+                        <p style="font-size:0.85rem; margin-top:4px;">Use Auto-Generate Blueprint or select manually to populate your exam paper questions.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            listContainer.innerHTML = "";
+            compiledQuestions.forEach((q, index) => {
+                const card = document.createElement("div");
+                card.className = "question-card";
+                
+                let metaHtml = `
+                    <span>📚 ${q.chapter}</span>
+                    <span>🏷️ ${q.topic}</span>
+                    <span>📍 ${q.type ? q.type.toUpperCase() : 'MCQ'}</span>
+                `;
+                
+                card.innerHTML = `
+                    <div class="q-number-badge">${index + 1}</div>
+                    <div class="q-body-content">
+                        <div class="q-card-text">${q.text}</div>
+                        <div class="q-card-meta">
+                            ${metaHtml}
+                        </div>
+                    </div>
+                    <div class="q-card-actions">
+                        <button type="button" class="q-action-icon-btn" onclick="reorderQuestion(${index}, -1)" title="Move Up" ${index === 0 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>↑</button>
+                        <button type="button" class="q-action-icon-btn" onclick="reorderQuestion(${index}, 1)" title="Move Down" ${index === compiledQuestions.length - 1 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>↓</button>
+                        <button type="button" class="q-action-icon-btn" onclick="swapQuestion(${index})" title="Swap Question">🔄</button>
+                        <button type="button" class="q-action-icon-btn delete" onclick="deleteQuestion(${index})" title="Delete">🗑️</button>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typesetPromise().catch(err => console.error(err));
+            }
+        }
+
+        function reorderQuestion(index, direction) {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= compiledQuestions.length) return;
+            
+            const temp = compiledQuestions[index];
+            compiledQuestions[index] = compiledQuestions[targetIndex];
+            compiledQuestions[targetIndex] = temp;
+            
+            renderCompiledQuestions();
+            saveDraft();
+        }
+
+        function deleteQuestion(index) {
+            const removed = compiledQuestions.splice(index, 1);
+            if (removed.length > 0) {
+                delete selectedQuestionsMap[removed[0].id];
+            }
+            renderCompiledQuestions();
+            saveDraft();
+        }
+
+        async function swapQuestion(index) {
+            const cls = document.getElementById("testClass").value;
+            const sub = document.getElementById("testSubject").value;
+            if (!cls || !sub) return;
+
+            const currentQ = compiledQuestions[index];
+            const cardEl = document.querySelectorAll('.question-card')[index];
+            const swapBtn = cardEl ? cardEl.querySelector('button[title="Swap Question"]') : null;
+            
+            if (swapBtn) {
+                swapBtn.innerHTML = '<span class="loading" style="width:12px; height:12px; border-width:1.5px;"></span>';
+                swapBtn.disabled = true;
+            }
+
+            try {
+                const course = getCourseFromClass(cls);
+                const querySnap = await db.collection("practice_questions")
+                    .where("course", "==", course)
+                    .where("subject", "==", sub)
+                    .get();
+
+                let candidates = [];
+                querySnap.forEach(doc => {
+                    const q = doc.data();
+                    q.id = doc.id;
+                    
+                    const inChapters = selectedChapters.includes(q.chapter);
+                    const inTopics = selectedTopics.includes(q.topic);
+                    const isAlreadyCompiled = compiledQuestions.some(existing => existing.id === q.id);
+                    
+                    if (inChapters && inTopics && !isAlreadyCompiled) {
+                        candidates.push(q);
+                    }
+                });
+
+                if (candidates.length === 0) {
+                    showNotification("No other unused matching questions available in Question Bank to swap.", "info");
+                    return;
+                }
+
+                const randomQ = candidates[Math.floor(Math.random() * candidates.length)];
+                
+                delete selectedQuestionsMap[currentQ.id];
+                selectedQuestionsMap[randomQ.id] = true;
+                compiledQuestions[index] = randomQ;
+                
+                renderCompiledQuestions();
+                showNotification("Question swapped successfully!", "success");
+                saveDraft();
+            } catch (err) {
+                console.error("Swap failed:", err);
+                showNotification("Failed to swap question: " + err.message, "error");
+            } finally {
+                if (swapBtn) {
+                    swapBtn.innerHTML = "🔄";
+                    swapBtn.disabled = false;
+                }
+            }
+        }
+
+        function previewExamPaperDirectly() {
+            if (compiledQuestions.length === 0) {
+                showNotification("No compiled questions to preview.", "error");
+                return;
+            }
+            const d = getFormData();
+            let questionsHtml = "";
+            compiledQuestions.forEach((q, index) => {
+                let optionsHtml = "";
+                if (q.type === 'mcq' && q.options) {
+                    optionsHtml = `
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; font-size:0.9rem;">
+                            <div><strong>A.</strong> ${q.options.A ? q.options.A.text : ''}</div>
+                            <div><strong>B.</strong> ${q.options.B ? q.options.B.text : ''}</div>
+                            <div><strong>C.</strong> ${q.options.C ? q.options.C.text : ''}</div>
+                            <div><strong>D.</strong> ${q.options.D ? q.options.D.text : ''}</div>
+                        </div>
+                    `;
+                }
+                questionsHtml += `
+                    <div style="border-bottom:1px solid #e2e8f0; padding:12px 0;">
+                        <div style="font-weight:700;">Q${index + 1}. ${q.text}</div>
+                        ${optionsHtml}
+                    </div>
+                `;
+            });
+
+            const html = `
+                <div style="border:1px solid #cbd5e1; border-radius:12px; padding:20px; background:white; font-family:'Outfit', sans-serif;">
+                    <div style="text-align:center; border-bottom:2px solid #334155; padding-bottom:12px; margin-bottom:16px;">
+                        <h3 style="margin:0; font-size:1.4rem; font-weight:900;">${d.testTitle || 'UNTITLED TEST'}</h3>
+                        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.85rem; color:#64748b; font-weight:600;">
+                            <span>CLASS: ${d.testClass}</span>
+                            <span>SUBJECT: ${d.testSubject}</span>
+                            <span>TIME: ${d.testDuration} MIN</span>
+                        </div>
+                    </div>
+                    <div>
+                        ${questionsHtml}
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="closeTestPreview()" style="margin-top:20px; width:100%;">Close Preview</button>
+            `;
+            
+            document.getElementById('testPreviewContent').innerHTML = html;
+            document.getElementById('testPreviewModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typesetPromise().catch(err => console.error(err));
+            }
+        }
+
+        window.closeTestPreview = function () {
+            document.getElementById('testPreviewModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        };
+
+        // ============================
+        // Helpers
+        // ============================
+        function showSuccessMessage(msg) {
+            const el = document.getElementById('successMessage');
+            el.innerHTML = `<span>✅</span><span>${msg}</span>`;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        function showAutoSaveIndicator() {
+            const el = document.getElementById('autoSaveIndicator');
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2000);
+        }
+
+        function showNotification(msg, type = 'info') {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            const el = document.createElement('div');
+            el.className = 'notification';
+            el.innerHTML = `<span>${type === 'error' ? '⚠️' : '✅'}</span> ${msg}`;
+            document.body.appendChild(el);
+            setTimeout(() => { if (el.parentNode) el.remove(); }, 3000);
+        }
+
+        function old_logout() {
+            auth.signOut().then(() => {
+                localStorage.removeItem("teacherVerification");
+                window.location.href = "../role-selection.html";
+            });
+        }
+
+        // Placeholders or connections to question features
+        window.addQuestions = () => {
+            saveDraft();
+            window.location.href = "add-questions.html";
+        };
+        window.importQuestions = () => {
+            showNotification('To import offline questions, use the Import feature inside Add Questions tab.', 'info');
+        };
+        window.questionBank = () => {
+            window.location.href = "add-questions.html?tab=bank";
+        };
+
+        function setupHamburger() {
+            const hamburger = document.getElementById('hamburger');
+            const sideNav = document.getElementById('sideNav');
+            const overlay = document.getElementById('overlay');
+            hamburger.addEventListener('click', () => {
+                hamburger.classList.toggle('active');
+                sideNav.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sideNav.classList.contains('active') ? 'hidden' : 'auto';
+            });
+            overlay.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                sideNav.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            document.querySelectorAll('.side-nav a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (link.getAttribute('href') === '../role-selection.html' && link.onclick) return;
+                    hamburger.classList.remove('active');
+                    sideNav.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                });
+            });
+        }
+
+        function addRippleEffect() {
+            document.querySelectorAll('.btn, .question-action-btn').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    const x = e.clientX - this.getBoundingClientRect().left;
+                    const y = e.clientY - this.getBoundingClientRect().top;
+                    const ripple = document.createElement('span');
+                    ripple.style.cssText = `position:absolute; background:rgba(255,255,255,0.4); border-radius:50%; transform:scale(0); animation:ripple 0.6s linear; width:100px; height:100px; top:${y - 50}px; left:${x - 50}px;`;
+                    this.style.position = 'relative';
+                    this.style.overflow = 'hidden';
+                    this.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 600);
+                });
+            });
+        }
+
+        // ---------- Canvas Background ----------
+        (function () {
+            const canvas = document.getElementById('equations-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height, dpr = Math.min(window.devicePixelRatio || 1, 2);
+            let isMobile, particleCount, baseSizeMultiplier;
+
+            function detectMobile() {
+                const w = window.innerWidth;
+                isMobile = w <= 768;
+                if (w <= 380) { particleCount = 18; baseSizeMultiplier = 0.55; }
+                else if (w <= 480) { particleCount = 24; baseSizeMultiplier = 0.65; }
+                else if (w <= 768) { particleCount = 32; baseSizeMultiplier = 0.78; }
+                else if (w <= 1024) { particleCount = 40; baseSizeMultiplier = 0.9; }
+                else { particleCount = 48; baseSizeMultiplier = 1.0; }
+            }
+
+            function resizeCanvas() {
+                detectMobile();
+                dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 2);
+                width = canvas.width = window.innerWidth * dpr;
+                height = canvas.height = window.innerHeight * dpr;
+                canvas.style.width = window.innerWidth + 'px';
+                canvas.style.height = window.innerHeight + 'px';
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(dpr, dpr);
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 300));
+            resizeCanvas();
+
+            const expressions = [
+                "E = mc²", "∫ x² dx", "∇ × B = μ₀J", "PV = nRT",
+                "sin²θ + cos²θ = 1", "H₂O + CO₂ → C₆H₁₂O₆", "ΔG = ΔH - TΔS",
+                "F = G(m₁m₂)/r²", "pH = -log[H⁺]", "DNA ⇌ RNA",
+                "Fe²⁺ + e⁻ → Fe", "λ = h/p", "v = u + at", "C₆H₁₂O₆",
+                "∑ F = ma", "lim (x→0) sin(x)/x = 1", "ATP → ADP + Pi",
+                "Krebs Cycle", "dψ/dt", "K_a = [H⁺][A⁻]/[HA]", "y = mx + c",
+            ];
+
+            function drawBenzene(ctx, x, y, size) {
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    const nextX = x + size * Math.cos(angle);
+                    const nextY = y + size * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(nextX, nextY);
+                    else ctx.lineTo(nextX, nextY);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.6, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            class ScienceParticle {
+                constructor() {
+                    this.reset();
+                    this.y = Math.random() * (window.innerHeight || 800);
+                }
+                reset() {
+                    this.type = Math.random() < 0.7 ? 'text' : 'chemistry';
+                    this.text = expressions[Math.floor(Math.random() * expressions.length)];
+                    this.x = Math.random() * (window.innerWidth || 400);
+                    this.y = -60;
+                    this.speed = 0.15 + Math.random() * 0.45;
+                    this.size = (10 + Math.floor(Math.random() * 14)) * baseSizeMultiplier;
+                    this.opacity = 0.12 + Math.random() * 0.15;
+                }
+                update(screenW, screenH) {
+                    this.y += this.speed;
+                    if (this.y > screenH + 60) {
+                        this.reset();
+                        this.y = -60;
+                        this.x = Math.random() * screenW;
+                    }
+                }
+                draw(ctx) {
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.fillStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.lineWidth = Math.max(1.2, 1.8 * baseSizeMultiplier);
+                    if (this.type === 'text') {
+                        ctx.font = `bold ${this.size}px 'Courier New', monospace`;
+                        ctx.fillText(this.text, this.x, this.y);
+                    } else {
+                        drawBenzene(ctx, this.x, this.y, this.size * 1.2);
+                    }
+                    ctx.restore();
+                }
+            }
+
+            let particles = [];
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    const p = new ScienceParticle();
+                    p.y = (window.innerHeight / particleCount) * i - 60 + Math.random() * 40;
+                    particles.push(p);
+                }
+            }
+            initParticles();
+
+            let animFrameId;
+            function animateCanvas() {
+                const screenW = window.innerWidth, screenH = window.innerHeight;
+                ctx.clearRect(0, 0, screenW, screenH);
+                particles.forEach(p => { p.update(screenW, screenH); p.draw(ctx); });
+                animFrameId = requestAnimationFrame(animateCanvas);
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                } else if (!document.hidden && !animFrameId) {
+                    animFrameId = requestAnimationFrame(animateCanvas);
+                }
+            });
+            animateCanvas();
+
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => { resizeCanvas(); initParticles(); }, 250);
+            });
+        })();
+    </script>
+</body>
+
+</html>
