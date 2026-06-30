@@ -9,6 +9,8 @@
     <title>Terms & Conditions - Sharada Academy Baramati</title>
     <!-- Tailwind CSS CDN v4 -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- GSAP CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <style>
         :root {
             --safe-bottom: env(safe-area-inset-bottom, 16px);
@@ -19,6 +21,9 @@
 
         body {
             -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
             background-color: #f8fafc;
             overflow-x: hidden;
             overflow-y: auto;
@@ -30,6 +35,42 @@
             padding-bottom: var(--safe-bottom);
             padding-left: var(--safe-left);
             padding-right: var(--safe-right);
+            position: relative;
+            margin: 0;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+
+        p,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .allow-select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        #equations-canvas {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
         }
 
         .gradient-text {
@@ -48,28 +89,63 @@
             border: 1px solid rgba(244, 63, 94, 0.08);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
         }
+
+        /* GSAP fallback: if GSAP fails, elements become visible after 0.6s */
+        #header,
+        #main-content,
+        #footer {
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        .gsap-fallback #header,
+        .gsap-fallback #main-content,
+        .gsap-fallback #footer {
+            opacity: 1;
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            #header,
+            #main-content,
+            #footer {
+                opacity: 1;
+                transition: none;
+            }
+
+            #equations-canvas {
+                opacity: 0.35;
+            }
+        }
     </style>
 </head>
 
 <body class="text-slate-800 antialiased selection:bg-pink-100 selection:text-pink-800">
 
-    <div class="min-h-screen flex flex-col justify-between px-4 py-6 sm:px-6 sm:py-8 md:px-12 md:py-10 max-w-4xl mx-auto w-full">
+    <!-- STEM Canvas background -->
+    <canvas id="equations-canvas" aria-hidden="true" role="presentation"></canvas>
+
+    <div class="content-layer min-h-screen flex flex-col justify-between px-4 py-6 sm:px-6 sm:py-8 md:px-12 md:py-10 max-w-4xl mx-auto w-full">
         <!-- Header -->
-        <header class="flex items-center justify-between pb-6 border-b border-slate-200/80">
+        <header id="header" class="opacity-0 flex items-center justify-between pb-4 border-b border-slate-200/80 w-full">
             <a href="index.html" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-pink-600 transition-colors duration-200 group py-2" aria-label="Go back to Home">
-                <!-- Back Arrow SVG -->
                 <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path>
                 </svg>
                 <span>Back</span>
             </a>
-            <div class="text-xs font-bold uppercase tracking-widest text-slate-400">
-                Sharada Academy Baramati
+            <div class="text-right">
+                <div class="text-sm sm:text-base font-black tracking-wider text-pink-600 leading-tight">
+                    SHARADA <span class="text-slate-800 font-light">ACADEMY</span>
+                </div>
+                <div class="text-[9px] tracking-widest text-slate-400 uppercase font-semibold">
+                    Baramati
+                </div>
             </div>
         </header>
 
         <!-- Content -->
-        <main class="flex-grow my-8">
+        <main id="main-content" class="opacity-0 flex-grow my-8">
             <div class="policy-card rounded-2xl p-6 sm:p-8 md:p-10 space-y-6">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -138,11 +214,362 @@
         </main>
 
         <!-- Footer -->
-        <footer class="text-center text-xs text-slate-400 border-t border-slate-200/80 pt-4">
+        <footer id="footer" class="opacity-0 text-center text-xs text-slate-400 border-t border-slate-200/80 pt-4">
             &copy; 2026 Sharada Academy Baramati. All rights reserved.
         </footer>
     </div>
 
+    <!-- Background Particle Canvas & GSAP Animations -->
+    <script>
+        (function () {
+            const canvas = document.getElementById('equations-canvas');
+            const ctx = canvas.getContext('2d');
+
+            let width, height;
+            let dpr;
+            let isMobile = false;
+            let particleCount;
+            let baseSizeMultiplier;
+            let lastFrameTime = 0;
+            const MOBILE_FRAME_INTERVAL = 1000 / 30;
+            const DESKTOP_FRAME_INTERVAL = 1000 / 60;
+
+            function detectDevice() {
+                const w = window.innerWidth;
+                isMobile = w <= 768;
+                if (w <= 339) {
+                    particleCount = 10;
+                    baseSizeMultiplier = 0.45;
+                } else if (w <= 380) {
+                    particleCount = 14;
+                    baseSizeMultiplier = 0.52;
+                } else if (w <= 480) {
+                    particleCount = 18;
+                    baseSizeMultiplier = 0.6;
+                } else if (w <= 768) {
+                    particleCount = 24;
+                    baseSizeMultiplier = 0.72;
+                } else if (w <= 1024) {
+                    particleCount = 34;
+                    baseSizeMultiplier = 0.85;
+                } else {
+                    particleCount = 44;
+                    baseSizeMultiplier = 1.0;
+                }
+                dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
+                dpr = Math.max(dpr, 1);
+            }
+
+            function resizeCanvas() {
+                detectDevice();
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                width = canvas.width = Math.round(w * dpr);
+                height = canvas.height = Math.round(h * dpr);
+                canvas.style.width = w + 'px';
+                canvas.style.height = h + 'px';
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(dpr, dpr);
+            }
+
+            let resizeRAF;
+            function handleResize() {
+                if (resizeRAF) cancelAnimationFrame(resizeRAF);
+                resizeRAF = requestAnimationFrame(() => {
+                    resizeCanvas();
+                });
+            }
+
+            window.addEventListener('resize', handleResize, { passive: true });
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    resizeCanvas();
+                    initParticles();
+                }, 400);
+            }, { passive: true });
+
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', handleResize, { passive: true });
+                window.visualViewport.addEventListener('scroll', handleResize, { passive: true });
+            }
+
+            resizeCanvas();
+
+            const expressions = [
+                "E = mc\u00b2",
+                "\u222b x\u00b2 dx",
+                "\u2207 \u00d7 B = \u03bc\u2080J",
+                "PV = nRT",
+                "sin\u00b2\u03b8 + cos\u00b2\u03b8 = 1",
+                "H\u2082O + CO\u2082 \u2192 C\u2086H\u2081\u2082O\u2086",
+                "\u0394G = \u0394H - T\u0394S",
+                "F = G(m\u2081m\u2082)/r\u00b2",
+                "pH = -log[H\u207a]",
+                "DNA \u21cc RNA",
+                "Fe\u00b2\u207a + e\u207b \u2192 Fe",
+                "\u03bb = h/p",
+                "v = u + at",
+                "C\u2086H\u2081\u2082O\u2086",
+                "\u2211 F = ma",
+                "lim (x\u21920) sin(x)/x = 1",
+                "ATP \u2192 ADP + Pi",
+                "Krebs Cycle",
+                "d\u03c8/dt",
+                "K_a = [H\u207a][A\u207b]/[HA]",
+                "y = mx + c",
+            ];
+
+            function drawBenzene(ctx, x, y, size) {
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    const nextX = x + size * Math.cos(angle);
+                    const nextY = y + size * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(nextX, nextY);
+                    else ctx.lineTo(nextX, nextY);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.6, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            function drawSkeletalChain(ctx, x, y, size) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + size * 0.5, y - size * 0.3);
+                ctx.lineTo(x + size, y);
+                ctx.lineTo(x + size * 1.5, y - size * 0.3);
+                ctx.stroke();
+            }
+
+            function drawResistor(ctx, x, y, size) {
+                const w = size * 1.8;
+                const zigH = Math.max(6, size * 0.5);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + w * 0.2, y);
+                ctx.lineTo(x + w * 0.3, y - zigH);
+                ctx.lineTo(x + w * 0.4, y + zigH);
+                ctx.lineTo(x + w * 0.5, y - zigH);
+                ctx.lineTo(x + w * 0.6, y + zigH);
+                ctx.lineTo(x + w * 0.7, y - zigH);
+                ctx.lineTo(x + w * 0.8, y);
+                ctx.lineTo(x + w, y);
+                ctx.stroke();
+            }
+
+            function drawCapacitor(ctx, x, y, size) {
+                const w = size * 1.2;
+                const h = Math.max(10, size * 0.8);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + w * 0.4, y);
+                ctx.moveTo(x + w * 0.4, y - h);
+                ctx.lineTo(x + w * 0.4, y + h);
+                ctx.moveTo(x + w * 0.6, y - h);
+                ctx.lineTo(x + w * 0.6, y + h);
+                ctx.moveTo(x + w * 0.6, y);
+                ctx.lineTo(x + w, y);
+                ctx.stroke();
+            }
+
+            function drawDiode(ctx, x, y, size) {
+                const w = size * 1.4;
+                const h = Math.max(8, size * 0.65);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + w * 0.3, y);
+                ctx.moveTo(x + w * 0.3, y - h);
+                ctx.lineTo(x + w * 0.7, y);
+                ctx.lineTo(x + w * 0.3, y + h);
+                ctx.closePath();
+                ctx.moveTo(x + w * 0.7, y - h);
+                ctx.lineTo(x + w * 0.7, y + h);
+                ctx.moveTo(x + w * 0.7, y);
+                ctx.lineTo(x + w, y);
+                ctx.stroke();
+            }
+
+            class ScienceParticle {
+                constructor() {
+                    this.reset();
+                    this.y = Math.random() * (window.innerHeight || 800);
+                }
+
+                reset() {
+                    const rand = Math.random();
+                    if (rand < 0.5) {
+                        this.type = 'text';
+                    } else if (rand < 0.75) {
+                        this.type = 'chemistry';
+                        this.subType = Math.random() > 0.5 ? 'benzene' : 'chain';
+                    } else {
+                        this.type = 'physics';
+                        const roll = Math.random();
+                        this.subType = roll < 0.33 ? 'resistor' : (roll < 0.66 ? 'capacitor' : 'diode');
+                    }
+                    this.text = expressions[Math.floor(Math.random() * expressions.length)];
+                    this.x = Math.random() * (window.innerWidth || 400);
+                    this.y = -60;
+                    this.speed = 0.12 + Math.random() * 0.4;
+                    this.size = (9 + Math.floor(Math.random() * 13)) * baseSizeMultiplier;
+                    this.opacity = 0.16 + Math.random() * 0.2;
+                }
+
+                update(screenW, screenH) {
+                    this.y += this.speed;
+                    if (this.y > screenH + 60) {
+                        this.reset();
+                        this.y = -60;
+                        this.x = Math.random() * screenW;
+                    }
+                }
+
+                draw(ctx) {
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.fillStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.lineWidth = Math.max(1, 1.6 * baseSizeMultiplier);
+
+                    if (this.type === 'text') {
+                        ctx.font = `bold ${this.size}px 'Courier New', monospace`;
+                        ctx.fillText(this.text, this.x, this.y);
+                    } else if (this.type === 'chemistry') {
+                        if (this.subType === 'benzene') {
+                            drawBenzene(ctx, this.x, this.y, this.size * 1.2);
+                        } else {
+                            drawSkeletalChain(ctx, this.x, this.y, this.size * 1.5);
+                        }
+                    } else if (this.type === 'physics') {
+                        if (this.subType === 'resistor') {
+                            drawResistor(ctx, this.x, this.y, this.size);
+                        } else if (this.subType === 'capacitor') {
+                            drawCapacitor(ctx, this.x, this.y, this.size);
+                        } else if (this.subType === 'diode') {
+                            drawDiode(ctx, this.x, this.y, this.size);
+                        }
+                    }
+                    ctx.restore();
+                }
+            }
+
+            let particles = [];
+
+            function initParticles() {
+                particles = [];
+                const screenH = window.innerHeight || 800;
+                for (let i = 0; i < particleCount; i++) {
+                    const p = new ScienceParticle();
+                    p.y = (screenH / particleCount) * i - 60 + Math.random() * 40;
+                    particles.push(p);
+                }
+            }
+
+            initParticles();
+
+            let animFrameId;
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            function animateCanvas(timestamp) {
+                if (prefersReducedMotion) {
+                    if (!timestamp) timestamp = performance.now();
+                }
+
+                const frameInterval = isMobile ? MOBILE_FRAME_INTERVAL : DESKTOP_FRAME_INTERVAL;
+
+                if (timestamp - lastFrameTime >= frameInterval || lastFrameTime === 0) {
+                    lastFrameTime = timestamp;
+                    const screenW = window.innerWidth;
+                    const screenH = window.innerHeight;
+                    ctx.clearRect(0, 0, screenW, screenH);
+                    for (let i = 0; i < particles.length; i++) {
+                        particles[i].update(screenW, screenH);
+                        particles[i].draw(ctx);
+                    }
+                }
+                animFrameId = requestAnimationFrame(animateCanvas);
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (animFrameId) {
+                        cancelAnimationFrame(animFrameId);
+                        animFrameId = null;
+                    }
+                    lastFrameTime = 0;
+                } else {
+                    if (!animFrameId) {
+                        lastFrameTime = 0;
+                        animFrameId = requestAnimationFrame(animateCanvas);
+                    }
+                }
+            }, { passive: true });
+
+            const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+            motionQuery.addEventListener('change', (e) => {
+                if (e.matches) {
+                    particles.forEach(p => {
+                        p.speed *= 0.3;
+                        p.opacity = Math.min(p.opacity, 0.15);
+                    });
+                }
+            });
+
+            lastFrameTime = 0;
+            animFrameId = requestAnimationFrame(animateCanvas);
+
+            let resizeInitTimeout;
+            const debouncedReinit = () => {
+                clearTimeout(resizeInitTimeout);
+                resizeInitTimeout = setTimeout(() => {
+                    resizeCanvas();
+                    initParticles();
+                    lastFrameTime = 0;
+                }, 350);
+            };
+            window.addEventListener('resize', debouncedReinit, { passive: true });
+
+            // GSAP Entrance animation
+            function initGSAP() {
+                if (prefersReducedMotion) {
+                    document.body.classList.add('gsap-fallback');
+                    return;
+                }
+
+                const fallbackTimer = setTimeout(() => {
+                    document.body.classList.add('gsap-fallback');
+                }, 2500);
+
+                if (typeof gsap === 'undefined') {
+                    clearTimeout(fallbackTimer);
+                    document.body.classList.add('gsap-fallback');
+                    return;
+                }
+
+                const tl = gsap.timeline({
+                    defaults: { ease: "power3.out", overwrite: "auto" },
+                    onComplete: () => clearTimeout(fallbackTimer)
+                });
+
+                const yOffsetHeader = isMobile ? -25 : -40;
+                const yOffsetMain = isMobile ? 15 : 25;
+
+                tl.to("#header", { opacity: 1, y: 0, duration: 0.7, startAt: { y: yOffsetHeader } })
+                    .to("#main-content", { opacity: 1, y: 0, duration: 0.7, startAt: { y: yOffsetMain } }, "-=0.4")
+                    .to("#footer", { opacity: 1, duration: 0.7 }, "-=0.25");
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initGSAP);
+            } else {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(initGSAP);
+                });
+            }
+        })();
+    </script>
 </body>
 
 </html>
