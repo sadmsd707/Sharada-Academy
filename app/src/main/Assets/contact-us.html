@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en" style="overflow-x: hidden; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
+    <meta name="theme-color" content="#f8fafc">
+    <title>Contact Us - Sharada Academy Baramati</title>
+    <!-- Tailwind CSS CDN v4 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- GSAP CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+        :root {
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+        }
+
+        body {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            background-color: #f8fafc;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            min-height: 100vh;
+            min-height: 100dvh;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+            padding-left: var(--safe-left);
+            padding-right: var(--safe-right);
+            position: relative;
+            margin: 0;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+
+        p,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .allow-select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        #equations-canvas {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #db2777, #e11d48, #ea580c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline;
+        }
+
+        /* Glassmorphism card */
+        .contact-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(219, 39, 119, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 12px 20px;
+            border-radius: 12px;
+            transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            touch-action: manipulation;
+            width: 100%;
+        }
+
+        .btn-action:active {
+            transform: scale(0.97);
+        }
+
+        /* GSAP fallback: if GSAP fails, elements become visible after 0.6s */
+        #header,
+        #main-content,
+        #footer {
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        .gsap-fallback #header,
+        .gsap-fallback #main-content,
+        .gsap-fallback #footer {
+            opacity: 1;
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            #header,
+            #main-content,
+            #footer {
+                opacity: 1;
+                transition: none;
+            }
+
+            .btn-action {
+                transition: none;
+            }
+
+            .btn-action:active {
+                transform: none;
+            }
+
+            #equations-canvas {
+                opacity: 0.35;
+            }
+        }
+    </style>
+</head>
+
+<body class="text-slate-800 antialiased selection:bg-pink-100 selection:text-pink-800">
+
+    <!-- STEM Canvas background -->
+    <canvas id="equations-canvas" aria-hidden="true" role="presentation"></canvas>
+
+    <div class="content-layer min-h-screen flex flex-col justify-between px-4 py-6 sm:px-6 sm:py-8 md:px-12 md:py-10 max-w-2xl mx-auto w-full">
+        <!-- Header -->
+        <header id="header" class="opacity-0 flex items-center justify-between pb-4 border-b border-slate-200/80 w-full">
+            <a href="index.html" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-pink-600 transition-colors duration-200 group py-2" aria-label="Go back to Home">
+                <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path>
+                </svg>
+                <span>Back</span>
+            </a>
+            <div class="text-right">
+                <div class="text-sm sm:text-base font-black tracking-wider text-pink-600 leading-tight">
+                    SHARADA <span class="text-slate-800 font-light">ACADEMY</span>
+                </div>
+                <div class="text-[9px] tracking-widest text-slate-400 uppercase font-semibold">
+                    Baramati
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main id="main-content" class="opacity-0 flex-grow my-8 space-y-6">
+            <div class="text-center space-y-2 mb-6">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                    Get in <span class="gradient-text">Touch</span>
+                </h1>
+                <p class="text-sm text-slate-500 max-w-sm mx-auto font-medium">
+                    Have queries about admissions, tests, or classes? Contact us directly.
+                </p>
+            </div>
+
+            <!-- Contact Card -->
+            <div class="contact-card rounded-2xl p-6 sm:p-8 space-y-6">
+                <!-- Address Section -->
+                <div class="flex gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-600 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Office Address</h2>
+                        <p class="text-sm sm:text-base font-semibold text-slate-700 leading-relaxed">
+                            Sharada Academy, Near Sharada Pratishthan,<br>
+                            Baramati, District Pune,<br>
+                            Maharashtra - 413102
+                        </p>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100" />
+
+                <!-- Call Support -->
+                <div class="flex gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.387a20.302 20.302 0 01-7.097-4.1C5.656 9.02 4.28 7.01 3.745 5.54c-.155-.44.01-1.022.388-1.3l1.293-.97c.363-.271.527-.734.417-1.173L4.73 3.83c-.125-.501-.575-.852-1.091-.852H3A2.25 2.25 0 00.75 5.25v1.5z"></path>
+                        </svg>
+                    </div>
+                    <div class="space-y-3 w-full">
+                        <div class="space-y-1">
+                            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Phone Enquiries</h2>
+                            <p class="text-sm sm:text-base font-semibold text-slate-700">+91 98220 54321</p>
+                        </div>
+                        <a href="tel:+919822054321" class="btn-action bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-600/15" aria-label="Call Sharada Academy support number">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.387a20.302 20.302 0 01-7.097-4.1C5.656 9.02 4.28 7.01 3.745 5.54c-.155-.44.01-1.022.388-1.3l1.293-.97c.363-.271.527-.734.417-1.173L4.73 3.83c-.125-.501-.575-.852-1.091-.852H3A2.25 2.25 0 00.75 5.25v1.5z"></path>
+                            </svg>
+                            Call Support
+                        </a>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100" />
+
+                <!-- Email Support -->
+                <div class="flex gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-600 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"></path>
+                        </svg>
+                    </div>
+                    <div class="space-y-3 w-full">
+                        <div class="space-y-1">
+                            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Email Enquiries</h2>
+                            <p class="text-sm sm:text-base font-semibold text-slate-700">contact@sharadaacademybaramati.com</p>
+                        </div>
+                        <a href="mailto:contact@sharadaacademybaramati.com" class="btn-action bg-pink-600 hover:bg-pink-700 text-white shadow-lg shadow-pink-600/15" aria-label="Email Sharada Academy contact address">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"></path>
+                            </svg>
+                            Send Email
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer id="footer" class="opacity-0 text-center text-xs text-slate-400 border-t border-slate-200/80 pt-4">
+            &copy; 2026 Sharada Academy Baramati. All rights reserved.
+        </footer>
+    </div>
+
+    <!-- Background Particle Canvas & GSAP Animations -->
+    <script>
+        (function () {
+            const canvas = document.getElementById('equations-canvas');
+            const ctx = canvas.getContext('2d');
+
+            let width, height;
+            let dpr;
+            let isMobile = false;
+            let particleCount;
+            let baseSizeMultiplier;
+            let lastFrameTime = 0;
+            const MOBILE_FRAME_INTERVAL = 1000 / 30;
+            const DESKTOP_FRAME_INTERVAL = 1000 / 60;
+
+            function detectDevice() {
+                const w = window.innerWidth;
+                isMobile = w <= 768;
+                if (w <= 339) {
+                    particleCount = 10;
+                    baseSizeMultiplier = 0.45;
+                } else if (w <= 380) {
+                    particleCount = 14;
+                    baseSizeMultiplier = 0.52;
+                } else if (w <= 480) {
+                    particleCount = 18;
+                    baseSizeMultiplier = 0.6;
+                } else if (w <= 768) {
+                    particleCount = 24;
+                    baseSizeMultiplier = 0.72;
+                } else if (w <= 1024) {
+                    particleCount = 34;
+                    baseSizeMultiplier = 0.85;
+                } else {
+                    particleCount = 44;
+                    baseSizeMultiplier = 1.0;
+                }
+                dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
+                dpr = Math.max(dpr, 1);
+            }
+
+            function resizeCanvas() {
+                detectDevice();
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                width = canvas.width = Math.round(w * dpr);
+                height = canvas.height = Math.round(h * dpr);
+                canvas.style.width = w + 'px';
+                canvas.style.height = h + 'px';
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(dpr, dpr);
+            }
+
+            let resizeRAF;
+            function handleResize() {
+                if (resizeRAF) cancelAnimationFrame(resizeRAF);
+                resizeRAF = requestAnimationFrame(() => {
+                    resizeCanvas();
+                });
+            }
+
+            window.addEventListener('resize', handleResize, { passive: true });
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    resizeCanvas();
+                    initParticles();
+                }, 400);
+            }, { passive: true });
+
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', handleResize, { passive: true });
+                window.visualViewport.addEventListener('scroll', handleResize, { passive: true });
+            }
+
+            resizeCanvas();
+
+            const expressions = [
+                "E = mc\u00b2",
+                "\u222b x\u00b2 dx",
+                "\u2207 \u00d7 B = \u03bc\u2080J",
+                "PV = nRT",
+                "sin\u00b2\u03b8 + cos\u00b2\u03b8 = 1",
+                "H\u2082O + CO\u2082 \u2192 C\u2086H\u2081\u2082O\u2086",
+                "\u0394G = \u0394H - T\u0394S",
+                "F = G(m\u2081m\u2082)/r\u00b2",
+                "pH = -log[H\u207a]",
+                "DNA \u21cc RNA",
+                "Fe\u00b2\u207a + e\u207b \u2192 Fe",
+                "\u03bb = h/p",
+                "v = u + at",
+                "C\u2086H\u2081\u2082O\u2086",
+                "\u2211 F = ma",
+                "lim (x\u21920) sin(x)/x = 1",
+                "ATP \u2192 ADP + Pi",
+                "Krebs Cycle",
+                "d\u03c8/dt",
+                "K_a = [H\u207a][A\u207b]/[HA]",
+                "y = mx + c",
+            ];
+
+            function drawBenzene(ctx, x, y, size) {
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    const nextX = x + size * Math.cos(angle);
+                    const nextY = y + size * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(nextX, nextY);
+                    else ctx.lineTo(nextX, nextY);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.6, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            function drawSkeletalChain(ctx, x, y, size) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + size * 0.5, y - size * 0.3);
+                ctx.lineTo(x + size, y);
+                ctx.lineTo(x + size * 1.5, y - size * 0.3);
+                ctx.stroke();
+            }
+
+            function drawResistor(ctx, x, y, size) {
+                const w = size * 1.8;
+                const zigH = Math.max(6, size * 0.5);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + w * 0.2, y);
+                ctx.lineTo(x + w * 0.3, y - zigH);
+                ctx.lineTo(x + w * 0.4, y + zigH);
+                ctx.lineTo(x + w * 0.5, y - zigH);
+                ctx.lineTo(x + w * 0.6, y + zigH);
+                ctx.lineTo(x + w * 0.7, y - zigH);
+                ctx.lineTo(x + w * 0.8, y);
+                ctx.lineTo(x + w, y);
+                ctx.stroke();
+            }
+
+            function drawCapacitor(ctx, x, y, size) {
+                const w = size * 1.2;
+                const h = Math.max(10, size * 0.8);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + w * 0.4, y);
+                ctx.moveTo(x + w * 0.4, y - h);
+                ctx.lineTo(x + w * 0.4, y + h);
+                ctx.moveTo(x + w * 0.6, y - h);
+                ctx.lineTo(x + w * 0.6, y + h);
+                ctx.moveTo(x + w * 0.6, y);
+                ctx.lineTo(x + w, y);
+                ctx.stroke();
+            }
+
+            function drawDiode(ctx, x, y, size) {
+                const w = size * 1.4;
+                const h = Math.max(8, size * 0.65);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + w * 0.3, y);
+                ctx.moveTo(x + w * 0.3, y - h);
+                ctx.lineTo(x + w * 0.7, y);
+                ctx.lineTo(x + w * 0.3, y + h);
+                ctx.closePath();
+                ctx.moveTo(x + w * 0.7, y - h);
+                ctx.lineTo(x + w * 0.7, y + h);
+                ctx.moveTo(x + w * 0.7, y);
+                ctx.lineTo(x + w, y);
+                ctx.stroke();
+            }
+
+            class ScienceParticle {
+                constructor() {
+                    this.reset();
+                    this.y = Math.random() * (window.innerHeight || 800);
+                }
+
+                reset() {
+                    const rand = Math.random();
+                    if (rand < 0.5) {
+                        this.type = 'text';
+                    } else if (rand < 0.75) {
+                        this.type = 'chemistry';
+                        this.subType = Math.random() > 0.5 ? 'benzene' : 'chain';
+                    } else {
+                        this.type = 'physics';
+                        const roll = Math.random();
+                        this.subType = roll < 0.33 ? 'resistor' : (roll < 0.66 ? 'capacitor' : 'diode');
+                    }
+                    this.text = expressions[Math.floor(Math.random() * expressions.length)];
+                    this.x = Math.random() * (window.innerWidth || 400);
+                    this.y = -60;
+                    this.speed = 0.12 + Math.random() * 0.4;
+                    this.size = (9 + Math.floor(Math.random() * 13)) * baseSizeMultiplier;
+                    this.opacity = 0.16 + Math.random() * 0.2;
+                }
+
+                update(screenW, screenH) {
+                    this.y += this.speed;
+                    if (this.y > screenH + 60) {
+                        this.reset();
+                        this.y = -60;
+                        this.x = Math.random() * screenW;
+                    }
+                }
+
+                draw(ctx) {
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.fillStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.lineWidth = Math.max(1, 1.6 * baseSizeMultiplier);
+
+                    if (this.type === 'text') {
+                        ctx.font = `bold ${this.size}px 'Courier New', monospace`;
+                        ctx.fillText(this.text, this.x, this.y);
+                    } else if (this.type === 'chemistry') {
+                        if (this.subType === 'benzene') {
+                            drawBenzene(ctx, this.x, this.y, this.size * 1.2);
+                        } else {
+                            drawSkeletalChain(ctx, this.x, this.y, this.size * 1.5);
+                        }
+                    } else if (this.type === 'physics') {
+                        if (this.subType === 'resistor') {
+                            drawResistor(ctx, this.x, this.y, this.size);
+                        } else if (this.subType === 'capacitor') {
+                            drawCapacitor(ctx, this.x, this.y, this.size);
+                        } else if (this.subType === 'diode') {
+                            drawDiode(ctx, this.x, this.y, this.size);
+                        }
+                    }
+                    ctx.restore();
+                }
+            }
+
+            let particles = [];
+
+            function initParticles() {
+                particles = [];
+                const screenH = window.innerHeight || 800;
+                for (let i = 0; i < particleCount; i++) {
+                    const p = new ScienceParticle();
+                    p.y = (screenH / particleCount) * i - 60 + Math.random() * 40;
+                    particles.push(p);
+                }
+            }
+
+            initParticles();
+
+            let animFrameId;
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            function animateCanvas(timestamp) {
+                if (prefersReducedMotion) {
+                    if (!timestamp) timestamp = performance.now();
+                }
+
+                const frameInterval = isMobile ? MOBILE_FRAME_INTERVAL : DESKTOP_FRAME_INTERVAL;
+
+                if (timestamp - lastFrameTime >= frameInterval || lastFrameTime === 0) {
+                    lastFrameTime = timestamp;
+                    const screenW = window.innerWidth;
+                    const screenH = window.innerHeight;
+                    ctx.clearRect(0, 0, screenW, screenH);
+                    for (let i = 0; i < particles.length; i++) {
+                        particles[i].update(screenW, screenH);
+                        particles[i].draw(ctx);
+                    }
+                }
+                animFrameId = requestAnimationFrame(animateCanvas);
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (animFrameId) {
+                        cancelAnimationFrame(animFrameId);
+                        animFrameId = null;
+                    }
+                    lastFrameTime = 0;
+                } else {
+                    if (!animFrameId) {
+                        lastFrameTime = 0;
+                        animFrameId = requestAnimationFrame(animateCanvas);
+                    }
+                }
+            }, { passive: true });
+
+            const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+            motionQuery.addEventListener('change', (e) => {
+                if (e.matches) {
+                    particles.forEach(p => {
+                        p.speed *= 0.3;
+                        p.opacity = Math.min(p.opacity, 0.15);
+                    });
+                }
+            });
+
+            lastFrameTime = 0;
+            animFrameId = requestAnimationFrame(animateCanvas);
+
+            let resizeInitTimeout;
+            const debouncedReinit = () => {
+                clearTimeout(resizeInitTimeout);
+                resizeInitTimeout = setTimeout(() => {
+                    resizeCanvas();
+                    initParticles();
+                    lastFrameTime = 0;
+                }, 350);
+            };
+            window.addEventListener('resize', debouncedReinit, { passive: true });
+
+            // GSAP Entrance animation
+            function initGSAP() {
+                if (prefersReducedMotion) {
+                    document.body.classList.add('gsap-fallback');
+                    return;
+                }
+
+                const fallbackTimer = setTimeout(() => {
+                    document.body.classList.add('gsap-fallback');
+                }, 2500);
+
+                if (typeof gsap === 'undefined') {
+                    clearTimeout(fallbackTimer);
+                    document.body.classList.add('gsap-fallback');
+                    return;
+                }
+
+                const tl = gsap.timeline({
+                    defaults: { ease: "power3.out", overwrite: "auto" },
+                    onComplete: () => clearTimeout(fallbackTimer)
+                });
+
+                const yOffsetHeader = isMobile ? -25 : -40;
+                const yOffsetMain = isMobile ? 15 : 25;
+
+                tl.to("#header", { opacity: 1, y: 0, duration: 0.7, startAt: { y: yOffsetHeader } })
+                    .to("#main-content", { opacity: 1, y: 0, duration: 0.7, startAt: { y: yOffsetMain } }, "-=0.4")
+                    .to("#footer", { opacity: 1, duration: 0.7 }, "-=0.25");
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initGSAP);
+            } else {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(initGSAP);
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>

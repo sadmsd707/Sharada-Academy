@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Select Chapter - Biology</title>
+  
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #e0f2fe, #f8fafc);
+      color: #333;
+      margin: 0;
+    }
+
+    header {
+      background: #1e3a8a;
+      color: white;
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    nav ul {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      color: #93c5fd;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 20px;
+      bottom: -35px;
+      background: #1e3a8a;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: background 0.3s;
+    }
+
+    .back-btn:hover {
+      background: #1e40af;
+    }
+
+    .chapter-section {
+      max-width: 800px;
+      margin: 80px auto 40px;
+      padding: 0 20px;
+    }
+
+    .chapter-title {
+      text-align: center;
+      font-size: 1.8rem;
+      color: #1e3a8a;
+      margin-bottom: 30px;
+    }
+
+    .chapter-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 15px 20px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s;
+    }
+
+    .chapter-row:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .chapter-name {
+      font-size: 1.05rem;
+      color: #1e3a8a;
+      font-weight: 600;
+    }
+
+    .chapter-row a {
+      background: #2563eb;
+      color: white;
+      padding: 8px 18px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .chapter-row a:hover {
+      background: #1e40af;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+      .chapter-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #1e3a8a;
+      color: white;
+      margin-top: 50px;
+    }
+  </style>
+    <!-- Global Dark Mode Support -->
+    <style>
+        body.dark-mode {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .glass-card, 
+        body.dark-mode .app-header, 
+        body.dark-mode .side-nav {
+            background: rgba(30, 41, 59, 0.85) !important;
+            border-color: rgba(51, 65, 85, 0.5) !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .side-nav ul li a {
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .logo-text .light,
+        body.dark-mode .welcome-card h2,
+        body.dark-mode .section-title,
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode p,
+        body.dark-mode span,
+        body.dark-mode label,
+        body.dark-mode strong {
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode .gradient-text,
+        body.dark-mode .logo-text {
+            color: #db2777 !important;
+            background: none !important;
+            -webkit-text-fill-color: #db2777 !important;
+        }
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: rgba(15, 23, 42, 0.6) !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 !important;
+        }
+    </style>
+    <script>
+        (function() {
+            if (localStorage.getItem("appTheme") === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                document.addEventListener("DOMContentLoaded", () => {
+                    document.body.classList.add("dark-mode");
+                });
+            }
+        })();
+    </script>
+</head>
+
+<body>
+  <header>
+    <h1>Select Chapter</h1>
+    <a href="neet.html" class="back-btn">⬅ Back</a>
+    <nav>
+      <ul>
+        <li><a href="neet.html">Home</a></li>
+        <li><a href="../exam.html">Practice</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="chapter-section">
+    <h2 class="chapter-title">Biology Chapters</h2>
+
+    <!-- Chapter Rows -->
+    <div class="chapter-row"><span class="chapter-name">1. The Living World</span><a
+        href="BotanyCW(NEET)/The Living World.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">2. Biological Classification</span><a
+        href="BotanyCW(NEET)/Biological Classification.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">3. Plant Kingdom</span><a
+        href="BotanyCW(NEET)/Plant Kingdom.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">4. Animal Kingdom</span><a
+        href="BotanyCW(NEET)/Animal Kingdom.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">5. Morphology of Flowering Plants</span><a
+        href="BotanyCW(NEET)/Morphology of Flowering Plants.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">6. Anatomy of Flowering Plants</span><a
+        href="BotanyCW(NEET)/Anatomy of Flowering Plants.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">7. Cell Cycle and Cell Division</span><a
+        href="BotanyCW(NEET)/Cell Cycle and Cell Division.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">8. Cell: The Unit of Life</span><a
+        href="BotanyCW(NEET)/Cell - The Unit of Life.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">9. Plant Growth and Development</span><a
+        href="BotanyCW(NEET)/Plant Growth and Development.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">10. Respiration in Plants</span><a
+        href="BotanyCW(NEET)/Respiration in Plants.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">11. Photosynthesis in Higher Plants</span><a
+        href="BotanyCW(NEET)/Photosynthesis in Higher Plants.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">12. Sexual Reproduction in Flowering Plants</span><a
+        href="BotanyCW(NEET)/Sexual Reproduction in Flowering Plants.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">13. Biomolecules</span><a
+        href="BotanyCW(NEET)/Biomolecules.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">14. Biodiversity and Its Conservation</span><a
+        href="BotanyCW(NEET)/Biodiversity and Its Conservation.html">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">15. Ecosystem</span><a
+        href="BotanyCW(NEET)/Ecosystem.html">Start</a></div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Sharada Academy. All rights reserved.</p>
+    <p style="margin-top: 10px; font-size: 0.9rem;">Made with ❤️ by Team Sharada</p>
+  </footer>
+</body>
+
+</html>

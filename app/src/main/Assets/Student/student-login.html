@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            try {
+                if (localStorage && localStorage.getItem("isLoggedIn") === "true") {
+                    const role = localStorage.getItem("userRole");
+                    if (role === "student") {
+                        window.location.href = "student-dashboard.html";
+                    } else if (role === "teacher") {
+                        window.location.href = "../Teachers/teacher-dashboard.html";
+                    } else if (role === "parent") {
+                        window.location.href = "../Parents/parent-dashboard.html";
+                    } else if (role === "admin") {
+                        window.location.href = "../admin-login.html";
+                    }
+                }
+            } catch (e) {
+                console.warn("DOM Storage / localStorage is disabled or restricted in this WebView:", e);
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f8fafc">
+    <title>Student Login - Sharada Academy</title>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
+            --safe-top: env(safe-area-inset-top, 0px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            background-color: #f8fafc;
+            min-height: 100vh;
+            min-height: 100dvh;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #1e293b;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #equations-canvas {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 5vw;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            text-align: center;
+        }
+        .logo-text {
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            color: #db2777;
+            line-height: 1.2;
+        }
+        .logo-text .light {
+            font-weight: 300;
+            color: #1e293b;
+        }
+        .tagline {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #64748b;
+            font-weight: 600;
+            width: 100%;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+            padding: 32px 24px;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .student-emoji {
+            font-size: 3.2rem;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .form-title {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(219, 39, 119, 0.15);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 22px;
+            font-size: 0.82rem;
+            color: #475569;
+        }
+        .info-box h4 {
+            color: #be185d;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+        .info-box p {
+            margin-bottom: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 0.9rem;
+        }
+        .required-field::after {
+            content: " *";
+            color: #db2777;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.9);
+            color: #1e293b;
+            font-family: inherit;
+        }
+        .input-field:focus {
+            border-color: #db2777;
+            box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.15);
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px;
+        }
+        .password-toggle:hover {
+            color: #db2777;
+        }
+
+        .validation-msg {
+            font-size: 0.75rem;
+            margin-top: 5px;
+            color: #64748b;
+            display: none;
+        }
+
+        .btn-primary {
+            width: 100%;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+            font-size: 15px;
+            letter-spacing: 0.01em;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            box-shadow: 0 8px 24px rgba(219, 39, 119, 0.2);
+            border: none;
+            outline: none;
+            cursor: pointer;
+            margin-top: 18px;
+        }
+        .btn-primary:active {
+            transform: scale(0.96);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+            background: linear-gradient(135deg, #be185d, #db2777);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            transform: none;
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.1);
+        }
+
+        .forgot-link {
+            display: inline-block;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.8rem;
+            margin-top: 12px;
+            text-align: center;
+            width: 100%;
+            font-weight: 500;
+        }
+        .forgot-link:hover {
+            color: #db2777;
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            color: #db2777;
+            text-decoration: none;
+            font-size: 0.85rem;
+            margin-top: 16px;
+            font-weight: 600;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .message-box {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            font-size: 0.85rem;
+            display: none;
+            font-weight: 500;
+        }
+        .message-box.show {
+            display: block;
+        }
+        .error-box {
+            background: rgba(254, 226, 226, 0.9);
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+        }
+        .success-box {
+            background: rgba(220, 252, 231, 0.9);
+            border: 1px solid #bbf7d0;
+            color: #065f46;
+        }
+
+        /* EXACT FOOTER FROM ROLE SELECTION (no background, no blur) */
+        .site-footer {
+            border-top: 1px solid #e2e8f0;   /* slate-200 */
+            padding-top: 20px;                /* pt-5 */
+            margin-top: 24px;                 /* mt-6 */
+            text-align: center;
+            width: 100%;
+            padding-bottom: 16px;             /* keep some bottom space */
+        }
+        .site-footer .copyright {
+            font-size: 0.875rem;              /* text-sm */
+            font-weight: 700;                 /* font-bold */
+            color: #1e293b;                   /* text-slate-800 */
+        }
+        .site-footer .love {
+            font-size: 10px;                  /* text-[10px] */
+            color: #64748b;                   /* text-slate-500 */
+            text-transform: uppercase;
+            letter-spacing: 0.25em;           /* tracking-widest */
+            font-weight: 700;
+            margin-top: 4px;                  /* mt-1 */
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 9999;
+        }
+        .loading-overlay.show {
+            display: flex;
+        }
+        .spinner {
+            width: 46px;
+            height: 46px;
+            border: 4px solid #f1f5f9;
+            border-top-color: #db2777;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            10%,30%,50%,70%,90% { transform: translateX(-5px); }
+            20%,40%,60%,80% { transform: translateX(5px); }
+        }
+    </style>
+    <!-- Global Dark Mode Support -->
+    <style>
+        body.dark-mode {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .glass-card, 
+        body.dark-mode .app-header, 
+        body.dark-mode .side-nav {
+            background: rgba(30, 41, 59, 0.85) !important;
+            border-color: rgba(51, 65, 85, 0.5) !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .side-nav ul li a {
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .logo-text .light,
+        body.dark-mode .welcome-card h2,
+        body.dark-mode .section-title,
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode p,
+        body.dark-mode span,
+        body.dark-mode label,
+        body.dark-mode strong {
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode .gradient-text,
+        body.dark-mode .logo-text {
+            color: #db2777 !important;
+            background: none !important;
+            -webkit-text-fill-color: #db2777 !important;
+        }
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: rgba(15, 23, 42, 0.6) !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 !important;
+        }
+    </style>
+    <script>
+        (function() {
+            if (localStorage.getItem("appTheme") === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                document.addEventListener("DOMContentLoaded", () => {
+                    document.body.classList.add("dark-mode");
+                });
+            }
+        })();
+    </script>
+</head>
+<body>
+
+    <canvas id="equations-canvas" aria-hidden="true" role="presentation"></canvas>
+
+    <div class="content-layer">
+        <header class="app-header">
+            <div class="logo-text">SHARADA <span class="light">ACADEMY</span></div>
+            <div class="tagline">Student Portal</div>
+        </header>
+
+        <main style="flex:1; display:flex; align-items:center; justify-content:center; padding: 16px;">
+            <div class="glass-card">
+                <div class="student-emoji">🎓</div>
+                <h2 class="form-title">Student Login</h2>
+
+                <div class="message-box error-box" id="errorMessage">
+                    Invalid Student ID, Password, or Mother's Name.
+                </div>
+                <div class="message-box success-box" id="successMessage">
+                    Login successful! Redirecting...
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="studentId" class="required-field">Student ID</label>
+                        <input type="text" id="studentId" class="input-field" placeholder="Enter your Student ID" required>
+                        <div class="validation-msg" id="studentIdMessage"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="required-field">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" class="input-field" placeholder="Enter your Password" required>
+                            <button type="button" class="password-toggle" id="passwordToggle">👁️</button>
+                        </div>
+                        <div class="validation-msg" id="passwordMessage"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="motherName" class="required-field">Mother's Name</label>
+                        <input type="text" id="motherName" class="input-field" placeholder="Enter your Mother's Full Name" required>
+                        <div class="validation-msg" id="motherNameMessage"></div>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="loginButton">Login</button>
+
+                    <a href="javascript:void(0)" onclick="alert('Please contact your school administration or class teacher to reset your password or retrieve your Student ID.')" class="forgot-link">Forgot Student ID, Password or Mother's Name?</a>
+                </form>
+
+                <a href="../role-selection.html" class="back-link">← Back to Role Selection</a>
+            </div>
+        </main>
+
+        <!-- CORRECTED FOOTER -->
+        <footer class="site-footer">
+            <div class="copyright">&copy; 2026 Sharada Academy. All rights reserved.</div>
+            <div class="love">Made with ❤️ by Team Sharada</div>
+        </footer>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div style="color:#1e293b; font-weight:500;">Verifying credentials...</div>
+    </div>
+
+    <script>
+        // ---------- Firebase Configuration ----------
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXWEuA7G55nawfNUoIqr9PqGP9YGQwGnc",
+            authDomain: "soham-6d886.firebaseapp.com",
+            projectId: "soham-6d886",
+            storageBucket: "soham-6d886.firebasestorage.app",
+            messagingSenderId: "281780176229",
+            appId: "1:281780176229:web:cd1eea7bd171c14a338d8c",
+            measurementId: "G-CB1J6LQ7DJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const form = document.getElementById("loginForm");
+        const studentIdInput = document.getElementById("studentId");
+        const passwordInput = document.getElementById("password");
+        const motherNameInput = document.getElementById("motherName");
+        const loginButton = document.getElementById("loginButton");
+        const passwordToggle = document.getElementById("passwordToggle");
+        const errorMessage = document.getElementById("errorMessage");
+        const successMessage = document.getElementById("successMessage");
+        const loadingOverlay = document.getElementById("loadingOverlay");
+
+        let isPasswordVisible = false;
+        passwordToggle.addEventListener("click", () => {
+            isPasswordVisible = !isPasswordVisible;
+            passwordInput.type = isPasswordVisible ? "text" : "password";
+            passwordToggle.textContent = isPasswordVisible ? "🙈" : "👁️";
+        });
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            errorMessage.classList.remove("show");
+            successMessage.classList.remove("show");
+            document.querySelectorAll('.validation-msg').forEach(el => el.style.display = 'none');
+
+            const studentId = studentIdInput.value.trim();
+            const password = passwordInput.value.trim();
+            const motherName = motherNameInput.value.trim();
+
+            let valid = true;
+            if (!studentId || studentId.length < 3) {
+                document.getElementById("studentIdMessage").style.display = 'block';
+                document.getElementById("studentIdMessage").textContent = "Enter a valid Student ID";
+                document.getElementById("studentIdMessage").style.color = "#b91c1c";
+                valid = false;
+            }
+            if (!password || password.length < 6) {
+                document.getElementById("passwordMessage").style.display = 'block';
+                document.getElementById("passwordMessage").textContent = "Password must be at least 6 characters";
+                document.getElementById("passwordMessage").style.color = "#b91c1c";
+                valid = false;
+            }
+            if (!motherName || motherName.length < 3) {
+                document.getElementById("motherNameMessage").style.display = 'block';
+                document.getElementById("motherNameMessage").textContent = "Enter a valid mother's name";
+                document.getElementById("motherNameMessage").style.color = "#b91c1c";
+                valid = false;
+            }
+            if (!valid) return;
+
+            const userRole = localStorage.getItem("userRole");
+            if (userRole !== "student") {
+                errorMessage.textContent = "Please select student role first from role selection page";
+                errorMessage.classList.add("show");
+                return;
+            }
+
+            loadingOverlay.classList.add("show");
+            loginButton.disabled = true;
+            loginButton.textContent = "Logging in...";
+
+            try {
+                const docRef = db.collection("studentCredentials").doc(studentId);
+                const docSnap = await docRef.get();
+                if (!docSnap.exists) throw new Error("No student found");
+
+                const data = docSnap.data();
+                if (data.password !== password) throw new Error("Invalid password");
+                if (!data.motherName || data.motherName.toLowerCase() !== motherName.toLowerCase()) throw new Error("Mother name mismatch");
+
+                localStorage.setItem("currentStudent", JSON.stringify({
+                    studentId: data.studentId,
+                    name: data.name,
+                    class: data.class,
+                    motherName: data.motherName,
+                    role: "student",
+                    loginTime: new Date().toISOString()
+                }));
+                localStorage.setItem("lastMotherName", motherName);
+                localStorage.setItem("isLoggedIn", "true");
+                localStorage.setItem("username", data.name);
+                localStorage.setItem("userRole", "student");
+
+                successMessage.classList.add("show");
+                setTimeout(() => {
+                    window.location.href = "student-dashboard.html";
+                }, 1500);
+
+            } catch (err) {
+                loadingOverlay.classList.remove("show");
+                loginButton.disabled = false;
+                loginButton.textContent = "Login";
+                if (err.message === "No student found") errorMessage.textContent = "Invalid Student ID.";
+                else if (err.message === "Invalid password") errorMessage.textContent = "Incorrect password.";
+                else if (err.message === "Mother name mismatch") errorMessage.textContent = "Mother's name does not match.";
+                else errorMessage.textContent = "Invalid credentials.";
+                errorMessage.classList.add("show");
+                passwordInput.value = "";
+                form.classList.add("shake");
+                setTimeout(() => form.classList.remove("shake"), 500);
+            }
+        });
+
+        [studentIdInput, passwordInput, motherNameInput].forEach(input => {
+            input.addEventListener('input', () => {
+                document.querySelectorAll('.validation-msg').forEach(el => el.style.display = 'none');
+                errorMessage.classList.remove("show");
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userRole = localStorage.getItem("userRole");
+            if (userRole !== "student") {
+                errorMessage.textContent = "Please select 'Student' role from the role selection page.";
+                errorMessage.classList.add("show");
+                loginButton.disabled = true;
+                setTimeout(() => { window.location.href = "../role-selection.html"; }, 3000);
+                return;
+            }
+            const lastStudentId = localStorage.getItem("lastStudentId");
+            if (lastStudentId) studentIdInput.value = lastStudentId;
+            const lastMotherName = localStorage.getItem("lastMotherName");
+            if (lastMotherName) motherNameInput.value = lastMotherName;
+
+            studentIdInput.addEventListener('blur', () => {
+                if (studentIdInput.value.trim()) localStorage.setItem("lastStudentId", studentIdInput.value.trim());
+            });
+            motherNameInput.addEventListener('blur', function() {
+                if (this.value) this.value = this.value.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+            });
+            studentIdInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); passwordInput.focus(); } });
+            passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); motherNameInput.focus(); } });
+            motherNameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); form.dispatchEvent(new Event('submit')); } });
+        });
+
+        // ---------- Canvas Background (identical to role selection) ----------
+        (function() {
+            const canvas = document.getElementById('equations-canvas');
+            const ctx = canvas.getContext('2d');
+
+            let width, height;
+            let dpr = Math.min(window.devicePixelRatio || 1, 2);
+            let isMobile = false;
+            let particleCount;
+            let baseSizeMultiplier;
+
+            function detectMobile() {
+                const w = window.innerWidth;
+                isMobile = w <= 768;
+                if (w <= 380) { particleCount = 18; baseSizeMultiplier = 0.55; }
+                else if (w <= 480) { particleCount = 24; baseSizeMultiplier = 0.65; }
+                else if (w <= 768) { particleCount = 32; baseSizeMultiplier = 0.78; }
+                else if (w <= 1024) { particleCount = 40; baseSizeMultiplier = 0.9; }
+                else { particleCount = 48; baseSizeMultiplier = 1.0; }
+            }
+
+            function resizeCanvas() {
+                detectMobile();
+                dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 2);
+                width = canvas.width = window.innerWidth * dpr;
+                height = canvas.height = window.innerHeight * dpr;
+                canvas.style.width = window.innerWidth + 'px';
+                canvas.style.height = window.innerHeight + 'px';
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(dpr, dpr);
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 300));
+            resizeCanvas();
+
+            const expressions = [
+                "E = mc²", "∫ x² dx", "∇ × B = μ₀J", "PV = nRT",
+                "sin²θ + cos²θ = 1", "H₂O + CO₂ → C₆H₁₂O₆", "ΔG = ΔH - TΔS",
+                "F = G(m₁m₂)/r²", "pH = -log[H⁺]", "DNA ⇌ RNA",
+                "Fe²⁺ + e⁻ → Fe", "λ = h/p", "v = u + at", "C₆H₁₂O₆",
+                "∑ F = ma", "lim (x→0) sin(x)/x = 1", "ATP → ADP + Pi",
+                "Krebs Cycle", "dψ/dt", "K_a = [H⁺][A⁻]/[HA]", "y = mx + c",
+            ];
+
+            function drawBenzene(ctx, x, y, size) {
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    const nextX = x + size * Math.cos(angle);
+                    const nextY = y + size * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(nextX, nextY);
+                    else ctx.lineTo(nextX, nextY);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.6, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            class ScienceParticle {
+                constructor() {
+                    this.reset();
+                    this.y = Math.random() * (window.innerHeight || 800);
+                }
+                reset() {
+                    this.type = Math.random() < 0.7 ? 'text' : 'chemistry';
+                    this.text = expressions[Math.floor(Math.random() * expressions.length)];
+                    this.x = Math.random() * (window.innerWidth || 400);
+                    this.y = -60;
+                    this.speed = 0.15 + Math.random() * 0.45;
+                    this.size = (10 + Math.floor(Math.random() * 14)) * baseSizeMultiplier;
+                    this.opacity = 0.12 + Math.random() * 0.15;
+                }
+                update(screenW, screenH) {
+                    this.y += this.speed;
+                    if (this.y > screenH + 60) {
+                        this.reset();
+                        this.y = -60;
+                        this.x = Math.random() * screenW;
+                    }
+                }
+                draw(ctx) {
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.fillStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.lineWidth = Math.max(1.2, 1.8 * baseSizeMultiplier);
+                    if (this.type === 'text') {
+                        ctx.font = `bold ${this.size}px 'Courier New', monospace`;
+                        ctx.fillText(this.text, this.x, this.y);
+                    } else {
+                        drawBenzene(ctx, this.x, this.y, this.size * 1.2);
+                    }
+                    ctx.restore();
+                }
+            }
+
+            let particles = [];
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    const p = new ScienceParticle();
+                    p.y = (window.innerHeight / particleCount) * i - 60 + Math.random() * 40;
+                    particles.push(p);
+                }
+            }
+            initParticles();
+
+            let animFrameId;
+            function animateCanvas() {
+                if (localStorage.getItem("disableAnimations") === "true") {
+                    if (typeof ctx !== 'undefined') {
+                        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                    }
+                    animFrameId = null;
+                    return;
+                }
+                const screenW = window.innerWidth;
+                const screenH = window.innerHeight;
+                ctx.clearRect(0, 0, screenW, screenH);
+                particles.forEach(p => { p.update(screenW, screenH); p.draw(ctx); });
+                animFrameId = requestAnimationFrame(animateCanvas);
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                } else if (!document.hidden && !animFrameId) {
+                    animFrameId = requestAnimationFrame(animateCanvas);
+                }
+            });
+            animateCanvas();
+
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => { resizeCanvas(); initParticles(); }, 250);
+            });
+        })();
+    </script>
+</body>
+</html>

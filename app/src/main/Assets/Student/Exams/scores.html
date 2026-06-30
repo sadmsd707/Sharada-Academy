@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#f8fafc">
+  <title>My Scores - Sharada Academy</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- MathJax Configuration & Loader -->
+  <script>
+      window.MathJax = {
+          tex: {
+              inlineMath: [['$', '$'], ['\\(', '\\)']],
+              displayMath: [['$$', '$$'], ['\\[', '\\]']],
+              processEscapes: true
+          },
+          options: {
+              skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+
+  <style>
+    :root {
+      --safe-bottom: env(safe-area-inset-bottom, 16px);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --rose-50: #fff1f2;
+      --rose-100: #ffe4e6;
+      --rose-200: #fecdd3;
+      --rose-300: #fda4af;
+      --rose-400: #fb7185;
+      --rose-500: #f43f5e;
+      --rose-600: #e11d48;
+      --rose-700: #be123c;
+      --rose-800: #9f1239;
+      --rose-900: #881337;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --emerald-500: #10b981;
+      --amber-500: #f59e0b;
+      --red-500: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    body {
+      background-color: #f8fafc;
+      min-height: 100vh;
+      min-height: 100dvh;
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #1e293b;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    #equations-canvas {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      pointer-events: none;
+      will-change: transform;
+    }
+
+    .content-layer {
+      position: relative;
+      z-index: 10;
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 5vw;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(203, 213, 225, 0.5);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo-area {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-text {
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      color: #db2777;
+      line-height: 1.2;
+    }
+
+    .logo-text .light {
+      font-weight: 300;
+      color: #1e293b;
+    }
+
+    .tagline {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .hamburger {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 28px;
+      height: 20px;
+      padding: 0;
+      z-index: 110;
+    }
+
+    .hamburger span {
+      display: block;
+      height: 3px;
+      width: 100%;
+      background-color: #db2777;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+    }
+
+    .side-nav {
+      position: fixed;
+      top: 0;
+      right: -300px;
+      width: 300px;
+      height: 100vh;
+      height: 100dvh;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: -8px 0 30px rgba(0, 0, 0, 0.08);
+      border-left: 1px solid rgba(203, 213, 225, 0.5);
+      transition: right 0.4s ease;
+      z-index: 1000;
+      padding-top: 80px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .side-nav.active {
+      right: 0;
+    }
+
+    .side-nav ul {
+      list-style: none;
+      padding: 0;
+      flex: 1;
+    }
+
+    .side-nav ul li {
+      border-bottom: 1px solid rgba(219, 39, 119, 0.1);
+    }
+
+    .side-nav ul li a {
+      display: block;
+      color: #1e293b;
+      text-decoration: none;
+      padding: 16px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      border-left: 4px solid transparent;
+    }
+
+    .side-nav ul li a:hover,
+    .side-nav ul li a.active-nav {
+      background: rgba(219, 39, 119, 0.05);
+      border-left-color: #db2777;
+      color: #db2777;
+      padding-left: 32px;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 24px 5vw 32px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(203, 213, 225, 0.5);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+      padding: 28px 24px;
+    }
+
+    .welcome-card {
+      background: rgba(252, 231, 243, 0.6);
+      border-color: rgba(219, 39, 119, 0.2);
+      text-align: center;
+      padding: 36px 24px;
+    }
+
+    .welcome-card h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #db2777, #e11d48);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .welcome-card p {
+      font-size: 1.1rem;
+      color: #475569;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 24px 16px;
+      border-top: 4px solid #db2777;
+      border-radius: 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .stat-value {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #db2777, #e11d48);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #64748b;
+      font-weight: 600;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .subject-tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .subject-tab {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      padding: 10px 20px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: 1px solid rgba(203, 213, 225, 0.5);
+      color: #475569;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .subject-tab.active {
+      background: linear-gradient(135deg, #db2777, #e11d48);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 8px 20px rgba(219, 39, 119, 0.25);
+    }
+
+    .subject-tab:hover:not(.active) {
+      background: rgba(219, 39, 119, 0.08);
+      color: #db2777;
+      border-color: rgba(219, 39, 119, 0.2);
+    }
+
+    .test-results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 24px;
+    }
+
+    .test-card {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(203, 213, 225, 0.4);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.02);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .test-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.06);
+    }
+
+    .test-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .test-title {
+      font-size: 1.15rem;
+      color: #1e293b;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .test-date {
+      color: #64748b;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .score-display {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: rgba(248, 250, 252, 0.6);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid #f1f5f9;
+    }
+
+    .score-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .score-circle.excellent {
+      background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .score-circle.good {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .score-circle.poor {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .score-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .score-details p {
+      font-size: 0.85rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .score-details p strong {
+      color: #1e293b;
+    }
+
+    .score-bar {
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+
+    .score-progress {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .test-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+      text-decoration: none;
+      font-family: inherit;
+      flex: 1;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #db2777, #e11d48);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(219, 39, 119, 0.15);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #be185d, #db2777);
+    }
+
+    .btn-secondary {
+      background: rgba(219, 39, 119, 0.06);
+      color: #db2777;
+      border: 1px solid rgba(219, 39, 119, 0.15);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(219, 39, 119, 0.12);
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 48px 24px;
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .no-results p {
+      color: #64748b;
+      font-size: 1.05rem;
+      font-weight: 500;
+    }
+
+    .start-practice-btn {
+      background: linear-gradient(135deg, #db2777, #e11d48);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(219, 39, 119, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .start-practice-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 20px rgba(219, 39, 119, 0.3);
+    }
+
+    #loadingOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 9999;
+      transition: opacity 0.3s ease;
+    }
+
+    .spinner {
+      border: 4px solid #f1f5f9;
+      border-top: 4px solid #db2777;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .site-footer {
+      border-top: 1px solid rgba(226, 232, 240, 0.5);
+      padding-top: 24px;
+      margin-top: auto;
+      text-align: center;
+      width: 100%;
+      padding-bottom: 24px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .site-footer .copyright {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .site-footer .love {
+      font-size: 10px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 28px;
+      border-radius: 24px;
+      width: 95%;
+      max-width: 750px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      animation: modalFadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 16px;
+    }
+
+    .modal-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #1e293b;
+    }
+
+    .close-btn {
+      background: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .close-btn:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .result-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .result-card {
+      background: rgba(248, 250, 252, 0.5);
+      border: 1px solid #f1f5f9;
+      padding: 20px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .score-section {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .score-box {
+      background: #ffe4e6;
+      color: #be123c;
+      padding: 12px 24px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 1.3rem;
+      border: 1px solid rgba(219, 39, 119, 0.15);
+      box-shadow: 0 4px 12px rgba(219, 39, 119, 0.05);
+    }
+
+    .chart-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .pie-chart {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      position: relative;
+      background: #e2e8f0;
+      flex-shrink: 0;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .pie-chart::after {
+      content: '';
+      position: absolute;
+      top: 25%;
+      left: 25%;
+      width: 50%;
+      height: 50%;
+      background: white;
+      border-radius: 50%;
+      z-index: 2;
+    }
+
+    .chart-labels {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .chart-labels .correct-label {
+      background: rgba(16, 185, 129, 0.1);
+      color: #059669;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .chart-labels .wrong-label {
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .stats-grid-small {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+    }
+
+    .stat-box-small {
+      padding: 12px 10px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .stat-box-small.attempted {
+      border-left: 4px solid #8b5cf6;
+      background: #f5f3ff;
+      color: #5b21b6;
+    }
+
+    .stat-box-small.unattempted {
+      border-left: 4px solid #6366f1;
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .stat-box-small.accuracy {
+      border-left: 4px solid #f59e0b;
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .stat-box-small.time {
+      border-left: 4px solid #0ea5e9;
+      background: #f0f9ff;
+      color: #075985;
+    }
+
+    .result-info-message {
+      font-size: 0.85rem;
+      color: #64748b;
+      line-height: 1.5;
+      text-align: center;
+      background: rgba(226, 232, 240, 0.3);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #94a3b8;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .grid button {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: default;
+      transition: transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .grid button.correct {
+      background: #10b981;
+      color: white;
+      box-shadow: 0 3px 8px rgba(16, 185, 129, 0.2);
+    }
+
+    .grid button.wrong {
+      background: #ef4444;
+      color: white;
+      box-shadow: 0 3px 8px rgba(239, 68, 68, 0.2);
+    }
+
+    .grid button.unattempted {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    @media (max-width: 768px) {
+      .app-header {
+        padding: 14px 20px;
+      }
+
+      .main-content {
+        padding: 16px;
+        gap: 20px;
+      }
+
+      .test-results {
+        grid-template-columns: 1fr;
+      }
+
+      .score-display {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .score-circle {
+        flex-shrink: 0;
+      }
+
+      .chart-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .modal-content {
+        padding: 20px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+  </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Global Dark Mode Support -->
+    <style>
+        body.dark-mode {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .glass-card, 
+        body.dark-mode .app-header, 
+        body.dark-mode .side-nav {
+            background: rgba(30, 41, 59, 0.85) !important;
+            border-color: rgba(51, 65, 85, 0.5) !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .side-nav ul li a {
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .logo-text .light,
+        body.dark-mode .welcome-card h2,
+        body.dark-mode .section-title,
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode p,
+        body.dark-mode span,
+        body.dark-mode label,
+        body.dark-mode strong {
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode .gradient-text,
+        body.dark-mode .logo-text {
+            color: #db2777 !important;
+            background: none !important;
+            -webkit-text-fill-color: #db2777 !important;
+        }
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: rgba(15, 23, 42, 0.6) !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 !important;
+        }
+    </style>
+    <script>
+        (function() {
+            if (localStorage.getItem("appTheme") === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                document.addEventListener("DOMContentLoaded", () => {
+                    document.body.classList.add("dark-mode");
+                });
+            }
+        })();
+    </script>
+</head>
+
+<body>
+  <canvas id="equations-canvas" aria-hidden="true" role="presentation"></canvas>
+
+  <div class="content-layer">
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-text">SHARADA <span class="light">ACADEMY</span></div>
+        <div class="tagline">Student Portal</div>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </header>
+
+    <div class="side-nav" id="sideNav">
+    <style>
+        /* Standardized Side Navigation Styling */
+        .side-nav {
+            position: fixed !important;
+            top: 0 !important;
+            right: -320px !important;
+            width: 300px !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.08) !important;
+            border-left: 1px solid rgba(203, 213, 225, 0.5) !important;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            z-index: 1000 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            padding-top: 80px !important;
+            box-sizing: border-box !important;
+        }
+        .side-nav.active {
+            right: 0 !important;
+        }
+        .side-nav ul {
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            flex: 1 !important;
+            overflow-y: auto !important;
+        }
+        .side-nav ul li {
+            border-bottom: 1px solid rgba(219, 39, 119, 0.08) !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .side-nav ul li a {
+            display: flex !important;
+            align-items: center !important;
+            gap: 14px !important;
+            color: #1e293b !important;
+            text-decoration: none !important;
+            padding: 16px 24px !important;
+            font-size: 0.95rem !important;
+            font-weight: 600 !important;
+            border-left: 4px solid transparent !important;
+            transition: all 0.25s ease !important;
+            background: transparent !important;
+            box-sizing: border-box !important;
+        }
+        .side-nav ul li a:hover,
+        .side-nav ul li a.active-nav,
+        .side-nav ul li a.nav-active {
+            background: rgba(219, 39, 119, 0.05) !important;
+            border-left-color: #db2777 !important;
+            color: #db2777 !important;
+            padding-left: 32px !important;
+        }
+        .side-nav .nav-icon {
+            font-size: 1.1rem !important;
+            width: 24px !important;
+            text-align: center !important;
+            flex-shrink: 0 !important;
+            transition: transform 0.25s ease !important;
+            color: inherit !important;
+            display: inline-block !important;
+        }
+        .side-nav ul li a:hover .nav-icon {
+            transform: scale(1.15) !important;
+        }
+    </style>
+    <ul>
+        <li><a href="../student-dashboard.html" class=""><i class="fa-solid fa-house nav-icon"></i>Home</a></li>
+        <li><a href="../Exams/take-test.html" class=""><i class="fa-solid fa-pen-to-square nav-icon"></i>Take a Test</a></li>
+        <li><a href="../Exams/exam.html" class=""><i class="fa-solid fa-book-open nav-icon"></i>Practice</a></li>
+        <li><a href="../Exams/scores.html" class="active-nav nav-active"><i class="fa-solid fa-chart-simple nav-icon"></i>Scores</a></li>
+        <li><a href="../student-announcement.html" class=""><i class="fa-solid fa-bullhorn nav-icon"></i>Announcements</a></li>
+        <li><a href="../student-resources.html" class=""><i class="fa-solid fa-folder-open nav-icon"></i>Resources</a></li>
+        <li><a href="../Boardprep/board-prep.html" class=""><i class="fa-solid fa-graduation-cap nav-icon"></i>Board Preparation</a></li>
+        <li><a href="../student-account.html" class=""><i class="fa-solid fa-user nav-icon"></i>My Account</a></li>
+                <li><a href="../student-settings.html" class=""><i class="fa-solid fa-gear nav-icon"></i>App Settings</a></li>
+        <li><a href="../../role-selection.html" onclick="logout(event)"><i class="fa-solid fa-right-from-bracket nav-icon"></i>Logout</a></li>
+    </ul>
+</div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <main class="main-content">
+      <section class="glass-card welcome-card">
+        <h2>My <span class="gradient-text">Test Scores</span></h2>
+        <p>Track your academic achievements, performance trends, and dynamic quiz results.</p>
+      </section>
+
+      <section class="stats-grid">
+        <div class="glass-card stat-card" style="border-top-color: #db2777;">
+          <div class="stat-value" id="statTotalTests">0</div>
+          <div class="stat-label">Total Tests Taken</div>
+        </div>
+        <div class="glass-card stat-card" style="border-top-color: #10b981;">
+          <div class="stat-value" id="statAvgAccuracy">0%</div>
+          <div class="stat-label">Avg. Accuracy</div>
+        </div>
+        <div class="glass-card stat-card" style="border-top-color: #f59e0b;">
+          <div class="stat-value" id="statHighestAccuracy">0%</div>
+          <div class="stat-label">Highest Score</div>
+        </div>
+      </section>
+
+      <div class="subject-tabs">
+        <div class="subject-tab active" onclick="filterTests('all')">All Subjects</div>
+        <div class="subject-tab" onclick="filterTests('physics')">Physics</div>
+        <div class="subject-tab" onclick="filterTests('chemistry')">Chemistry</div>
+        <div class="subject-tab" onclick="filterTests('mathematics')">Mathematics</div>
+        <div class="subject-tab" onclick="filterTests('biology')">Biology</div>
+      </div>
+
+      <div class="test-results" id="testResults"></div>
+    </main>
+
+    <footer class="site-footer">
+      <p class="copyright">&copy; 2026 Sharada Academy. All rights reserved.</p>
+      <p class="love">Made with ❤️ by Team Sharada</p>
+    </footer>
+  </div>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p style="color: #64748b; font-weight: 600; font-size: 0.95rem;">Retrieving scores data...</p>
+  </div>
+
+  <div class="modal" id="resultModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Test Details</h2>
+        <button class="close-btn" onclick="closeModal()">×</button>
+      </div>
+
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Firebase Config ----------
+    const firebaseConfig = {
+            apiKey: "AIzaSyBXWEuA7G55nawfNUoIqr9PqGP9YGQwGnc",
+            authDomain: "soham-6d886.firebaseapp.com",
+            projectId: "soham-6d886",
+            storageBucket: "soham-6d886.firebasestorage.app",
+            messagingSenderId: "281780176229",
+            appId: "1:281780176229:web:cd1eea7bd171c14a338d8c",
+            measurementId: "G-CB1J6LQ7DJ"
+        };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // ---------- Hamburger Menu ----------
+    const hamburger = document.getElementById('hamburger');
+    const sideNav = document.getElementById('sideNav');
+    const overlay = document.getElementById('overlay');
+
+    hamburger.addEventListener('click', () => {
+      sideNav.classList.toggle('active');
+      overlay.classList.toggle('active');
+      hamburger.classList.toggle('active');
+      document.body.style.overflow = sideNav.classList.contains('active') ? 'hidden' : 'auto';
+    });
+
+    overlay.addEventListener('click', () => {
+      sideNav.classList.remove('active');
+      overlay.classList.remove('active');
+      hamburger.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    document.querySelectorAll('.side-nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        sideNav.classList.remove('active');
+        overlay.classList.remove('active');
+        hamburger.classList.remove('active');
+        document.body.style.overflow = 'auto';
+      });
+    });
+
+    // ---------- Global State ----------
+    let currentFilteredSubject = "all";
+    let allTestScores = [];
+
+    // ---------- Student Verification ----------
+    window.onload = function () {
+      // Check if student is logged in
+      const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+      const userRole = localStorage.getItem("userRole");
+
+      if (!isLoggedIn || userRole !== "student") {
+        window.location.href = "../../role-selection.html";
+        return;
+      }
+
+      loadScoresData();
+    };
+
+    function logout() {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("currentStudent");
+      localStorage.removeItem("studentId");
+      auth.signOut().then(() => {
+        window.location.href = "../../role-selection.html";
+      });
+    }
+
+    // ---------- Helper Functions ----------
+    function parseCorrect(scoreStr) {
+      if (!scoreStr || !scoreStr.includes("/")) return 0;
+      return parseInt(scoreStr.split("/")[0]) || 0;
+    }
+
+    function parseTotal(scoreStr) {
+      if (!scoreStr || !scoreStr.includes("/")) return 10;
+      return parseInt(scoreStr.split("/")[1]) || 10;
+    }
+
+    function guessSubject(title) {
+      if (!title) return "physics";
+      const name = title.toLowerCase();
+      if (name.includes("physics")) return "physics";
+      if (name.includes("chemistry")) return "chemistry";
+      if (name.includes("math") || name.includes("maths") || name.includes("mathematics")) return "mathematics";
+      if (name.includes("biology") || name.includes("botany") || name.includes("zoology")) return "biology";
+      return "physics";
+    }
+
+    // ---------- Load Scores Data ----------
+    async function loadScoresData() {
+      const loadingOverlay = document.getElementById("loadingOverlay");
+      loadingOverlay.style.opacity = "1";
+      loadingOverlay.style.display = "flex";
+
+      // Get student ID from localStorage (set during student login)
+      const studentInfo = JSON.parse(localStorage.getItem("currentStudent") || "{}");
+      const studentId = studentInfo.studentId || localStorage.getItem("studentId");
+
+      if (!studentId) {
+        console.error("No student ID found in session. Redirecting to login.");
+        logout();
+        return;
+      }
+
+      let firestoreScores = [];
+      let localStorageScores = [];
+
+      // 1. Fetch scores from Firestore `scores` collection
+      try {
+        const scoresSnap = await db.collection("scores")
+          .where("studentId", "==", studentId)
+          .orderBy("date", "desc")
+          .get();
+
+        scoresSnap.forEach(doc => {
+          const data = doc.data();
+
+          // Handle different date formats (Timestamp or string)
+          let parsedDate;
+          if (data.date && typeof data.date.toDate === 'function') {
+            parsedDate = data.date.toDate().toISOString();
+          } else if (data.date) {
+            parsedDate = new Date(data.date).toISOString();
+          } else if (data.timestamp && typeof data.timestamp.toDate === 'function') {
+            parsedDate = data.timestamp.toDate().toISOString();
+          } else {
+            parsedDate = new Date().toISOString();
+          }
+
+          // Parse score - handle both "42/50" format and direct percentage
+          let correct, total, accuracy;
+          if (data.score && typeof data.score === 'string' && data.score.includes('/')) {
+            correct = parseCorrect(data.score);
+            total = parseTotal(data.score);
+            accuracy = data.percentage !== undefined ? data.percentage : Math.round((correct / total) * 100);
+          } else if (data.percentage !== undefined) {
+            accuracy = data.percentage;
+            total = data.total || data.numberOfQuestions || 100;
+            correct = Math.round((accuracy / 100) * total);
+          } else if (data.score !== undefined && data.total !== undefined) {
+            correct = parseInt(data.score) || 0;
+            total = parseInt(data.total) || 10;
+            accuracy = Math.round((correct / total) * 100);
+          } else {
+            correct = 0;
+            total = 10;
+            accuracy = 0;
+          }
+
+          firestoreScores.push({
+            id: doc.id,
+            title: data.testName || data.title || "Online Test Score",
+            subject: data.subject ? data.subject.toLowerCase() : guessSubject(data.testName || ''),
+            correct: correct,
+            total: total,
+            accuracy: accuracy,
+            time: data.time || "N/A",
+            timestamp: parsedDate,
+            details: data.details || [],
+            isFirestore: true
+          });
+        });
+      } catch (error) {
+        console.error("Firestore retrieval error:", error);
+      }
+
+      // 2. Fetch scores from Local Storage (offline quiz results)
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("quizResults") || key.startsWith("mhtcet_test_"))) {
+          try {
+            const localData = JSON.parse(localStorage.getItem(key));
+            if (localData && localData.total !== undefined) {
+              const testTimestamp = localData.timestamp || new Date().toISOString();
+              const testSubject = localData.subject || guessSubject(localData.title || '');
+
+              localStorageScores.push({
+                id: key,
+                title: localData.title || "Local Practice Test",
+                subject: testSubject.toLowerCase(),
+                correct: localData.correct !== undefined ? localData.correct : 0,
+                total: localData.total || 10,
+                accuracy: localData.accuracy !== undefined ? localData.accuracy : Math.round(((localData.correct || 0) / (localData.total || 10)) * 100),
+                time: localData.time || "N/A",
+                timestamp: testTimestamp,
+                details: localData.details || [],
+                isFirestore: false
+              });
+            }
+          } catch (e) {
+            console.error("Local storage parse error:", e);
+          }
+        }
+      }
+
+      // Merge and remove duplicates (match by similar timestamp and title)
+      const merged = [...firestoreScores];
+      localStorageScores.forEach(localItem => {
+        const exists = merged.some(fItem =>
+          fItem.title === localItem.title &&
+          Math.abs(new Date(fItem.timestamp) - new Date(localItem.timestamp)) < 60000
+        );
+        if (!exists) {
+          merged.push(localItem);
+        }
+      });
+
+      // Sort newest first
+      merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      allTestScores = merged;
+
+      // Update dashboard stats
+      updateDashboardStats();
+
+      // Render with current filter
+      filterTests(currentFilteredSubject);
+
+      // Hide loader
+      setTimeout(() => {
+        loadingOverlay.style.opacity = "0";
+        setTimeout(() => loadingOverlay.style.display = "none", 300);
+      }, 400);
+    }
+
+    function updateDashboardStats() {
+      const totalTests = allTestScores.length;
+      document.getElementById("statTotalTests").textContent = totalTests;
+
+      if (totalTests === 0) {
+        document.getElementById("statAvgAccuracy").textContent = "0%";
+        document.getElementById("statHighestAccuracy").textContent = "0%";
+        return;
+      }
+
+      const totalAccuracy = allTestScores.reduce((sum, item) => sum + (item.accuracy || 0), 0);
+      const avgAccuracy = Math.round(totalAccuracy / totalTests);
+      document.getElementById("statAvgAccuracy").textContent = avgAccuracy + "%";
+
+      const highest = Math.max(...allTestScores.map(item => item.accuracy || 0));
+      document.getElementById("statHighestAccuracy").textContent = highest + "%";
+    }
+
+    function filterTests(subject) {
+      currentFilteredSubject = subject;
+
+      document.querySelectorAll('.subject-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.textContent.toLowerCase() === subject || (subject === 'all' && tab.textContent.toLowerCase().includes('all'))) {
+          tab.classList.add('active');
+        }
+      });
+
+      const filtered = subject === "all"
+        ? allTestScores
+        : allTestScores.filter(test => test.subject === subject);
+
+      renderScoresList(filtered);
+    }
+
+    function renderScoresList(tests) {
+      const container = document.getElementById("testResults");
+
+      if (tests.length === 0) {
+        container.innerHTML = `
+          <div class="no-results glass-card">
+            <p>No test scores found in this category.</p>
+            <button class="start-practice-btn" onclick="window.location.href='exam.html'">Start a New Practice Test</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = tests.map(test => {
+        let accuracyClass = "poor";
+        let progressColor = "var(--red-500)";
+
+        if (test.accuracy >= 85) {
+          accuracyClass = "excellent";
+          progressColor = "var(--emerald-500)";
+        } else if (test.accuracy >= 60) {
+          accuracyClass = "good";
+          progressColor = "var(--amber-500)";
+        }
+
+        const date = new Date(test.timestamp);
+        const formattedDate = date.toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const reviewBtn = `<button class="btn btn-secondary" onclick="viewDetailedResult('${test.id}')">Review Answers</button>`;
+        const retakeBtn = `<button class="btn btn-primary" onclick="retakeTest('${test.title}')">Retake Test</button>`;
+
+        return `
+          <div class="test-card glass-card">
+            <div class="test-header">
+              <div class="test-title">${test.title}</div>
+              <div class="test-date">${formattedDate}</div>
+            </div>
+            <div class="score-display">
+              <div class="score-circle ${accuracyClass}">${test.accuracy}%</div>
+              <div class="score-details">
+                <p>Score: <strong>${test.correct} / ${test.total}</strong> correct</p>
+                <p>Time Spent: <strong>${test.time || 'N/A'}</strong></p>
+                <div class="score-bar">
+                  <div class="score-progress" style="width: ${test.accuracy}%; background: ${progressColor};"></div>
+                </div>
+              </div>
+            </div>
+            <div class="test-actions">
+              ${reviewBtn}
+              ${retakeBtn}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function viewDetailedResult(id) {
+      const scoreData = allTestScores.find(item => item.id === id);
+      if (!scoreData) {
+        alert("Scores record details could not be located.");
+        return;
+      }
+      
+      window.currentActiveScoreData = scoreData;
+
+      const wrong = scoreData.total - scoreData.correct;
+      const accuracy = scoreData.accuracy;
+      const correctPercent = (scoreData.correct / scoreData.total) * 100;
+
+      const date = new Date(scoreData.timestamp);
+      const formattedDate = date.toLocaleString('en-IN', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+
+      document.getElementById('modalTitle').textContent = scoreData.title;
+
+      let questionsHtml = "";
+      let infoMessageHtml = "";
+
+      if (scoreData.details && scoreData.details.length > 0) {
+        questionsHtml = `
+          <div class="result-card">
+            <h3 style="color:#1e293b; font-weight:800; font-size:1.1rem; margin-bottom:4px;">Question Grid</h3>
+            <p style="font-size:0.8rem; color:#64748b; font-weight:600; margin-bottom:12px;">Click a bubble to review full question text and explanation.</p>
+            <div class="grid">
+              ${scoreData.details.map((res, i) => {
+          let className = 'unattempted';
+          if (res.userAns === "Not Answered") {
+            className = 'unattempted';
+          } else if (res.isCorrect) {
+            className = 'correct';
+          } else {
+            className = 'wrong';
+          }
+          return `<button class="${className}" onclick="showQuestionReviewDetail(${i})" title="Q${i + 1}: Click to review explanation" style="cursor:pointer; border:none; outline:none; transition:transform 0.15s ease;">${i + 1}</button>`;
+        }).join('')}
+            </div>
+          </div>
+          <div id="selectedQuestionReviewArea" style="margin-top: 20px; display: none;" class="result-card"></div>
+        `;
+      } else {
+        infoMessageHtml = `
+          <div class="result-info-message">
+            ⚠️ <strong>Academic Notice:</strong> Detailed question-by-question review is not available for this score record.
+          </div>
+        `;
+      }
+
+      document.getElementById('modalContent').innerHTML = `
+        <div class="result-container">
+          <div class="result-card">
+            <p style="font-size:0.9rem; color:#64748b; font-weight:500;">Test Taken on: <strong>${formattedDate}</strong></p>
+            <div class="score-section">
+              <div class="score-box">${scoreData.correct} / ${scoreData.total}</div>
+              <div class="chart-wrapper">
+                <div class="pie-chart" style="background: conic-gradient(
+                  #10b981 0% ${correctPercent}%,
+                  #ef4444 ${correctPercent}% 100%
+                );"></div>
+                <div class="chart-labels">
+                  <div class="correct-label">Correct answers: ${scoreData.correct}</div>
+                  <div class="wrong-label">Incorrect answers: ${wrong}</div>
+                </div>
+              </div>
+            </div>
+            <div class="stats-grid-small">
+              <div class="stat-box-small attempted">
+                Attempted<br><span style="font-size:1.15rem; font-weight:800;">${scoreData.correct + wrong} / ${scoreData.total}</span>
+              </div>
+              <div class="stat-box-small accuracy">
+                Accuracy<br><span style="font-size:1.15rem; font-weight:800;">${accuracy}%</span>
+              </div>
+              <div class="stat-box-small time">
+                Time Spent<br><span style="font-size:1.15rem; font-weight:800;">${scoreData.time || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+          ${infoMessageHtml}
+          ${questionsHtml}
+        </div>
+      `;
+
+      document.getElementById('resultModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    window.showQuestionReviewDetail = function(index) {
+      const activeScore = window.currentActiveScoreData;
+      if (!activeScore || !activeScore.details || !activeScore.details[index]) return;
+      
+      const q = activeScore.details[index];
+      const reviewArea = document.getElementById('selectedQuestionReviewArea');
+      if (!reviewArea) return;
+      
+      let optionsHtml = '';
+      if (q.options) {
+        optionsHtml = `<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin: 12px 0;">`;
+        ['A', 'B', 'C', 'D'].forEach(opt => {
+          const optVal = q.options[opt];
+          if (optVal) {
+            let borderStyle = 'border: 1px solid #cbd5e1;';
+            let iconHtml = '';
+            
+            const isSelected = q.userAns === opt;
+            const isCorrect = q.correctAns === opt;
+            
+            if (isCorrect) {
+              borderStyle = 'border: 2px solid #10b981; background-color: #f0fdf4; color: #16a34a; font-weight:600;';
+              iconHtml = ' <span style="margin-left:auto; color:#10b981; font-weight:700;">✔️ (Correct)</span>';
+            } else if (isSelected && !q.isCorrect) {
+              borderStyle = 'border: 2px solid #ef4444; background-color: #fef2f2; color: #b91c1c; font-weight:600;';
+              iconHtml = ' <span style="margin-left:auto; color:#ef4444; font-weight:700;">❌ (Your Pick)</span>';
+            } else if (isSelected) {
+              iconHtml = ' <span style="margin-left:auto; color:#10b981; font-weight:700;">✔️ (Your Pick)</span>';
+            }
+            
+            optionsHtml += `
+              <div style="border-radius:10px; padding:10px 14px; display:flex; align-items:center; gap:8px; font-size:0.9rem; ${borderStyle}">
+                <strong style="color:#db2777; ${isCorrect ? 'color:#16a34a;' : ''}">${opt}.</strong>
+                <span>${autoWrapMathInText(optVal.text || '')}</span>
+                ${optVal.image ? `<img src="${optVal.image}" style="max-height:40px; margin-left:8px; object-fit:contain;">` : ''}
+                ${iconHtml}
+              </div>
+            `;
+          }
+        });
+        optionsHtml += `</div>`;
+      }
+      
+      let solutionHtml = '';
+      if (q.solutionText || q.solutionImage) {
+        solutionHtml = `
+          <div style="margin-top: 16px; background: #faf5ff; border: 1px solid #f3e8ff; border-radius: 12px; padding: 16px;">
+            <div style="font-weight: 800; color: #7e22ce; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem;">
+              <span>💡</span> Solution & Explanation:
+            </div>
+            <div style="color: #581c87; font-size: 0.9rem; line-height: 1.6;">${autoWrapMathInText(q.solutionText || '')}</div>
+            ${q.solutionImage ? `<div style="margin-top:12px; text-align:center;"><img src="${q.solutionImage}" style="max-height:160px; max-width:100%; object-fit: contain; border-radius: 8px;"></div>` : ''}
+          </div>
+        `;
+      }
+      
+      reviewArea.innerHTML = `
+        <h4 style="font-family:'Outfit', sans-serif; font-weight:800; color:#1e293b; font-size:1.05rem; margin-bottom:12px; border-bottom:1px solid #e2e8f0; padding-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+          <span>Question ${index + 1} Review</span>
+          <span class="chip" style="background:${q.isCorrect ? '#d1fae5; color:#065f46;' : (q.userAns === 'Not Answered' ? '#f1f5f9; color:#475569;' : '#fee2e2; color:#991b1b')}; font-size:0.75rem; font-weight:700; padding:4px 10px; border-radius:8px;">
+            ${q.isCorrect ? 'Correct' : (q.userAns === 'Not Answered' ? 'Unattempted' : 'Incorrect')}
+          </span>
+        </h4>
+        <div style="font-weight:700; color:#1e293b; font-size:1rem; line-height:1.5; margin-bottom:12px;">${autoWrapMathInText(q.questionText)}</div>
+        ${q.questionImage ? `<div style="text-align:center; margin-bottom:12px;"><img src="${q.questionImage}" style="max-height:180px; max-width:100%; object-fit:contain; border-radius:8px;"></div>` : ''}
+        ${optionsHtml}
+        ${q.userAns === 'Not Answered' ? `
+          <div style="font-size:0.85rem; font-weight:600; color:#64748b; margin-top:8px;">
+            You did not attempt this question. Correct Option is: <strong style="color:#10b981;">${q.correctAns}</strong>
+          </div>
+        ` : ''}
+        ${solutionHtml}
+      `;
+      
+      reviewArea.style.display = 'block';
+      
+      // Auto-scroll review area into view
+      reviewArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      
+      if (typeof MathJax !== 'undefined') {
+        MathJax.typesetPromise([reviewArea]).catch(err => console.error(err));
+      }
+    };
+
+    function retakeTest(testName) {
+      if (confirm(`Do you wish to start a new practice attempt for "${testName}"?`)) {
+        window.location.href = "exam.html";
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('resultModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    window.onclick = function (event) {
+      const modal = document.getElementById('resultModal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    };
+
+    function autoWrapMathInText(text) {
+      if (!text) return '';
+      if (text.includes('\\(') || text.includes('\\[') || text.includes('$$')) {
+        return text;
+      }
+      const latexPattern = /\\[a-zA-Z]+|[_^][{}]|[\{\}]/;
+      if (latexPattern.test(text)) {
+        return '\\(' + text + '\\)';
+      }
+      return text;
+    }
+
+    // ---------- Canvas Particle Animation ----------
+    (function () {
+      const canvas = document.getElementById('equations-canvas');
+      const ctx = canvas.getContext('2d');
+      let width, height;
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+      let isMobile = false;
+      let particleCount;
+      let baseSizeMultiplier;
+
+      function detectMobile() {
+        const w = window.innerWidth;
+        isMobile = w <= 768;
+        if (w <= 380) {
+          particleCount = 18;
+          baseSizeMultiplier = 0.55;
+        } else if (w <= 480) {
+          particleCount = 24;
+          baseSizeMultiplier = 0.65;
+        } else if (w <= 768) {
+          particleCount = 32;
+          baseSizeMultiplier = 0.78;
+        } else if (w <= 1024) {
+          particleCount = 40;
+          baseSizeMultiplier = 0.9;
+        } else {
+          particleCount = 48;
+          baseSizeMultiplier = 1.0;
+        }
+      }
+
+      function resizeCanvas() {
+        detectMobile();
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = canvas.width = window.innerWidth * dpr;
+        height = canvas.height = window.innerHeight * dpr;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+      }
+
+      window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 300));
+      resizeCanvas();
+
+      const expressions = [
+        "E = mc²", "∫ x² dx", "∇ × B = μ₀J", "PV = nRT",
+        "sin²θ + cos²θ = 1", "H₂O + CO₂ → C₆H₁₂O₆", "ΔG = ΔH - TΔS",
+        "F = G(m₁m₂)/r²", "pH = -log[H⁺]", "DNA ⇌ RNA",
+        "Fe²⁺ + e⁻ → Fe", "λ = h/p", "v = u + at",
+        "∑ F = ma", "lim (x→0) sin(x)/x = 1", "ATP → ADP + Pi",
+        "dψ/dt", "K_a = [H⁺][A⁻]/[HA]", "y = mx + c"
+      ];
+
+      function drawBenzene(ctx, x, y, size) {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI / 3) * i;
+          const nextX = x + size * Math.cos(angle);
+          const nextY = y + size * Math.sin(angle);
+          if (i === 0) ctx.moveTo(nextX, nextY);
+          else ctx.lineTo(nextX, nextY);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x, y, size * 0.6, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      class ScienceParticle {
+        constructor() {
+          this.reset();
+          this.y = Math.random() * (window.innerHeight || 800);
+        }
+
+        reset() {
+          this.type = Math.random() < 0.7 ? 'text' : 'chemistry';
+          this.text = expressions[Math.floor(Math.random() * expressions.length)];
+          this.x = Math.random() * (window.innerWidth || 400);
+          this.y = -60;
+          this.speed = 0.15 + Math.random() * 0.45;
+          this.size = (10 + Math.floor(Math.random() * 14)) * baseSizeMultiplier;
+          this.opacity = 0.12 + Math.random() * 0.15;
+        }
+
+        update(screenW, screenH) {
+          this.y += this.speed;
+          if (this.y > screenH + 60) {
+            this.reset();
+            this.y = -60;
+            this.x = Math.random() * screenW;
+          }
+        }
+
+        draw(ctx) {
+          ctx.save();
+          ctx.strokeStyle = `rgba(219, 39, 119, ${this.opacity})`;
+          ctx.fillStyle = `rgba(219, 39, 119, ${this.opacity})`;
+          ctx.lineWidth = Math.max(1.2, 1.8 * baseSizeMultiplier);
+
+          if (this.type === 'text') {
+            ctx.font = `bold ${this.size}px 'Courier New', monospace`;
+            ctx.fillText(this.text, this.x, this.y);
+          } else if (this.type === 'chemistry') {
+            drawBenzene(ctx, this.x, this.y, this.size * 1.2);
+          }
+          ctx.restore();
+        }
+      }
+
+      let particles = [];
+      function initParticles() {
+        particles = [];
+        for (let i = 0; i < particleCount; i++) {
+          const p = new ScienceParticle();
+          p.y = (window.innerHeight / particleCount) * i - 60 + Math.random() * 40;
+          particles.push(p);
+        }
+      }
+
+      initParticles();
+
+      let animFrameId;
+      function animateCanvas() {
+                if (localStorage.getItem("disableAnimations") === "true") {
+                    if (typeof ctx !== 'undefined') {
+                        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                    }
+                    animFrameId = null;
+                    return;
+                }
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
+        ctx.clearRect(0, 0, screenW, screenH);
+        for (let i = 0; i < particles.length; i++) {
+          particles[i].update(screenW, screenH);
+          particles[i].draw(ctx);
+        }
+        animFrameId = requestAnimationFrame(animateCanvas);
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && animFrameId) {
+          cancelAnimationFrame(animFrameId);
+          animFrameId = null;
+        } else if (!document.hidden && !animFrameId) {
+          animFrameId = requestAnimationFrame(animateCanvas);
+        }
+      });
+
+      animateCanvas();
+
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          resizeCanvas();
+          initParticles();
+        }, 250);
+      });
+    })();
+  </script>
+</body>
+
+</html>

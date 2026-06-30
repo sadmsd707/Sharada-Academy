@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Select NEET Mock Test - Soham</title>
+  
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #e0f2fe, #f8fafc);
+      color: #333;
+      margin: 0;
+    }
+
+    header {
+      background: #1e3a8a;
+      color: white;
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    nav ul {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      color: #93c5fd;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 20px;
+      bottom: -35px;
+      background: #1e3a8a;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: background 0.3s;
+    }
+
+    .back-btn:hover {
+      background: #1e40af;
+    }
+
+    .chapter-section {
+      max-width: 800px;
+      margin: 80px auto 40px;
+      padding: 0 20px;
+    }
+
+    .chapter-title {
+      text-align: center;
+      font-size: 1.8rem;
+      color: #1e3a8a;
+      margin-bottom: 30px;
+    }
+
+    .chapter-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 15px 20px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.2s;
+    }
+
+    .chapter-row:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+
+    .chapter-name {
+      font-size: 1.05rem;
+      color: #1e3a8a;
+      font-weight: 600;
+    }
+
+    .chapter-row a {
+      background: #2563eb;
+      color: white;
+      padding: 8px 18px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .chapter-row a:hover {
+      background: #1e40af;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+      .chapter-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #1e3a8a;
+      color: white;
+      margin-top: 50px;
+    }
+  </style>
+    <!-- Global Dark Mode Support -->
+    <style>
+        body.dark-mode {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .glass-card, 
+        body.dark-mode .app-header, 
+        body.dark-mode .side-nav {
+            background: rgba(30, 41, 59, 0.85) !important;
+            border-color: rgba(51, 65, 85, 0.5) !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .side-nav ul li a {
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .logo-text .light,
+        body.dark-mode .welcome-card h2,
+        body.dark-mode .section-title,
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode p,
+        body.dark-mode span,
+        body.dark-mode label,
+        body.dark-mode strong {
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode .gradient-text,
+        body.dark-mode .logo-text {
+            color: #db2777 !important;
+            background: none !important;
+            -webkit-text-fill-color: #db2777 !important;
+        }
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: rgba(15, 23, 42, 0.6) !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 !important;
+        }
+    </style>
+    <script>
+        (function() {
+            if (localStorage.getItem("appTheme") === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                document.addEventListener("DOMContentLoaded", () => {
+                    document.body.classList.add("dark-mode");
+                });
+            }
+        })();
+    </script>
+</head>
+<body>
+  <header>
+    <h1>Select NEET Mock Test</h1>
+    <a href="neet.html" class="back-btn">⬅ Back</a>
+    <nav>
+      <ul>
+        <li><a href="neet.html">Home</a></li>
+        <li><a href="../exam.html">Practice</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="chapter-section">
+    <h2 class="chapter-title">Mock Tests</h2>
+
+    <!-- 25 Mock Test Rows -->
+    <!-- You can generate these dynamically later -->
+    <!-- For now, here they are manually listed -->
+    <div class="chapter-row"><span class="chapter-name">Mock Test 1</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 1">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 2</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 2">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 3</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 3">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 4</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 4">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 5</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 5">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 6</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 6">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 7</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 7">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 8</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 8">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 9</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 9">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 10</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 10">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 11</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 11">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 12</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 12">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 13</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 13">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 14</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 14">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 15</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 15">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 16</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 16">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 17</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 17">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 18</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 18">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 19</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 19">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 20</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 20">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 21</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 21">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 22</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 22">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 23</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 23">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 24</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 24">Start</a></div>
+    <div class="chapter-row"><span class="chapter-name">Mock Test 25</span><a href="#" class="btn coming-soon-btn" data-name="Mock Test 25">Start</a></div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Sharada Academy. All rights reserved.</p>
+     <p style="margin-top: 10px; font-size: 0.9rem;">Made with ❤️ by Team Sharada</p>
+  </footer>
+
+  <!-- Glassmorphic Toast Notification System -->
+  <style>
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(219, 39, 119, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      color: #1e293b;
+      padding: 16px 24px;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      pointer-events: auto;
+      opacity: 0;
+      transform: translateY(20px) scale(0.9);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .toast-icon {
+      font-size: 1.25rem;
+      color: #db2777;
+      animation: toastPulse 2s infinite;
+    }
+
+    @keyframes toastPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+  </style>
+  <div class="toast-container" id="toastContainer"></div>
+  <script>
+    function showToast(message, icon = "🚀") {
+      let container = document.getElementById('toastContainer');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        container.id = 'toastContainer';
+        document.body.appendChild(container);
+      }
+      
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = '<span class="toast-icon">' + icon + '</span><div>' + message + '</div>';
+      container.appendChild(toast);
+      
+      setTimeout(() => toast.classList.add('show'), 50);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+      }, 3500);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.coming-soon-btn, [href*="neet-mock-"], [href*="JEEFL-T"], [href*="MCPY-T"], [href*="MCFL-T"], [href*="neet-pyq-"], [href="#" class="coming-soon-btn" data-name="MHT-CET Biology"]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.preventDefault();
+          const name = el.getAttribute('data-name') || el.textContent.trim() || 'This test';
+          showToast(name + " is coming soon! Our team is curating premium practice content for you.", "✨");
+        });
+        el.setAttribute('href', '#');
+        el.classList.add('coming-soon-btn');
+      });
+    });
+  </script>
+
+</body>
+</html>

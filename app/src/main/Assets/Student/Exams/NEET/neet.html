@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Sections - Soham</title>
+  
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #e0f2fe, #f8fafc);
+      color: #333;
+      margin: 0;
+    }
+
+    header {
+      background: #1e3a8a;
+      color: white;
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    nav ul {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      color: #93c5fd;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 20px;
+      bottom: -35px;
+      background: #1e3a8a;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: background 0.3s;
+    }
+
+    .back-btn:hover {
+      background: #1e40af;
+    }
+
+    .section-options {
+      padding: 70px 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 35px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .section-card {
+      background: white;
+      padding: 35px 25px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .section-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+    }
+
+    .section-card h3 {
+      color: #1e3a8a;
+      font-size: 1.3rem;
+      margin-bottom: 12px;
+    }
+
+    .section-card p {
+      font-size: 0.95rem;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .section-card a {
+      display: inline-block;
+      padding: 12px 25px;
+      background: #2563eb;
+      color: white;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.3s, transform 0.2s;
+      margin: 5px;
+    }
+
+    .section-card a:hover {
+      background: #1e40af;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      .section-options {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .section-options {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #1e3a8a;
+      color: white;
+      margin-top: 50px;
+    }
+  </style>
+    <!-- Global Dark Mode Support -->
+    <style>
+        body.dark-mode {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .glass-card, 
+        body.dark-mode .app-header, 
+        body.dark-mode .side-nav {
+            background: rgba(30, 41, 59, 0.85) !important;
+            border-color: rgba(51, 65, 85, 0.5) !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .side-nav ul li a {
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .logo-text .light,
+        body.dark-mode .welcome-card h2,
+        body.dark-mode .section-title,
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode p,
+        body.dark-mode span,
+        body.dark-mode label,
+        body.dark-mode strong {
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode .gradient-text,
+        body.dark-mode .logo-text {
+            color: #db2777 !important;
+            background: none !important;
+            -webkit-text-fill-color: #db2777 !important;
+        }
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: rgba(15, 23, 42, 0.6) !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 !important;
+        }
+    </style>
+    <script>
+        (function() {
+            if (localStorage.getItem("appTheme") === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                document.addEventListener("DOMContentLoaded", () => {
+                    document.body.classList.add("dark-mode");
+                });
+            }
+        })();
+    </script>
+</head>
+<body>
+  <header>
+    <h1>NEET Test</h1>
+    <a href="../exam.html" class="back-btn">⬅ Back</a>
+    <nav>
+      <ul>
+        <li><a href="../../student-dashboard.html">Home</a></li>
+        <li><a href="../exam.html">Practice</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section-options">
+    <div class="section-card">
+      <h3>Physics</h3>
+      <p>Strengthen your NEET Physics problem-solving skills.</p>
+      <a href="neet-physics.html">Start Physics Test</a>
+    </div>
+    <div class="section-card">
+      <h3>Chemistry</h3>
+      <p>Practice Organic, Inorganic & Physical Chemistry MCQs.</p>
+      <a href="neet-chemistry.html">Start Chemistry Test</a>
+    </div>
+    <div class="section-card">
+      <h3>Biology</h3>
+      <p>Master Botany and Zoology concepts for NEET Biology.</p>
+      <a href="neet-zoobotany.html">Start Biology Test</a>
+    </div>
+    <div class="section-card">
+      <h3>Full Length Test</h3>
+      <p>Take a real NEET exam simulation with all 3 subjects.</p>
+      <a href="neet-full.html">Start Full Test</a>
+    </div>
+    <div class="section-card">
+      <h3>Previous Years Papers</h3>
+      <p>Solve NEET PYQs to understand exam patterns.</p>
+      <a href="neet-pyq.html">View Papers</a>
+    </div>
+    <div class="section-card">
+      <h3>View Syllabus</h3>
+      <p>Check the full syllabus for NEET exam preparation.</p>
+      <a href="neet syllabus.pdf" target="_blank">📄 View Syllabus</a>
+      <a href="neet syllabus.pdf" download>⬇️ Download PDF</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Sharada Academy. All rights reserved.</p>
+     <p style="margin-top: 10px; font-size: 0.9rem;">Made with ❤️ by Team Sharada</p>
+  </footer>
+</body>
+</html>

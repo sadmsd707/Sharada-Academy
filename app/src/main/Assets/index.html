@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en" style="overflow-x: hidden; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+
+<head>
+    <script>
+        (function () {
+            try {
+                if (localStorage && localStorage.getItem("isLoggedIn") === "true") {
+                    const role = localStorage.getItem("userRole");
+                    if (role === "student") {
+                        window.location.href = "Student/student-dashboard.html";
+                    } else if (role === "teacher") {
+                        window.location.href = "Teachers/teacher-dashboard.html";
+                    } else if (role === "parent") {
+                        window.location.href = "Parents/parent-dashboard.html";
+                    } else if (role === "admin") {
+                        window.location.href = "admin-login.html";
+                    }
+                }
+            } catch (e) {
+                console.warn("DOM Storage / localStorage is disabled or restricted in this WebView:", e);
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
+    <meta name="theme-color" content="#f8fafc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="description"
+        content="Sharada Academy Baramati offers expert JEE, NEET & MHT-CET coaching with HOD-led faculty and smart classrooms. Established 2016.">
+    <meta property="og:title" content="Sharada Academy Baramati - JEE | NEET | MHT-CET">
+    <meta property="og:description"
+        content="Honest Efforts. Proven Success. Expert-led coaching for engineering & medical entrance exams since 2016.">
+    <meta property="og:type" content="website">
+    <title>Sharada Academy Baramati - JEE | NEET | MHT-CET Prep</title>
+    <!-- Tailwind CSS CDN v4 (browser build) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4">
+    </script>
+    <!-- GSAP CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js">
+    </script>
+    <style>
+        :root {
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+        }
+
+        /* Reset box-sizing for consistency */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        /* Selective user-select: allow text selection on textual content, prevent on interactive */
+        body {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            background-color: #f8fafc;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            min-height: 100vh;
+            min-height: 100dvh;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+            padding-left: var(--safe-left);
+            padding-right: var(--safe-right);
+            position: relative;
+            margin: 0;
+            /* Prevent content shift when address bar hides on iOS */
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+
+        /* Allow text selection on paragraphs and headings for accessibility */
+        p,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .allow-select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        #equations-canvas {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            /* Promote to GPU layer */
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #db2777, #e11d48, #ea580c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            /* Fallback for browsers that don't support background-clip:text */
+            display: inline;
+        }
+
+        @supports not (-webkit-background-clip: text) {
+            .gradient-text {
+                background: none;
+                -webkit-text-fill-color: #db2777;
+                color: #db2777;
+            }
+        }
+
+        .badge-touch {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            cursor: default;
+        }
+
+        .badge-touch:active {
+            transform: scale(0.96);
+        }
+
+        .btn-cta {
+            min-height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+            cursor: pointer;
+            font-size: 16px;
+            letter-spacing: 0.01em;
+            border-radius: 14px;
+            padding: 14px 28px;
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            box-shadow: 0 8px 28px rgba(219, 39, 119, 0.25);
+            border: none;
+            outline: none;
+            text-decoration: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .btn-cta:active {
+            transform: scale(0.95);
+            box-shadow: 0 4px 14px rgba(219, 39, 119, 0.35);
+            background: linear-gradient(135deg, #be185d, #db2777);
+        }
+
+        .btn-cta:focus-visible {
+            outline: 3px solid #db2777;
+            outline-offset: 3px;
+            border-radius: 16px;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .btn-cta:hover {
+                transform: scale(1.04);
+                box-shadow: 0 12px 36px rgba(219, 39, 119, 0.35);
+            }
+
+            .badge-touch:hover {
+                transform: scale(1.03);
+                box-shadow: 0 6px 18px rgba(219, 39, 119, 0.12);
+            }
+        }
+
+        /* --- Responsive Typography & Sizing (replaces xs: breakpoint) --- */
+
+        /* Base: smallest phones (<380px) */
+        .headline-text {
+            font-size: 1.75rem;
+            line-height: 1.2;
+        }
+
+        .subtext-size {
+            font-size: 0.85rem;
+        }
+
+        .stat-value-size {
+            font-size: 1.05rem;
+        }
+
+        .stat-label-size {
+            font-size: 8px;
+            letter-spacing: 0.06em;
+        }
+
+        .badge-text-size {
+            font-size: 10px;
+        }
+
+        .tagline-size {
+            font-size: 9px;
+        }
+
+        .headline-br {
+            display: none;
+        }
+
+        /* xs breakpoint: 380px - 639px */
+        @media (min-width: 380px) {
+            .headline-text {
+                font-size: 2.1rem;
+                line-height: 1.15;
+            }
+
+            .subtext-size {
+                font-size: 0.95rem;
+            }
+
+            .stat-value-size {
+                font-size: 1.2rem;
+            }
+
+            .stat-label-size {
+                font-size: 9px;
+                letter-spacing: 0.07em;
+            }
+
+            .badge-text-size {
+                font-size: 11px;
+            }
+
+            .tagline-size {
+                font-size: 10px;
+            }
+
+            .headline-br {
+                display: inline;
+            }
+
+            .btn-cta {
+                font-size: 15px;
+                padding: 13px 24px;
+                min-height: 48px;
+                border-radius: 12px;
+                max-width: 100%;
+            }
+
+            .badge-touch {
+                padding: 9px 15px;
+                min-height: 38px;
+            }
+        }
+
+        /* sm breakpoint: 640px - 767px */
+        @media (min-width: 640px) {
+            .headline-text {
+                font-size: 2.8rem;
+                line-height: 1.1;
+            }
+
+            .subtext-size {
+                font-size: 1.1rem;
+            }
+
+            .stat-value-size {
+                font-size: 1.5rem;
+            }
+
+            .stat-label-size {
+                font-size: 10px;
+                letter-spacing: 0.08em;
+            }
+
+            .badge-text-size {
+                font-size: 0.8rem;
+            }
+
+            .tagline-size {
+                font-size: 11px;
+            }
+
+            .headline-br {
+                display: none;
+            }
+
+            .btn-cta {
+                max-width: 360px;
+                font-size: 16px;
+                padding: 14px 30px;
+                min-height: 50px;
+                border-radius: 13px;
+            }
+
+            .badge-touch {
+                padding: 10px 18px;
+                min-height: 40px;
+            }
+        }
+
+        /* md breakpoint: 768px - 1023px */
+        @media (min-width: 768px) {
+            .headline-text {
+                font-size: 3.5rem;
+                line-height: 1.1;
+            }
+
+            .subtext-size {
+                font-size: 1.25rem;
+            }
+
+            .stat-value-size {
+                font-size: 1.8rem;
+            }
+
+            .stat-label-size {
+                font-size: 11px;
+                letter-spacing: 0.09em;
+            }
+
+            .badge-text-size {
+                font-size: 0.85rem;
+            }
+
+            .tagline-size {
+                font-size: 12px;
+            }
+
+            .headline-br {
+                display: inline;
+            }
+
+            .btn-cta {
+                max-width: 300px;
+                font-size: 16px;
+                padding: 14px 30px;
+                min-height: 52px;
+                border-radius: 14px;
+            }
+
+            .badge-touch {
+                padding: 11px 20px;
+                min-height: 42px;
+            }
+        }
+
+        /* lg breakpoint: 1024px+ */
+        @media (min-width: 1024px) {
+            .headline-text {
+                font-size: 4.2rem;
+                line-height: 1.1;
+            }
+
+            .subtext-size {
+                font-size: 1.35rem;
+            }
+
+            .stat-value-size {
+                font-size: 2rem;
+            }
+
+            .stat-label-size {
+                font-size: 12px;
+                letter-spacing: 0.1em;
+            }
+
+            .badge-text-size {
+                font-size: 0.9rem;
+            }
+
+            .tagline-size {
+                font-size: 13px;
+            }
+
+            .btn-cta {
+                max-width: 320px;
+                font-size: 17px;
+                padding: 15px 32px;
+                min-height: 54px;
+            }
+        }
+
+        /* Extra small: <340px (very tiny phones) */
+        @media (max-width: 339px) {
+            .headline-text {
+                font-size: 1.5rem;
+                line-height: 1.18;
+            }
+
+            .subtext-size {
+                font-size: 0.78rem;
+            }
+
+            .stat-value-size {
+                font-size: 0.9rem;
+            }
+
+            .stat-label-size {
+                font-size: 7px;
+                letter-spacing: 0.05em;
+            }
+
+            .badge-text-size {
+                font-size: 9px;
+            }
+
+            .tagline-size {
+                font-size: 8px;
+            }
+
+            .btn-cta {
+                font-size: 14px;
+                padding: 12px 18px;
+                min-height: 44px;
+                border-radius: 10px;
+                max-width: 100%;
+            }
+
+            .badge-touch {
+                padding: 7px 11px;
+                min-height: 34px;
+            }
+
+            footer .stat-value {
+                font-size: 0.85rem !important;
+            }
+
+            footer .stat-label {
+                font-size: 7px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn-cta {
+                max-width: 100%;
+                font-size: 15px;
+                padding: 13px 22px;
+                min-height: 48px;
+                border-radius: 12px;
+            }
+
+            .badge-touch {
+                font-size: 10px;
+                padding: 8px 13px;
+                min-height: 36px;
+                letter-spacing: 0.03em;
+            }
+
+            footer .stat-label {
+                letter-spacing: 0.06em;
+            }
+        }
+
+        @media (min-width: 481px) and (max-width: 768px) {
+            .btn-cta {
+                max-width: 360px;
+                font-size: 16px;
+                padding: 14px 30px;
+                min-height: 50px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .btn-cta {
+                max-width: 280px;
+                font-size: 17px;
+                padding: 15px 32px;
+                min-height: 54px;
+            }
+        }
+
+        .footer-stat {
+            transition: transform 0.15s ease;
+            cursor: default;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* GSAP fallback: if GSAP fails, elements become visible after 0.6s */
+        #header,
+        #badges,
+        #headline,
+        #subtext,
+        #ctas,
+        #footer {
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        .gsap-fallback #header,
+        .gsap-fallback #badges,
+        .gsap-fallback #headline,
+        .gsap-fallback #subtext,
+        .gsap-fallback #ctas,
+        .gsap-fallback #footer {
+            opacity: 1;
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+
+            #header,
+            #badges,
+            #headline,
+            #subtext,
+            #ctas,
+            #footer {
+                opacity: 1;
+                transition: none;
+            }
+
+            .btn-cta,
+            .badge-touch,
+            .footer-stat {
+                transition: none;
+            }
+
+            .btn-cta:active {
+                transform: none;
+            }
+
+            .badge-touch:active {
+                transform: none;
+            }
+
+            #equations-canvas {
+                opacity: 0.35;
+            }
+        }
+    </style>
+</head>
+
+<body class="text-slate-900 font-sans">
+
+    <!-- STEM Canvas containing Equations, Chemistry Structures, and Physics Symbols -->
+    <canvas id="equations-canvas" aria-hidden="true" role="presentation"></canvas>
+
+    <!-- Main Intro Wrapper -->
+    <main
+        class="content-layer min-h-screen flex flex-col justify-between px-5 py-6 sm:px-8 sm:py-8 md:px-12 md:py-10 max-w-7xl mx-auto w-full"
+        style="min-height: 100dvh;" role="main" aria-label="Sharada Academy Introduction">
+
+        <!-- Header Area -->
+        <header class="flex flex-wrap justify-between items-center gap-y-3 opacity-0 w-full" id="header">
+            <div class="text-xl sm:text-2xl md:text-3xl font-black tracking-wider text-pink-600 leading-tight">
+                SHARADA <span class="text-slate-800 font-light">ACADEMY</span>
+            </div>
+            <div class="tagline-size tracking-widest text-slate-500 uppercase font-semibold">
+                Baramati's Premier Institute
+            </div>
+        </header>
+
+        <!-- Central Content Area -->
+        <div
+            class="flex flex-col items-center text-center my-auto space-y-6 sm:space-y-7 md:space-y-8 w-full px-1 sm:px-2">
+
+            <!-- Exam Badges -->
+            <div class="flex flex-wrap justify-center gap-2.5 sm:gap-3 md:gap-4 opacity-0 w-full" id="badges">
+                <span
+                    class="badge-touch px-4 py-2 sm:px-5 sm:py-2.5 rounded-full border border-pink-200 bg-pink-50 text-pink-600 font-bold tracking-wide badge-text-size shadow-[0_4px_12px_rgba(219,39,119,0.08)]">
+                    IIT-JEE (Main &amp; Adv)
+                </span>
+                <span
+                    class="badge-touch px-4 py-2 sm:px-5 sm:py-2.5 rounded-full border border-rose-200 bg-rose-50 text-rose-600 font-bold tracking-wide badge-text-size shadow-[0_4px_12px_rgba(225,29,72,0.08)]">
+                    NEET (Medical)
+                </span>
+                <span
+                    class="badge-touch px-4 py-2 sm:px-5 sm:py-2.5 rounded-full border border-purple-200 bg-purple-50 text-purple-600 font-bold tracking-wide badge-text-size shadow-[0_4px_12px_rgba(147,51,234,0.08)]">
+                    MHT-CET
+                </span>
+            </div>
+
+            <!-- Main Catchy Headline -->
+            <h1 class="headline-text font-extrabold tracking-tight max-w-4xl text-slate-900 opacity-0 px-1 allow-select"
+                id="headline">
+                Honest Efforts. <br class="headline-br">
+                Proven <span class="gradient-text">Success.</span>
+            </h1>
+
+            <!-- Short Pitch -->
+            <p class="subtext-size text-slate-600 max-w-2xl mx-auto font-medium opacity-0 leading-relaxed px-2 sm:px-4 allow-select"
+                id="subtext">
+                Shaping fundamentals and building concept clarity for India's toughest competitive engineering and
+                medical entrance exams since 2016.
+            </p>
+
+            <!-- Call To Action (opens role-selection.html) -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center w-full opacity-0 px-2 sm:px-0"
+                id="ctas">
+                <a href="role-selection.html" class="btn-cta"
+                    aria-label="Start Preparation With Us - Go to role selection">
+                    Start Preparation With Us
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer Area -->
+        <footer
+            class="flex flex-col gap-4 border-t border-slate-200 pt-4 sm:pt-5 md:pt-6 opacity-0 w-full"
+            id="footer">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6 text-center w-full">
+                <div class="footer-stat">
+                    <div class="stat-value-size font-extrabold text-pink-600">2016</div>
+                    <div class="stat-label-size text-slate-500 uppercase tracking-widest font-bold mt-1">
+                        Established
+                    </div>
+                </div>
+                <div class="footer-stat">
+                    <div class="stat-value-size font-extrabold text-slate-800">Expert</div>
+                    <div class="stat-label-size text-slate-500 uppercase tracking-widest font-bold mt-1">
+                        HOD Led Faculty
+                    </div>
+                </div>
+                <div class="footer-stat">
+                    <div class="stat-value-size font-extrabold text-slate-800">Smart</div>
+                    <div class="stat-label-size text-slate-500 uppercase tracking-widest font-bold mt-1">
+                        Smart Classrooms
+                    </div>
+                </div>
+            </div>
+            <!-- Sub-footer Links -->
+            <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-slate-400 font-semibold pb-2 border-t border-slate-100/80 pt-3">
+                <a href="about-us.html" class="hover:text-pink-600 active:text-pink-700 transition-colors duration-200" aria-label="About Sharada Academy">About Us</a>
+                <a href="privacy-policy.html" class="hover:text-pink-600 active:text-pink-700 transition-colors duration-200" aria-label="Privacy Policy">Privacy Policy</a>
+                <a href="terms-conditions.html" class="hover:text-pink-600 active:text-pink-700 transition-colors duration-200" aria-label="Terms and Conditions">Terms & Conditions</a>
+                <a href="contact-us.html" class="hover:text-pink-600 active:text-pink-700 transition-colors duration-200" aria-label="Contact Us">Contact Us</a>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- Animation & Canvas Script -->
+    <script>
+        (function () {
+            const canvas = document.getElementById('equations-canvas');
+            const ctx = canvas.getContext('2d');
+
+            let width, height;
+            let dpr;
+            let isMobile = false;
+            let isTinyPhone = false;
+            let particleCount;
+            let baseSizeMultiplier;
+            let lastFrameTime = 0;
+            const MOBILE_FRAME_INTERVAL = 1000 / 30; // Cap at ~30fps on mobile for battery
+            const DESKTOP_FRAME_INTERVAL = 1000 / 60; // ~60fps on desktop
+
+            function detectDevice() {
+                const w = window.innerWidth;
+                isMobile = w <= 768;
+                isTinyPhone = w <= 380;
+                if (w <= 339) {
+                    particleCount = 10;
+                    baseSizeMultiplier = 0.45;
+                } else if (w <= 380) {
+                    particleCount = 14;
+                    baseSizeMultiplier = 0.52;
+                } else if (w <= 480) {
+                    particleCount = 18;
+                    baseSizeMultiplier = 0.6;
+                } else if (w <= 768) {
+                    particleCount = 24;
+                    baseSizeMultiplier = 0.72;
+                } else if (w <= 1024) {
+                    particleCount = 34;
+                    baseSizeMultiplier = 0.85;
+                } else {
+                    particleCount = 44;
+                    baseSizeMultiplier = 1.0;
+                }
+                // Lower DPR on mobile for performance
+                dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
+                // Ensure minimum 1
+                dpr = Math.max(dpr, 1);
+            }
+
+            function resizeCanvas() {
+                detectDevice();
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                width = canvas.width = Math.round(w * dpr);
+                height = canvas.height = Math.round(h * dpr);
+                canvas.style.width = w + 'px';
+                canvas.style.height = h + 'px';
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(dpr, dpr);
+            }
+
+            // Debounced resize for iOS address bar
+            let resizeRAF;
+            function handleResize() {
+                if (resizeRAF) cancelAnimationFrame(resizeRAF);
+                resizeRAF = requestAnimationFrame(() => {
+                    resizeCanvas();
+                });
+            }
+
+            window.addEventListener('resize', handleResize, { passive: true });
+            window.addEventListener('orientationchange', () => {
+                // Delay to let the browser finish orientation change
+                setTimeout(() => {
+                    resizeCanvas();
+                    initParticles();
+                }, 400);
+            }, { passive: true });
+
+            // Also listen for visualViewport changes (iOS keyboard, address bar)
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', handleResize, { passive: true });
+                window.visualViewport.addEventListener('scroll', handleResize, { passive: true });
+            }
+
+            resizeCanvas();
+
+            const expressions = [
+                "E = mc\u00b2",
+                "\u222b x\u00b2 dx",
+                "\u2207 \u00d7 B = \u03bc\u2080J",
+                "PV = nRT",
+                "sin\u00b2\u03b8 + cos\u00b2\u03b8 = 1",
+                "H\u2082O + CO\u2082 \u2192 C\u2086H\u2081\u2082O\u2086",
+                "\u0394G = \u0394H - T\u0394S",
+                "F = G(m\u2081m\u2082)/r\u00b2",
+                "pH = -log[H\u207a]",
+                "DNA \u21cc RNA",
+                "Fe\u00b2\u207a + e\u207b \u2192 Fe",
+                "\u03bb = h/p",
+                "v = u + at",
+                "C\u2086H\u2081\u2082O\u2086",
+                "\u2211 F = ma",
+                "lim (x\u21920) sin(x)/x = 1",
+                "ATP \u2192 ADP + Pi",
+                "Krebs Cycle",
+                "d\u03c8/dt",
+                "K_a = [H\u207a][A\u207b]/[HA]",
+                "y = mx + c",
+            ];
+
+            function drawBenzene(ctx, x, y, size) {
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    const nextX = x + size * Math.cos(angle);
+                    const nextY = y + size * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(nextX, nextY);
+                    else ctx.lineTo(nextX, nextY);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.6, 0, Math.PI * 2);
+                ctx.stroke();
+                const fs = Math.max(8, size * 0.65);
+                ctx.font = `bold ${fs}px monospace`;
+                ctx.fillText("CH\u2083", x + size, y - size * 0.5);
+            }
+
+            function drawSkeletalChain(ctx, x, y, size) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + size * 0.5, y - size * 0.3);
+                ctx.lineTo(x + size, y);
+                ctx.lineTo(x + size * 1.5, y - size * 0.3);
+                ctx.stroke();
+                const fs = Math.max(8, size * 0.65);
+                ctx.font = `bold ${fs}px monospace`;
+                ctx.fillText("OH", x + size * 1.5 + 4, y - size * 0.3 + 4);
+                ctx.fillText("O", x + size * 0.5 - 4, y - size * 0.3 - 6);
+            }
+
+            function drawResistor(ctx, x, y, size) {
+                const w = size * 1.8;
+                const zigH = Math.max(6, size * 0.5);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + w * 0.2, y);
+                ctx.lineTo(x + w * 0.3, y - zigH);
+                ctx.lineTo(x + w * 0.4, y + zigH);
+                ctx.lineTo(x + w * 0.5, y - zigH);
+                ctx.lineTo(x + w * 0.6, y + zigH);
+                ctx.lineTo(x + w * 0.7, y - zigH);
+                ctx.lineTo(x + w * 0.8, y);
+                ctx.lineTo(x + w, y);
+                ctx.stroke();
+                const fs = Math.max(7, size * 0.6);
+                ctx.font = `bold ${fs}px monospace`;
+                ctx.fillText("R", x + w * 0.45, y - zigH - 5);
+            }
+
+            function drawCapacitor(ctx, x, y, size) {
+                const w = size * 1.2;
+                const h = Math.max(10, size * 0.8);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + w * 0.4, y);
+                ctx.moveTo(x + w * 0.4, y - h);
+                ctx.lineTo(x + w * 0.4, y + h);
+                ctx.moveTo(x + w * 0.6, y - h);
+                ctx.lineTo(x + w * 0.6, y + h);
+                ctx.moveTo(x + w * 0.6, y);
+                ctx.lineTo(x + w, y);
+                ctx.stroke();
+                const fs = Math.max(7, size * 0.6);
+                ctx.font = `bold ${fs}px monospace`;
+                ctx.fillText("C", x + w * 0.42, y - h - 4);
+            }
+
+            function drawDiode(ctx, x, y, size) {
+                const w = size * 1.4;
+                const h = Math.max(8, size * 0.65);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + w * 0.3, y);
+                ctx.moveTo(x + w * 0.3, y - h);
+                ctx.lineTo(x + w * 0.7, y);
+                ctx.lineTo(x + w * 0.3, y + h);
+                ctx.closePath();
+                ctx.moveTo(x + w * 0.7, y - h);
+                ctx.lineTo(x + w * 0.7, y + h);
+                ctx.moveTo(x + w * 0.7, y);
+                ctx.lineTo(x + w, y);
+                ctx.stroke();
+                const fs = Math.max(6, size * 0.55);
+                ctx.font = `bold ${fs}px monospace`;
+                ctx.fillText("D", x + w * 0.45, y - h - 4);
+            }
+
+            class ScienceParticle {
+                constructor() {
+                    this.reset();
+                    this.y = Math.random() * (window.innerHeight || 800);
+                }
+
+                reset() {
+                    const rand = Math.random();
+                    if (rand < 0.5) {
+                        this.type = 'text';
+                    } else if (rand < 0.75) {
+                        this.type = 'chemistry';
+                        this.subType = Math.random() > 0.5 ? 'benzene' : 'chain';
+                    } else {
+                        this.type = 'physics';
+                        const roll = Math.random();
+                        this.subType = roll < 0.33 ? 'resistor' : (roll < 0.66 ? 'capacitor' : 'diode');
+                    }
+                    this.text = expressions[Math.floor(Math.random() * expressions.length)];
+                    this.x = Math.random() * (window.innerWidth || 400);
+                    this.y = -60;
+                    this.speed = 0.12 + Math.random() * 0.4; // slightly slower on average
+                    this.size = (9 + Math.floor(Math.random() * 13)) * baseSizeMultiplier;
+                    this.opacity = 0.16 + Math.random() * 0.2;
+                }
+
+                update(screenW, screenH) {
+                    this.y += this.speed;
+                    if (this.y > screenH + 60) {
+                        this.reset();
+                        this.y = -60;
+                        this.x = Math.random() * screenW;
+                    }
+                }
+
+                draw(ctx) {
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.fillStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.lineWidth = Math.max(1, 1.6 * baseSizeMultiplier);
+
+                    if (this.type === 'text') {
+                        ctx.font = `bold ${this.size}px 'Courier New', monospace`;
+                        ctx.fillText(this.text, this.x, this.y);
+                    } else if (this.type === 'chemistry') {
+                        if (this.subType === 'benzene') {
+                            drawBenzene(ctx, this.x, this.y, this.size * 1.2);
+                        } else {
+                            drawSkeletalChain(ctx, this.x, this.y, this.size * 1.5);
+                        }
+                    } else if (this.type === 'physics') {
+                        if (this.subType === 'resistor') {
+                            drawResistor(ctx, this.x, this.y, this.size);
+                        } else if (this.subType === 'capacitor') {
+                            drawCapacitor(ctx, this.x, this.y, this.size);
+                        } else if (this.subType === 'diode') {
+                            drawDiode(ctx, this.x, this.y, this.size);
+                        }
+                    }
+                    ctx.restore();
+                }
+            }
+
+            let particles = [];
+
+            function initParticles() {
+                particles = [];
+                const screenH = window.innerHeight || 800;
+                for (let i = 0; i < particleCount; i++) {
+                    const p = new ScienceParticle();
+                    // Stagger initial Y positions to reduce overlap
+                    p.y = (screenH / particleCount) * i - 60 + Math.random() * 40;
+                    particles.push(p);
+                }
+            }
+
+            initParticles();
+
+            let animFrameId;
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            function animateCanvas(timestamp) {
+                if (prefersReducedMotion) {
+                    // Still animate but very slowly
+                    if (!timestamp) timestamp = performance.now();
+                }
+
+                const frameInterval = isMobile ? MOBILE_FRAME_INTERVAL : DESKTOP_FRAME_INTERVAL;
+
+                if (timestamp - lastFrameTime >= frameInterval || lastFrameTime === 0) {
+                    lastFrameTime = timestamp;
+                    const screenW = window.innerWidth;
+                    const screenH = window.innerHeight;
+                    ctx.clearRect(0, 0, screenW, screenH);
+                    for (let i = 0; i < particles.length; i++) {
+                        particles[i].update(screenW, screenH);
+                        particles[i].draw(ctx);
+                    }
+                }
+                animFrameId = requestAnimationFrame(animateCanvas);
+            }
+
+            // Handle visibility change to save battery on mobile
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (animFrameId) {
+                        cancelAnimationFrame(animFrameId);
+                        animFrameId = null;
+                    }
+                    lastFrameTime = 0;
+                } else {
+                    if (!animFrameId) {
+                        lastFrameTime = 0;
+                        animFrameId = requestAnimationFrame(animateCanvas);
+                    }
+                }
+            }, { passive: true });
+
+            // Listen for reduced motion changes
+            const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+            motionQuery.addEventListener('change', (e) => {
+                if (e.matches) {
+                    // Slow down particles significantly
+                    particles.forEach(p => {
+                        p.speed *= 0.3;
+                        p.opacity = Math.min(p.opacity, 0.15);
+                    });
+                }
+            });
+
+            // Start animation
+            lastFrameTime = 0;
+            animFrameId = requestAnimationFrame(animateCanvas);
+
+            // Re-init particles on resize with new count (debounced)
+            let resizeInitTimeout;
+            const debouncedReinit = () => {
+                clearTimeout(resizeInitTimeout);
+                resizeInitTimeout = setTimeout(() => {
+                    resizeCanvas();
+                    initParticles();
+                    lastFrameTime = 0;
+                }, 350);
+            };
+            window.addEventListener('resize', debouncedReinit, { passive: true });
+
+            // GSAP Cinematic Entrance Sequence with robust fallback
+            function initGSAP() {
+                const elements = ['#header', '#badges', '#headline', '#subtext', '#ctas', '#footer'];
+
+                // Check for reduced motion preference
+                if (prefersReducedMotion) {
+                    document.body.classList.add('gsap-fallback');
+                    return;
+                }
+
+                // Fallback: reveal everything if GSAP doesn't load within 2.5 seconds
+                const fallbackTimer = setTimeout(() => {
+                    document.body.classList.add('gsap-fallback');
+                }, 2500);
+
+                if (typeof gsap === 'undefined') {
+                    // Immediate fallback if GSAP script failed completely
+                    clearTimeout(fallbackTimer);
+                    document.body.classList.add('gsap-fallback');
+                    return;
+                }
+
+                // If GSAP is available, clear fallback and run animation
+                const tl = gsap.timeline({
+                    defaults: { ease: "power3.out", overwrite: "auto" },
+                    onComplete: () => clearTimeout(fallbackTimer)
+                });
+
+                // Slightly reduced distances for mobile to prevent jank
+                const yOffsetHeader = isMobile ? -25 : -40;
+                const yOffsetBadges = isMobile ? 15 : 25;
+                const yOffsetHeadline = isMobile ? 20 : 35;
+                const yOffsetSubtext = isMobile ? 12 : 18;
+                const yOffsetCtas = isMobile ? 12 : 18;
+
+                tl.to("#header", { opacity: 1, y: 0, duration: 0.7, startAt: { y: yOffsetHeader } })
+                    .to("#badges", { opacity: 1, y: 0, duration: 0.55, startAt: { y: yOffsetBadges } }, "-=0.4")
+                    .to("#headline", { opacity: 1, y: 0, duration: 0.7, startAt: { y: yOffsetHeadline } }, "-=0.4")
+                    .to("#subtext", { opacity: 1, y: 0, duration: 0.55, startAt: { y: yOffsetSubtext } }, "-=0.4")
+                    .to("#ctas", { opacity: 1, y: 0, duration: 0.55, startAt: { y: yOffsetCtas } }, "-=0.4")
+                    .to("#footer", { opacity: 1, duration: 0.7 }, "-=0.25");
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initGSAP);
+            } else {
+                // DOM already loaded, run on next tick to ensure layout is settled
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(initGSAP);
+                });
+            }
+
+            // Prevent double-tap zoom on interactive elements without blocking scrolling
+            const touchElements = document.querySelectorAll('.btn-cta, .badge-touch');
+            touchElements.forEach(el => {
+                el.addEventListener('touchstart', function (e) {
+                    // Only prevent default if it's a direct tap (not a scroll)
+                    // We use a small threshold to distinguish tap from scroll
+                    const target = e.target;
+                    if (target === this || this.contains(target)) {
+                        // Don't prevent default here to allow scrolling
+                        // Instead rely on touch-action: manipulation in CSS
+                    }
+                }, { passive: true });
+            });
+
+            // Log initialization for debugging
+            console.log('Sharada Academy - Mobile optimized landing page initialized. Particles:', particleCount, 'DPR:', dpr, 'Mobile:', isMobile);
+        })();
+    </script>
+</body>
+
+</html>

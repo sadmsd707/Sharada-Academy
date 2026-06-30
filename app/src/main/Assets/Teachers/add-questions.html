@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#f8fafc" />
+    <title>Sharada Academy – Practice Platform</title>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- MathJax Configuration & Loader -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        :root {
+            --safe-area-top: env(safe-area-inset-top, 0px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-area-left: env(safe-area-inset-left, 0px);
+            --safe-area-right: env(safe-area-inset-right, 0px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background: #f8fafc;
+            color: #475569;
+            line-height: 1.6;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding-top: var(--safe-area-top);
+            padding-bottom: var(--safe-area-bottom);
+            padding-left: var(--safe-area-left);
+            padding-right: var(--safe-area-right);
+            position: relative;
+        }
+
+        #equations-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            z-index: 0;
+            pointer-events: none;
+            display: block;
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100dvh;
+            width: 100%;
+        }
+
+        .app-header {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(203, 213, 225, 0.4);
+            height: 70px;
+            gap: 12px;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .header-logo .logo-pink {
+            color: #db2777;
+        }
+
+        .header-logo .logo-light {
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 0.04em;
+        }
+
+        .hamburger {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 28px;
+            height: 20px;
+            padding: 0;
+            z-index: 1001;
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+
+        .hamburger span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #db2777;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+            transform-origin: center;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: translateY(8.5px) rotate(45deg);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: translateY(-8.5px) rotate(-45deg);
+        }
+
+        .hamburger:active {
+            transform: scale(0.92);
+        }
+
+        .side-nav {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100vh;
+            height: 100dvh;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.08);
+            border-left: 1px solid rgba(203, 213, 225, 0.5);
+            transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-nav.active {
+            right: 0;
+        }
+
+        .side-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 100vh;
+            max-height: 100dvh;
+            padding-top: 80px;
+            padding-bottom: 24px;
+        }
+
+        .side-nav ul li a {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #1e293b;
+            text-decoration: none;
+            padding: 16px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-left: 4px solid transparent;
+            transition: all 0.25s ease;
+            background: transparent;
+        }
+
+        .side-nav ul li a:hover {
+            background: rgba(219, 39, 119, 0.05);
+            border-left-color: #db2777;
+            color: #db2777;
+            padding-left: 32px;
+        }
+
+        .nav-icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.35s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .dashboard {
+            padding: 24px 5vw 32px;
+            max-width: 1100px;
+            margin: auto;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+            padding: 24px 28px;
+        }
+
+        .site-footer {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            margin-top: auto;
+            text-align: center;
+            width: 100%;
+            padding-bottom: 16px;
+        }
+
+        .site-footer .copyright {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .site-footer .love {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 18px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #64748b;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab-btn.active {
+            color: #db2777;
+            border-bottom-color: #db2777;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            color: #0f172a;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            background: #fafbfc;
+            color: #0f172a;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #db2777;
+            box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.08);
+            background: #fff;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        @media (max-width:600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .options-container {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            margin-top: 4px;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .option-row:hover {
+            border-color: #db2777;
+        }
+
+        .option-letter {
+            font-weight: 800;
+            font-size: 1rem;
+            color: #db2777;
+            width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .option-text-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .correct-radio {
+            width: 18px;
+            height: 18px;
+            accent-color: #db2777;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .option-image-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .option-preview-img {
+            width: 28px;
+            height: 28px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+
+        .option-remove-img {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 2px 4px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #db2777, #e11d48);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(219, 39, 119, 0.2);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 12px 28px rgba(219, 39, 119, 0.3);
+            background: linear-gradient(135deg, #c71d6b, #d41a3f);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.96);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-danger {
+            background: #fff;
+            color: #ef4444;
+            border: 1.5px solid #fecaca;
+        }
+
+        .btn-outline {
+            background: #fff;
+            color: #0f172a;
+            border: 1.5px solid #e2e8f0;
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-outline:active {
+            transform: scale(0.97);
+        }
+
+
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+
+        .question-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .q-text {
+            font-weight: 600;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .q-meta {
+            font-size: 0.78rem;
+            color: #64748b;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-mcq {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-text {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 9999;
+            animation: slideUp 0.3s ease, fadeOut 0.3s ease 2.2s forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        /* ===== MODAL STYLES ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.45);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 16px;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 20px;
+            padding: 0;
+            max-width: 560px;
+            width: 100%;
+            max-height: 88vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.08);
+            animation: modalIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.94) translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #0f172a;
+            padding: 18px 22px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            background: #fafbfc;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+            line-height: 1;
+            font-weight: 700;
+        }
+
+        .modal-close-btn:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .modal-body {
+            padding: 20px 22px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 14px 22px;
+            border-top: 1px solid #f1f5f9;
+            flex-shrink: 0;
+            background: #fafbfc;
+            border-radius: 0 0 20px 20px;
+        }
+
+        /* View modal detail styles */
+        .view-detail {
+            margin-bottom: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .view-label {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 5px;
+            flex-shrink: 0;
+        }
+
+        .view-value {
+            color: #475569;
+            word-break: break-word;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .view-divider {
+            border: none;
+            border-top: 1px solid #f1f5f9;
+            margin: 14px 0;
+        }
+
+        .view-question-text {
+            background: #f8fafc;
+            border-left: 3px solid #db2777;
+            border-radius: 0 8px 8px 0;
+            padding: 12px 14px;
+            color: #1e293b;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin: 6px 0 10px;
+        }
+
+        .view-options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .view-option-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1.5px solid #e2e8f0;
+            background: #fff;
+            font-size: 0.9rem;
+        }
+
+        .view-option-row.correct {
+            border-color: #86efac;
+            background: #f0fdf4;
+        }
+
+        .view-option-letter {
+            font-weight: 800;
+            color: #db2777;
+            width: 22px;
+            flex-shrink: 0;
+        }
+
+        .view-option-row.correct .view-option-letter {
+            color: #16a34a;
+        }
+
+        .view-option-text {
+            color: #1e293b;
+            word-break: break-word;
+        }
+
+        .correct-badge {
+            margin-left: auto;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #16a34a;
+            background: #dcfce7;
+            padding: 2px 8px;
+            border-radius: 12px;
+            flex-shrink: 0;
+        }
+
+        .solution-box {
+            background: linear-gradient(135deg, #fdf2f8, #fce7f3);
+            border: 1px solid #fbcfe8;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-top: 12px;
+        }
+
+        .solution-box .view-label {
+            background: #fce7f3;
+            color: #9d174d;
+        }
+
+        .solution-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #475569;
+            font-size: 0.92rem;
+            margin-top: 6px;
+            line-height: 1.6;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+    <canvas id="equations-canvas" aria-hidden="true" role="presentation"></canvas>
+
+    <div class="content-layer">
+        <header class="app-header">
+            <div class="header-logo">
+                <span class="logo-pink">SHARADA</span>
+                <span class="logo-light">ACADEMY</span>
+            </div>
+            <button class="hamburger" id="hamburger" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </header>
+
+        <div class="side-nav" id="sideNav">
+            <style>
+                .side-nav {
+                    position: fixed !important;
+                    top: 0 !important;
+                    right: -320px !important;
+                    width: 300px !important;
+                    height: 100vh !important;
+                    height: 100dvh !important;
+                    background: rgba(255, 255, 255, 0.95) !important;
+                    backdrop-filter: blur(16px) !important;
+                    -webkit-backdrop-filter: blur(16px) !important;
+                    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.08) !important;
+                    border-left: 1px solid rgba(203, 213, 225, 0.5) !important;
+                    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                    z-index: 1000 !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    padding-top: 80px !important;
+                    box-sizing: border-box !important;
+                }
+                body.dark-mode .side-nav {
+                    background: rgba(15, 23, 42, 0.95) !important;
+                    border-left-color: rgba(51, 65, 85, 0.5) !important;
+                }
+                .side-nav.active {
+                    right: 0 !important;
+                }
+                .side-nav ul {
+                    list-style: none !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    flex: 1 !important;
+                    overflow-y: auto !important;
+                }
+                .side-nav ul li {
+                    border-bottom: 1px solid rgba(219, 39, 119, 0.08) !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    opacity: 1 !important;
+                    transform: none !important;
+                }
+                .side-nav ul li a {
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 14px !important;
+                    color: #1e293b !important;
+                    text-decoration: none !important;
+                    padding: 16px 24px !important;
+                    font-size: 0.95rem !important;
+                    font-weight: 600 !important;
+                    border-left: 4px solid transparent !important;
+                    transition: all 0.25s ease !important;
+                    background: transparent !important;
+                    box-sizing: border-box !important;
+                }
+                body.dark-mode .side-nav ul li a {
+                    color: #f1f5f9 !important;
+                }
+                .side-nav ul li a:hover,
+                .side-nav ul li a.active-nav,
+                .side-nav ul li a.nav-active {
+                    background: rgba(219, 39, 119, 0.05) !important;
+                    border-left-color: #db2777 !important;
+                    color: #db2777 !important;
+                    padding-left: 32px !important;
+                }
+                .side-nav .nav-icon {
+                    font-size: 1.1rem !important;
+                    width: 24px !important;
+                    text-align: center !important;
+                    flex-shrink: 0 !important;
+                    transition: transform 0.25s ease !important;
+                    color: inherit !important;
+                    display: inline-block !important;
+                }
+                .side-nav ul li a:hover .nav-icon {
+                    transform: scale(1.15) !important;
+                }
+            </style>
+            <ul>
+                <li><a href="teacher-dashboard.html" class=""><i class="fa-solid fa-chart-simple nav-icon"></i>Dashboard</a></li>
+                <li><a href="teacher-classes.html" class=""><i class="fa-solid fa-school nav-icon"></i>My Classes</a></li>
+                <li><a href="attendance.html" class=""><i class="fa-solid fa-calendar-days nav-icon"></i>Attendance</a></li>
+                <li><a href="announcements.html" class=""><i class="fa-solid fa-bullhorn nav-icon"></i>Announcements</a></li>
+                <li><a href="create-test.html" class=""><i class="fa-solid fa-pen-clip nav-icon"></i>Create Test</a></li>
+                <li><a href="my-tests.html" class=""><i class="fa-solid fa-file-signature nav-icon"></i>My Tests</a></li>
+                <li><a href="sitting-arrangement.html" class=""><i class="fa-solid fa-chair nav-icon"></i>Sitting Arrangement</a></li>
+                <li><a href="omr-scanner.html" class=""><i class="fa-solid fa-camera nav-icon"></i>OMR Scanner</a></li>
+                <li><a href="teacher-scores.html" class=""><i class="fa-solid fa-chart-line nav-icon"></i>Student Scores</a></li>
+                <li><a href="add-student.html" class=""><i class="fa-solid fa-user-graduate nav-icon"></i>Add Student</a></li>
+                <li><a href="fees-section.html" class=""><i class="fa-solid fa-credit-card nav-icon"></i>Fees Section</a></li>
+                <li><a href="teacher-parent.html" class=""><i class="fa-solid fa-people-group nav-icon"></i>Parent Section</a></li>
+                <li><a href="teacher-resources.html" class=""><i class="fa-solid fa-book nav-icon"></i>Resources</a></li>
+                <li><a href="add-questions.html" class="active-nav nav-active"><i class="fa-solid fa-circle-question nav-icon"></i>Add New Questions</a></li>
+                <li><a href="my-account.html" class=""><i class="fa-solid fa-user-gear nav-icon"></i>My Account</a></li>
+                <li><a href="../role-selection.html" class="" onclick="logout(event); return false;"><i class="fa-solid fa-right-from-bracket nav-icon"></i>Logout</a></li>
+            </ul>
+        </div>
+        <div class="overlay" id="overlay"></div>
+
+        <main class="dashboard">
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="add" onclick="switchTeacherTab('add')">➕ Add Question</button>
+                <button class="tab-btn" data-tab="bank" onclick="switchTeacherTab('bank')">📚 Question Bank</button>
+            </div>
+
+            <div id="tabAdd">
+                <div class="glass-card">
+                    <h2 style="font-size:1.2rem; font-weight:700; margin-bottom:18px;" id="formTitle">✍️ Create New
+                        Question</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Course</label>
+                            <select id="courseSelect" onchange="updateChapterField(); saveLastSelections();">
+                                <option value="" selected disabled>-- Select Course --</option>
+                                <option value="JEE">JEE</option>
+                                <option value="NEET">NEET</option>
+                                <option value="MHT CET">MHT CET</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select id="subjectSelect" onchange="updateChapterField(); saveLastSelections();">
+                                <option value="" selected disabled>-- Select Subject --</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Zoology">Zoology</option>
+                                <option value="Botany">Botany</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Chapter</label>
+                            <div id="chapterContainer"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Topic</label>
+                            <div id="topicContainer"></div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Year</label><input type="number" id="yearInput"
+                                placeholder="e.g., 2025" min="2000" max="2100"></div>
+                        <div class="form-group"><label>Month</label><select id="monthSelect">
+                                <option value="January">January</option>
+                                <option value="February">February</option>
+                                <option value="March">March</option>
+                                <option value="April">April</option>
+                                <option value="May">May</option>
+                                <option value="June">June</option>
+                                <option value="July">July</option>
+                                <option value="August">August</option>
+                                <option value="September">September</option>
+                                <option value="October">October</option>
+                                <option value="November">November</option>
+                                <option value="December">December</option>
+                            </select></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Day</label><input type="number" id="dayInput" placeholder="1-31"
+                                min="1" max="31"></div>
+                        <div class="form-group"><label>Shift</label><select id="shiftSelect">
+                                <option value="Morning">Morning</option>
+                                <option value="Afternoon">Afternoon</option>
+                            </select></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Question Type</label>
+                        <select id="questionType" onchange="toggleQuestionType()">
+                            <option value="mcq">Multiple Choice (MCQ)</option>
+                            <option value="text">Short Answer / Text</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Question Text</label>
+                        <textarea id="questionText" rows="3" placeholder="Enter your question here..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Question Image (optional)</label>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button type="button" class="btn btn-outline btn-sm"
+                                onclick="document.getElementById('qImageInput').click()">🖼️ Upload</button>
+                            <input type="file" id="qImageInput" accept="image/*" style="display:none"
+                                onchange="handleImageUpload(this, 'qImagePreview', 'qImageData')">
+                            <img id="qImagePreview" alt="Preview"
+                                style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #e2e8f0; display:none;">
+                            <button type="button" class="btn btn-sm btn-danger" id="qImageRemove" style="display:none"
+                                onclick="clearImage('qImageInput','qImagePreview','qImageData')">✕</button>
+                        </div>
+                        <input type="hidden" id="qImageData" value="">
+                    </div>
+
+                    <!-- SOLUTION BLOCK -->
+                    <div class="form-group">
+                        <label>Solution / Explanation</label>
+                        <textarea id="solutionText" rows="3"
+                            placeholder="Optional solution or explanation..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Solution Image (optional)</label>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button type="button" class="btn btn-outline btn-sm"
+                                onclick="document.getElementById('solImageInput').click()">🖼️ Upload</button>
+                            <input type="file" id="solImageInput" accept="image/*" style="display:none"
+                                onchange="handleImageUpload(this, 'solImagePreview', 'solImageData')">
+                            <img id="solImagePreview" alt="Preview"
+                                style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #e2e8f0; display:none;">
+                            <button type="button" class="btn btn-sm btn-danger" id="solImageRemove" style="display:none"
+                                onclick="clearImage('solImageInput','solImagePreview','solImageData')">✕</button>
+                        </div>
+                        <input type="hidden" id="solImageData" value="">
+                    </div>
+
+                    <div id="mcqOptions">
+                        <label style="font-weight:600; font-size:0.85rem; margin-bottom:8px; display:block;">Answer
+                            Options</label>
+                        <div class="options-container" id="optionsContainer"></div>
+                    </div>
+
+                    <div id="textAnswerSection" style="display:none;">
+                        <div class="form-group">
+                            <label>Correct Answer</label>
+                            <input type="text" id="correctTextAnswer" placeholder="Enter the correct answer...">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-top:12px;">
+                        <button class="btn btn-primary" id="submitBtn" onclick="submitQuestion()"> Add Question</button>
+                        <button class="btn btn-secondary" id="cancelEditBtn" style="display:none;"
+                            onclick="cancelEdit()"> Cancel Edit</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tabBank" style="display:none;">
+                <div class="glass-card">
+                    <h2 style="font-size:1.2rem; font-weight:700; margin-bottom:18px;">📚 Question Bank</h2>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+                        <select id="filterCourse" onchange="renderQuestionBank()"
+                            style="padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+                            <option value="all">🎯 All Courses</option>
+                            <option>JEE</option>
+                            <option>NEET</option>
+                            <option>MHT CET</option>
+                        </select>
+                        <select id="filterSubject" onchange="renderQuestionBank()"
+                            style="padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+                            <option value="all">📘 All Subjects</option>
+                        </select>
+                        <button class="btn btn-outline btn-sm" onclick="exportQuestions()">📥 Export</button>
+                        <button class="btn btn-outline btn-sm"
+                            onclick="document.getElementById('importFile').click()">📤 Import</button>
+                        <input type="file" id="importFile" accept=".json" style="display:none"
+                            onchange="importQuestions(event)">
+                    </div>
+                    <div id="questionList"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p class="copyright">&copy; 2026 Sharada Academy. All rights reserved.</p>
+            <p class="love">Made with ❤️ by Team Sharada</p>
+        </footer>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content" style="max-width:420px;">
+            <div class="modal-header">
+                <span>🗑️ Confirm Delete</span>
+                <button class="modal-close-btn" onclick="closeDeleteModal()" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="color:#475569; font-size:0.95rem; line-height:1.6;">Are you sure you want to permanently
+                    delete this question? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-primary"
+                    style="background:linear-gradient(135deg,#ef4444,#dc2626); box-shadow:0 4px 12px rgba(239,68,68,0.25);"
+                    onclick="confirmDeleteQuestion()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View question modal -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>📋 Question Details</span>
+                <button class="modal-close-btn" onclick="closeViewModal()" title="Close">✕</button>
+            </div>
+            <div class="modal-body" id="viewContent"></div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toastContainer"></div>
+
+    <script>
+        if (localStorage.getItem("isLoggedIn") !== "true" || localStorage.getItem("userRole") !== "teacher") {
+            window.location.href = "../role-selection.html";
+        }
+
+        // ========== FIXED: Simple, safe auto-wrap for LaTeX ==========
+        function autoWrapMathInText(text) {
+            if (!text) return '';
+            // If already has math delimiters, assume it's ready
+            if (text.includes('\\(') || text.includes('\\[') || text.includes('$$')) {
+                return text;
+            }
+            // Check for common LaTeX command patterns
+            const latexPattern = /\\[a-zA-Z]+|[_^][{}]|[\{\}]/;
+            if (latexPattern.test(text)) {
+                // Wrap entire string in inline math delimiters
+                return '\\(' + text + '\\)';
+            }
+            return text;
+        }
+
+        function saveLastSelections() {
+            const course = document.getElementById('courseSelect').value;
+            const subject = document.getElementById('subjectSelect').value;
+            const chapter = getChapterValue();
+            const topic = getTopicValue();
+
+            localStorage.setItem('last_course', course || '');
+            localStorage.setItem('last_subject', subject || '');
+            localStorage.setItem('last_chapter', chapter || '');
+            localStorage.setItem('last_topic', topic || '');
+        }
+
+        function restoreLastSelections() {
+            const lastCourse = localStorage.getItem('last_course');
+            const lastSubject = localStorage.getItem('last_subject');
+            const lastChapter = localStorage.getItem('last_chapter');
+            const lastTopic = localStorage.getItem('last_topic');
+
+            document.getElementById('courseSelect').value = lastCourse || '';
+            document.getElementById('subjectSelect').value = lastSubject || '';
+
+            updateChapterField();
+
+            setTimeout(() => {
+                if (lastChapter) setChapterValue(lastChapter);
+                if (lastTopic) setTopicValue(lastTopic);
+            }, 150);
+        }
+
+        function logout(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("userRole");
+            localStorage.removeItem("currentTeacher");
+            localStorage.removeItem("teacherVerification");
+            localStorage.removeItem("username");
+            if (typeof auth !== 'undefined') {
+                auth.signOut().then(() => {
+                    window.location.href = "../role-selection.html";
+                }).catch(() => {
+                    window.location.href = "../role-selection.html";
+                });
+            } else {
+                window.location.href = "../role-selection.html";
+            }
+        }
+        // Firebase config and initialization
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXWEuA7G55nawfNUoIqr9PqGP9YGQwGnc",
+            authDomain: "soham-6d886.firebaseapp.com",
+            projectId: "soham-6d886",
+            storageBucket: "soham-6d886.firebasestorage.app",
+            messagingSenderId: "281780176229",
+            appId: "1:281780176229:web:cd1eea7bd171c14a338d8c",
+            measurementId: "G-CB1J6LQ7DJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Hamburger menu
+        const hamburger = document.getElementById('hamburger');
+        const sideNav = document.getElementById('sideNav');
+        const overlay = document.getElementById('overlay');
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            sideNav.classList.toggle('active');
+            overlay.classList.toggle('active');
+            document.body.style.overflow = sideNav.classList.contains('active') ? 'hidden' : 'auto';
+        });
+        overlay.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            sideNav.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+        document.querySelectorAll('.side-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                sideNav.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+        });
+
+        // ---------- All Topic Data (same as original) ----------
+        const mhtcetPhysicsTopics = {
+            "Alternating Current": ["Alternating Current, Voltage and Power", "AC Circuits", "Quality and Power Factor", "Transformers", "Parallel AC Circuits"],
+            "Atomic Physics": ["Atomic Structure", "Bohr's Atomic Model", "Atomic Spectrum"],
+            "Capacitance": ["Capacitance", "Grouping of Capacitors", "Capacitors with Dielectric", "Force and Energy stored in Capacitor", "Charging and Discharging of Capacitors"],
+            "Centre of Mass and Collision": ["Momentum", "Centre of Mass of Discrete Particles", "Centre of Mass of Continuous Mass Distribution", "Motion of Centre of Mass", "Impulse", "Collisions", "Variable Mass System"],
+            "Communication System": ["Communication System", "Propagation of EM Waves", "Modulation"],
+            "Current Electricity": ["Electric Current and Drift Velocity", "Ohm's Law and Resistance", "Combination of Resistors", "Kirchhoff's Laws", "Electrical Measuring Instruments"],
+            "Dual Nature of Matter": ["Cathode Rays and Positive Rays", "Matter Waves", "Photoelectric Effect"],
+            "Electromagnetic Induction": ["Magnetic Flux, Faraday's and Lenz law", "Induced Electric Field", "Motional and Rotational EMF", "Inductance", "Self and Mutual Inductance", "LR Circuit"],
+            "Electromagnetic Waves": ["Electromagnetic Waves and Maxwell's equations", "Electromagnetic Spectrum"],
+            "Electrostatics": ["Electric Charge and Coulomb's law", "Electric Field and Electric Field Lines", "Electric Potential and Potential Energy", "Electric Dipole", "Electric Flux and Gauss Law"],
+            "Experimental Physics": ["Experimental Physics"],
+            "Gravitation": ["Newton's Law of Gravitation", "Gravitational Field", "Acceletation Due to Gravity", "Gravitational Potential and Potential Energy", "Motion of Satellite", "Kepler Laws"],
+            "Kinetic Theory of Gases": ["Gas Laws", "Speed of Gas", "Degree of Freedom and Specific Heat", "Pressure and Energy of gas"],
+            "Laws of Motion": ["Newton's laws of Motion", "Equilibrium of Forces", "Spring Forces", "Friction force", "Non-uniform Circular Motion"],
+            "Magnetic Effects of Current": ["Biot-Savart's Law and Ampere's Circuital Law", "Magnetic Field", "Motion of Charged Particle in Magnetic Field", "Force and Torque on Current Carrying Conductor", "Magnetic Moment", "Magnetic Dipole"],
+            "Magnetic Properties of Matter": ["Algebra & Trigonometry", "Coordinate Geometry", "Basic Calculus", "Vectors Basics", "Logarithms & Exponentials"],
+            "Mathematics in Physics": ["Fundamentals of Vectors", "Addition and Subtraction of Vectors", "Multiplication of Vectors", "Errors of Measurement"],
+            "Mechanical Properties of Fluids": ["Pressure and Thrust", "Pascal's Law", "Aechmidies Principle", "Hydrodynamics", "Efflux of Liquid", "Surface Tension", "Viscosity"],
+            "Mechanical Properties of Solids": ["Elasticity", "Young's Modulus and Breaking Stress", "Bulk Modulas", "Shearing Stress", "Work Done in Stretching a Wire"],
+            "Motion in One Dimension": ["Rest of Motion", "Uniform Motion", "Non-Uniform Motion", "Relative Motion", "Motion Under Gravity", "Graphs of Motion in One Dimension"],
+            "Motion in Two Dimension": ["Projectile Motion", "Relative Motion", "Uniform Circular Motion"],
+            "Nuclear Physics": ["Nuclear structure", "Nuclear energy", "Radioactivity", "Nuclear reactions"],
+            "Oscillations": ["Simple Harmonic Motion", "Energy of Simple Hormonic Motion", "Time Period and Frequency", "Applications of SHM", "Superposition of SHM's and Resonance", "Angular Oscillations"],
+            "Ray Optics": ["Reflection of Light from Plane Mirror", "Mirror Formula, Reflection in Spherical Mirror", "Critical angle and total internal reflection", "Refraction of light from plane surface", "Lens Formula, Refraction of light from curved surface", "Combination of Lens and Mirrors", "Prism and Dispersion of Light", "Optical Instruments", "Human eye"],
+            "Rotation Motion": ["Momentum of Inertia of Rigid Bodies", "Torque", "Rotational Kinematics", "Angular Momentum and Angular impulse", "Rolling without Slipping", "Combination of Translation and Rotation"],
+            "Semiconductors": ["Energy Bands in Solids", "Semiconductors", "Diodes", "Rectifier", "Special purpose diodes", "Junction Transistors", "Logic gates"],
+            "Thermal Properties of Matter": ["Thermometry", "Thermal Expansion", "Calorimetry", "Conduction", "Convection", "Radiation"],
+            "Thermodynamics": ["Thermodynamic Systems", "First Law of Thermodynamics", "Thermodynamic Processes", "Heat Engine, Refrigerator and Second Law of Thermodynamics"],
+            "Units and Dimensions": ["Units", "Dimensions"],
+            "Wave Optics": ["Wave Theory and Wavefronts", "Interference of Light", "Youngs Double Slit Experiment", "Diffraction of Light", "Polarization of Light"],
+            "Waves and Sound": ["Basic of Mechanical Waves", "Travelling Waves", "Interference and Superposition of Waves", "Stationary Waves", "Vibration of String", "Organ Pipe (Vibration of Air Column)", "Beats", "Doppler's Effect", "Speed of Sound Waves", "Properties of Sound Waves"],
+            "Work, Power & Energy": ["Work Done", "Energy", "Power", "Circular Motion"]
+        };
+
+        const mhtcetChemistryTopics = {
+            "Alcohol, Phenols and Ethers": ["Preparation and Properties of Alcohols", "Reactions of Alcohols", "Preparation of Phenols", "Reactions of Phenol", "Preparation of Ethers", "Reactions of Ethers", "Dihydric alcohols", "Preparation and Reactions of Glycol", "Methods of Preparation of Carbonyl Compounds", "Reactions of Carbonyl Compounds", "Tests for Aldehyde and Ketones", "Properties of Phenol"],
+            "Aldehydes Ketones": ["Method of preparation for both aldehydes and ketones", "Method of preparation for Aldehydes", "Method of preparation for Ketones", "Chemical reactions for aldehydes and ketones", "Reactions for aldehydes", "Reactions for ketones", "Tests for aldehyde and ketones", "Method of Preparation for Both Aldehydes and Ketones", "Tests for Aldehyde and Ketones"],
+            "Amines": ["Preparation and Properties of Amines", "Separation of mixture of amines", "Preparation and Properties of Amides", "Preparation and Properties of Cyanides", "Preparation and Properties of Isocyanides"],
+            "Biomolecules": ["Carbohydrates", "Preparation and Reactions of Glucose", "Disaccharides and Polysaccharides", "Properties and Preparation of Amino Acids", "Proteins", "Nucleic Acids", "Vitamins", "Fats"],
+            "Carboxylic Acid Derivatives": ["Preparation and Properties of Carboxylic Acids", "Reaction Involving Cleavage of \u2013OH Group", "Reactions Involving Acid Group", "Abnormal Behaviour of Formic Acid", "Preparation and Properties of Acid Derivatives", "Preparation and Properties of Esters"],
+            "Chemical Bonding and Molecular Structure": ["Covalent and Co-ordinate Bonding", "Hybridisation and VSEPR Theory", "Molecular Orbital Theory", "Ionic bond", "Polarization", "Properties of ionic compounds", "Dipole moment", "Van Der Waals Forces, Hydrogen Bonding and Metallic Bonding"],
+            "Chemical Equilibrium": ["Law of Mass Action, Equilibrium Constant (Kc and Kp) and its Application", "Le chatelier's principle"],
+            "Chemical Kinetics": ["Rate of reaction", "Rate law and rate constant", "Integrated rate laws", "Methods to determine order of reaction", "Parallel and Sequencial rate laws", "Arrhenius theory"],
+            "Chemistry in Everyday Life": ["Drugs and It's Classification", "Cleansing Agents", "Enzymes and Receptors", "Artificial Sweetening Agents and Food Preservatives"],
+            "Classification of Elements and Periodicity in Properties": ["Earlier attempts of periodic classification", "Modern periodic table", "Periodic properties"],
+            "Coordination Compounds": ["Terminology of coordination compounds", "Nomenclature of coordination compounds", "Isomerism of coordination compounds", "Werner's theory and Valence Bond Theory", "Crystal Field Theory", "Stability of complex ion", "Carbonyl Compounds"],
+            "D and F Block Elements": ["Properties of D-block elements", "Compounds of Transition Metals", "F-Block elements"],
+            "Electrochemistry": ["Cells and Electrode Potential, Nernst Equation", "Types of half cells", "Concentration cell", "Commercial Cells and Batteries", "Corrosion", "Conductance and Conductivity"],
+            "Environmental Chemistry": ["Air Pollution", "Introduction to Nanochemistry", "Water Pollution", "Land Pollution", "Control of environmental pollution"],
+            "General Organic Chemistry": ["IUPAC Nomenclature", "Classification of organic compounds", "Bond Cleavage", "Reaction Intermediates", "Electron displacement effects", "Conjugation and Aromaticity", "Attacking reagents", "Isomerism of Organic Compounds", "Purification of Organic Compounds"],
+            "General Principles and Processes of Isolation of Elements": ["Minerals and ores", "Concentration of the Ore", "Refining of Crude Metal", "Flux and Refractory materials", "Extraction of Metals"],
+            "Haloalkanes and Haloarenes": ["Preparation and Properties of Monohalides", "Preparation and Properties of Geminal and Vicinal Dihalides", "Preparation and Properties of Aryl Halides", "Grignard Reagent"],
+            "Hydrocarbons": ["Properties and Preparation of Alkanes", "Reactions of alkanes", "Properties and Preparation of Alkenes", "Reactions of alkenes", "Reactions of alkynes", "Preparation and Reactions of cycloalkanes and cycloalkenes", "Preparation and Properties of Benzene", "Reactions of Benzene", "Reactions of aromatic compounds", "Properties and Preparation of Alkynes"],
+            "Hydrogen": ["Preparation and Properties of Hydrogen", "Hydrides", "Preparation and Properties of Hydrogen Peroxide", "Chemical properties of hydrogen peroxide", "Preparation and Properties of Water", "Chemical properties of heavy water"],
+            "Ionic Equilibrium": ["Theories of Acids and Bases", "Ionic Product of Water", "PH of solutions", "Salt Hydrolysis", "Buffer solutions", "Solubility"],
+            "P Block Elements (Group 13 & 14)": ["Boron and Its Compounds", "Aluminium and Its Compounds", "Carbon and Its Compounds", "Silicon and Its Compounds", "Tin and Lead Containing Compounds"],
+            "P Block Elements (Group 15,16, 17 & 18)": ["Nitrogen and Its Compounds", "Phosphorus and Its Compounds", "Oxygen and Its Compounds", "Sulphur and Its Compounds", "Halogens and Its Compounds", "Noble Gases"],
+            "Polymers": ["Classification of Polymers", "Preparation and Properties of Polymers"],
+            "Practical Chemistry": ["Radicals", "Preliminary Tests"],
+            "Redox Reactions": ["Oxidation and Reduction Reactions", "Types of redox reactions", "Oxidation number", "Balancing of redox reactions", "Equivalence concept", "Redox titration"],
+            "S Block Elements": ["General Characteristics of Alkali Metals", "Compounds of Alkali Metals", "Alkaline Earth Metals", "Compounds of Alkaline Earth Metals", "Properties of S-block elements"],
+            "Solid State": ["Properties and Types of Solids", "Crystal Structure of Solids", "Cubic system", "Ionic structure", "Stoichiometric defects", "Non-stoichiometric defects", "Electrical and Magnetic properties"],
+            "Solutions": ["Solubility and Concentration of Solutions", "Vapour pressure and raoult's law", "Henry's law", "Colligative Properties and Abnormal Molecular Masses"],
+            "Some Basic Concepts of Chemistry": ["Laws of chemical combination", "Mole concept", "Quantitative measures in chemical equations", "Concentration terms", "Significant Figures"],
+            "States of Matter": ["Gas laws and Ideal Gas Equation", "Mixture of gases", "Kinetic theory of gases", "Real Gases and Van der Waal's Equation", "Critical phenomena and liquefaction"],
+            "Structure of Atom": ["Atomic Models", "Atomic Mass and Atomic Size", "Bohr's model", "Hydrogen spectrum", "Dual Behaviour of Matter and Heisenberg Uncertainty Principle", "Quantum mechanical model", "Electronic configuration"],
+            "Surface Chemistry": ["Adsorption", "Adsorption isotherms", "Catalysis and Theories of Catalysis", "Colloids", "Preparation and Purification of colloids", "Properties of colloidal solution", "Emulsions and Gels", "Nanostructures"],
+            "Thermodynamics (C)": ["System and surrounding", "First Law and Basic Fundamentals of Thermodynamics", "Laws of Thermochemistry and Enthalpy Change", "Entropy and Second law of thermodynamics", "Third law of thermodynamics"]
+        };
+
+        const mhtcetMathematicsTopics = {
+            "Application Of Derivative": ["Tangent and Normal", "Monotonicity (Increasing / Decreasing function)", "Maxima and Minima of a Function", "Mean Value Theorem", "Rate Measure & Approximations", "Rolle's Theorem & Lagrange's Mean Value Theorem"],
+            "Area Under Curves": ["Area between curves", "Curve sketching", "Miscellaneous area problems"],
+            "Basic of Mathematics": ["Ratio and Proportion", "Logarithm", "Inequalities"],
+            "Binomial Theorem": ["Properties of Binomial Coefficients", "Series involving Product of Coefficients", "Sum of Series"],
+            "Circle": ["General Equation of 2nd degree curve", "Equation of Circle & its intercept", "Position of point", "line and circle", "Tangent to circle", "Pair of Tangents", "Chord of Contact", "Chord with given Middle Point", "Intersection of Circles", "Common Tangents", "Common Chord", "Family of Circle", "Coaxial systems of circles", "Locus"],
+            "Complex Number": ["Power of iota", "Algebra of complex numbers", "Conjugate, modulus and argument", "Polar and Euler Form", "De Moivres Theorem", "Cube Root of Unity", "Locus Based on Distance Formula", "Geometry of Complex Number"],
+            "Continutity And Differentiability": ["Continuity", "Differentiability"],
+            "Definite Integration": ["Definite Integration by Parts", "Definite Integration by Substitution", "Properties of Definite Integration", "Properties of Periodic Functions", "Definite Integration by Reduction Formula", "Miscellaneous", "Leibnitz Rule of Differentiation"],
+            "Determinants": ["Expansion of Determinants", "Multiplication of Determinants", "System of Linear Equations", "Miscellaneous"],
+            "Differential Equations": ["Order and Degree", "Formation of Differential Equation", "Variable Separable Form", "Homogeneous DE", "Linear Differential Equation", "Exact Forms", "Orthogonal Trajectory", "Applications of DE", "Variable Separable form"],
+            "Differentiation": ["Differentiation of composite functions", "Differentiation of implicit functions", "Parametric differentiation", "Logarithmic differentiation", "Derivative of f(x) wrt g(x)", "Differentiation of Inverse Trigonometric Functions", "Derivative of function and its inverse", "Higher order derivatives", "Functional Equation"],
+            "Ellipse": ["Equation of Ellipse", "Tangent to ellipse", "Common Tangent", "Normal to ellipse", "Diameter to ellipse", "Line and ellipse"],
+            "Functions": ["Domain", "Range", "Odd and Even Functions", "Periodicity", "Composite Function", "Types of Function (Mapping)", "Inverse of a Function", "Functional Equation", "Definition of Function", "Number of Solutions", "Identical Functions"],
+            "Heights And Distances": ["Heights and Distances"],
+            "Hyperbola": ["General Equation of 2nd degree curve", "Equation of hyperbola", "Normal to hyperbola", "Rectangular hyperbola", "Tangent to hyperbola"],
+            "Indefinite Integration": ["Fundamental of Indefinite Integration", "Integration by Substitution", "Integration by Parts", "Integration using Partial Fraction", "Integration using Reduction Formula", "Miscellaneous Forms"],
+            "Inverse Trigonometric Function": ["Principal Value and Basics", "T inverse T property", "Converting one Inverse T function to other Inverse T", "Sum of complementary angles", "Sum and difference of angles", "Multiple Angles", "Infinite Series"],
+            "Limits": ["Existance of Limit", "Algebraic and Rational Limits", "Trigonometric and Inverse Trigonometric limits", "Exponential and logarithmic limits", "Special Forms", "Miscellaneous"],
+            "Linear Programming": ["Linear Programming"],
+            "Mathematical Induction": ["Mathematical Induction"],
+            "Mathematical Reasoning": ["Mathematical Reasoning"],
+            "Matrices": ["Formation and Basic of Matrix", "Basic Algebra of Matrices", "Product of Matrices", "Adjoint and its Properties", "Inverse of a Matrix", "Rank of Matrix", "Symmetric & Skew Symmetric Matrices"],
+            "Pair Of Line": ["homogeneous equation of second degree", "Pair of lines through origin", "Angle between lines", "combined equation of angle bisector", "general equation of second degree", "Condition for 2nd degree equation to represent pair of straight lines", "point of intersection of pair of straight lines"],
+            "Parabola": ["standard equation of parabola", "Position of point", "Tangent to Parabola", "Common Tangent", "Normal to Parabola", "Locus", "Line and parabola"],
+            "Permutation and Combination": ["Factorial", "Permutation", "Combination", "Arrangement under Constraint", "Circular Permutation", "Selection of one or more item", "Division of Identical items"],
+            "Probability": ["Classical Definition of Probability", "Addition and Subtraction Theorems", "Conditional Probability and Multiplication Theorem", "Independent Events", "Total Probability", "Baye's Theorem", "Bernoulli Trial and Binomial Distribution", "Random variable and its Probability Distribution", "Random Variable and its Probability Distribution"],
+            "Properties of Triangles": ["Sine Rule and its application", "Cosine Rule and Projection Formula", "Napiers Analogy, Area of Triangle & Half angle Formulae", "Circle Connected to Triangle", "Circle and Polygon"],
+            "Quadratic Equation": ["Relation between Roots and Coefficients", "Location of Roots", "N degree equation", "Range of Quadratic Function", "Descartes Rule of Sign"],
+            "Sequence and Series": ["Arithmetic Progression", "Geometric Progression", "Mixed Question on AP and GP", "Harmonic Progression", "Arithmetic Geometric Progression", "Summation of Series"],
+            "Sets & Relations": ["Questions on Venn Diagram", "Questions on number of relations and sets"],
+            "Statistics": ["Statistics", "Mean", "Relation Between Mean, Median and Mode", "Measures of Dispersion", "Mean Square Deviation", "Relation Between Variance and Mean Deviation"],
+            "Straight Line": ["Coordinate System", "Basic Forms of Straight Line", "Angle between Lines", "Derived Forms of Line", "Position of a point", "Point and Line", "Concurrency & Family of Lines", "Locus", "Angle bisector"],
+            "Three Dimensional Geometry": ["Basics of point in 3 dimension", "Direction Cosines and Direction Ratios", "Line in Space", "Plane in Space", "Line and Plane"],
+            "Trigonometric Equations": ["Basic", "Solving Trigonometric Equation", "Solving Trigonometric Inequalities"],
+            "Trigonometric Ratios and Identities": ["Measurement of Angles", "Basic Identities & T Ratios", "Sum and Difference & Multiple angle Formula", "Transformation Formulas", "T-Ratios of Multiple & sub multiple angles", "Maximum and Minimum Values", "Sum of three of more angles", "Trigonometric Series", "Number of Solutions"],
+            "Vector Algebra": ["Algebra of Vectors", "Product of 2 vectors", "Scalar Triple Product", "Vector Triple Product"]
+        };
+
+        const neetPhysicsRaw = [
+            { "chapter": "Mathematics in Physics", "topics": ["Fundamentals of Vectors", "Addition and Subtraction of Vectors", "Multiplication of Vectors", "Errors of Measurement"] },
+            { "chapter": "Units and Dimensions", "topics": ["Units", "Dimensions"] },
+            { "chapter": "Motion in One Dimension", "topics": ["Rest and Motion", "Uniform Motion", "Non-Uniform Motion", "Relative Motion", "Motion Under Gravity", "Graphs of Motion in One Dimension"] },
+            { "chapter": "Motion in Two Dimensions", "topics": ["Projectile Motion", "Relative Motion", "Uniform Circular Motion"] },
+            { "chapter": "Laws of Motion", "topics": ["Newton's Laws of Motion", "Equilibrium of Forces", "Spring Forces", "Friction Force", "Non-uniform Circular Motion"] },
+            { "chapter": "Work, Power and Energy", "topics": ["Work Done", "Energy", "Power", "Circular Motion"] },
+            { "chapter": "Center of Mass, Momentum and Collision", "topics": ["Momentum", "Centre of Mass of Discrete Particles", "Centre of Mass of Continuous Mass Distribution", "Motion of Centre of Mass", "Impulse", "Collisions", "Variable Mass System"] },
+            { "chapter": "Rotational Motion", "topics": ["Moment of Inertia of Rigid Bodies", "Torque", "Rotational Kinematics", "Angular Momentum and Angular Impulse", "Rolling without Slipping", "Combination of Translation and Rotation"] },
+            { "chapter": "Gravitation", "topics": ["Newton's Law of Gravitation", "Gravitational Field", "Acceleration Due to Gravity", "Gravitational Potential and Potential Energy", "Motion of Satellite", "Kepler's Laws"] },
+            { "chapter": "Mechanical Properties of Solids", "topics": ["Elasticity", "Young's Modulus and Breaking Stress", "Bulk Modulus", "Shearing Stress", "Work Done in Stretching a Wire"] },
+            { "chapter": "Mechanical Properties of Fluids", "topics": ["Pressure and Thrust", "Pascal's Law", "Archimedes' Principle", "Hydrodynamics", "Efflux of Liquid", "Surface Tension", "Viscosity"] },
+            { "chapter": "Thermal Properties of Matter", "topics": ["Thermometry", "Thermal Expansion", "Calorimetry", "Conduction", "Convection", "Radiation"] },
+            { "chapter": "Thermodynamics", "topics": ["Thermodynamic Systems", "First Law of Thermodynamics", "Thermodynamic Processes", "Heat Engine, Refrigerator and Second Law of Thermodynamics"] },
+            { "chapter": "Kinetic Theory of Gases", "topics": ["Gas Laws", "Speed of Gas", "Degree of Freedom and Specific Heat", "Pressure and Energy of Gas"] },
+            { "chapter": "Oscillations", "topics": ["Simple Harmonic Motion", "Energy of Simple Harmonic Motion", "Time Period and Frequency", "Applications of SHM", "Superposition of SHMs and Resonance", "Angular Oscillations"] },
+            { "chapter": "Waves and Sound", "topics": ["Basics of Mechanical Waves", "Travelling Waves", "Interference and Superposition of Waves", "Stationary Waves", "Vibration of String", "Organ Pipe (Vibration of Air Column)", "Beats", "Doppler's Effect", "Speed of Sound Waves", "Properties of Sound Waves"] },
+            { "chapter": "Electrostatics", "topics": ["Electric Charge and Coulomb's Law", "Electric Field and Electric Field Lines", "Electric Potential and Potential Energy", "Electric Dipole", "Electric Flux and Gauss's Law"] },
+            { "chapter": "Capacitance", "topics": ["Capacitance", "Grouping of Capacitors", "Capacitors with Dielectric", "Force and Energy Stored in Capacitor", "Charging and Discharging of Capacitors"] },
+            { "chapter": "Current Electricity", "topics": ["Electric Current and Drift of Electrons", "Resistance and Resistivity", "Electric Cell or Battery", "Kirchhoff's Laws", "Electric Power and Heating Effect of Current", "Wheatstone Bridge", "Electric Instruments", "Combinations of Resistances"] },
+            { "chapter": "Magnetic Properties of Matter", "topics": ["Magnetism and Properties of Magnet", "Earth's Magnetic Field", "Magnetic Equipments", "Magnetic Materials and their Properties"] },
+            { "chapter": "Magnetic Effects of Current", "topics": ["Biot-Savart's Law and Ampere's Circuital Law", "Magnetic Field", "Motion of Charged Particle in Magnetic Field", "Force and Torque on Current Carrying Conductor", "Magnetic Moment", "Magnetic Dipole"] },
+            { "chapter": "Electromagnetic Induction", "topics": ["Magnetic Flux, Faraday's and Lenz's Law", "Induced Electric Field", "Motional and Rotational EMF", "Inductance", "Self and Mutual Inductance", "LR Circuit"] },
+            { "chapter": "Alternating Current", "topics": ["Alternating Current, Voltage and Power", "AC Circuits", "Quality and Power Factor", "Transformers", "Parallel AC Circuits"] },
+            { "chapter": "Electromagnetic Waves", "topics": ["Electromagnetic Waves and Maxwell's Equations", "Electromagnetic Spectrum"] },
+            { "chapter": "Ray Optics", "topics": ["Reflection of Light from Plane Mirror", "Mirror Formula, Reflection in Spherical Mirror", "Critical Angle and Total Internal Reflection", "Refraction of Light from Plane Surface", "Lens Formula, Refraction of Light from Curved Surface", "Combination of Lens and Mirrors", "Prism and Dispersion of Light", "Optical Instruments", "Human Eye"] },
+            { "chapter": "Wave Optics", "topics": ["Wave Theory and Wavefronts", "Interference of Light", "Young's Double Slit Experiment", "Diffraction of Light", "Polarization of Light"] },
+            { "chapter": "Atomic Physics", "topics": ["Atomic Structure", "Bohr's Atomic Model", "Atomic Spectrum"] },
+            { "chapter": "Nuclear Physics", "topics": ["Nuclear Structure", "Nuclear Energy", "Radioactivity", "Nuclear Reactions"] },
+            { "chapter": "Semiconductors", "topics": ["Energy Bands in Solids", "Semiconductors", "Diodes", "Rectifier", "Special Purpose Diodes", "Junction Transistors", "Logic Gates"] },
+            { "chapter": "Experimental Physics", "topics": ["Experimental Physics (Measurement, Screw Gauge, Vernier Calipers, etc.)"] },
+            { "chapter": "Dual Nature of Matter", "topics": ["Cathode Rays and Positive Rays", "Matter Waves", "Photoelectric Effect"] }
+        ];
+
+        const neetChemistryRaw = [
+            { "chapter": "Some Basic Concepts of Chemistry", "topics": ["Laws of chemical combination", "Mole concept", "Quantitative measures in chemical equations", "Concentration terms", "Significant Figures"] },
+            { "chapter": "Structure of Atom", "topics": ["Atomic Models", "Atomic Mass and Atomic Size", "Bohr's model", "Hydrogen spectrum", "Dual Behaviour of Matter and Heisenberg Uncertainty Principle", "Quantum mechanical model", "Electronic configuration"] },
+            { "chapter": "Classification of Elements and Periodicity in Properties", "topics": ["Earlier attempts of periodic classification", "Modern periodic table", "Periodic properties"] },
+            { "chapter": "Chemical Bonding and Molecular Structure", "topics": ["Covalent and Co-ordinate Bonding", "Hybridisation and VSEPR Theory", "Molecular Orbital Theory", "Ionic bond", "Polarization", "Properties of ionic compounds", "Dipole moment", "Van Der Waals Forces, Hydrogen Bonding and Metallic Bonding"] },
+            { "chapter": "Thermodynamics", "topics": ["System and surrounding", "First Law and Basic Fundamentals of Thermodynamics", "Laws of Thermochemistry and Enthalpy Change", "Entropy and Second law of thermodynamics", "Third law of thermodynamics"] },
+            { "chapter": "Chemical Equilibrium", "topics": ["Law of Mass Action, Equilibrium Constant (Kc and Kp) and its Application", "Le chatelier's principle"] },
+            { "chapter": "Ionic Equilibrium", "topics": ["Theories of Acids and Bases", "Ionic Product of Water", "PH of solutions", "Salt Hydrolysis", "Buffer solutions", "Solubility"] },
+            { "chapter": "Redox Reactions", "topics": ["Oxidation and Reduction Reactions", "Types of redox reactions", "Oxidation number", "Balancing of redox reactions", "Equivalence concept", "Redox titration"] },
+            { "chapter": "p-Block Elements (Group 13 & 14)", "topics": ["Boron and Its Compounds", "Aluminium and Its Compounds", "Carbon and Its Compounds", "Silicon and Its Compounds", "Tin and Lead Containing Compounds"] },
+            { "chapter": "General Organic Chemistry", "topics": ["IUPAC Nomenclature", "Classification of organic compounds", "Bond Cleavage", "Reaction Intermediates", "Electron displacement effects", "Conjugation and Aromaticity", "Attacking reagents", "Isomerism of Organic Compounds", "Purification of Organic Compounds"] },
+            { "chapter": "Hydrocarbons", "topics": ["Properties and Preparation of Alkanes", "Reactions of alkanes", "Properties and Preparation of Alkenes", "Reactions of alkenes", "Reactions of alkynes", "Preparation and Reactions of cycloalkanes and cycloalkenes", "Preparation and Properties of Benzene", "Reactions of Benzene", "Reactions of aromatic compounds", "Properties and Preparation of Alkynes"] },
+            { "chapter": "Solutions", "topics": ["Solubility and Concentration of Solutions", "Vapour pressure and raoult's law", "Henry's law", "Colligative Properties and Abnormal Molecular Masses"] },
+            { "chapter": "Electrochemistry", "topics": ["Cells and Electrode Potential, Nernst Equation", "Types of half cells", "Concentration cell", "Commercial Cells and Batteries", "Corrosion", "Conductance and Conductivity"] },
+            { "chapter": "Chemical Kinetics", "topics": ["Rate of reaction", "Rate law and rate constant", "Integrated rate laws", "Methods to determine order of reaction", "Parallel and Sequencial rate laws", "Arrhenius theory"] },
+            { "chapter": "Surface Chemistry", "topics": ["Adsorption", "Adsorption isotherms", "Catalysis and Theories of Catalysis", "Colloids", "Preparation and Purification of colloids", "Properties of colloidal solution", "Emulsions and Gels", "Nanostructures"] },
+            { "chapter": "p-Block Elements (Group 15, 16, 17, 18)", "topics": ["Nitrogen and Its Compounds", "Phosphorus and Its Compounds", "Oxygen and Its Compounds", "Sulphur and Its Compounds", "Halogens and Its Compounds", "Noble Gases"] },
+            { "chapter": "d and f Block Elements", "topics": ["Properties of D-block elements", "Compounds of Transition Metals", "F-Block elements"] },
+            { "chapter": "Coordination Compounds", "topics": ["Terminology of coordination compounds", "Nomenclature of coordination compounds", "Isomerism of coordination compounds", "Werner's theory and Valence Bond Theory", "Crystal Field Theory", "Stability of complex ion", "Carbonyl Compounds"] },
+            { "chapter": "Haloalkanes and Haloarenes", "topics": ["Preparation and Properties of Monohalides", "Preparation and Properties of Geminal and Vicinal Dihalides", "Preparation and Properties of Aryl Halides", "Grignard Reagent"] },
+            { "chapter": "Alcohols, Phenols and Ethers", "topics": ["Preparation and Properties of Alcohols", "Reactions of Alcohols", "Preparation of Phenols", "Reactions of Phenol", "Preparation of Ethers", "Reactions of Ethers", "Dihydric alcohols", "Preparation and Reactions of Glycol", "Methods of Preparation of Carbonyl Compounds", "Reactions of Carbonyl Compounds", "Tests for Aldehyde and Ketones", "Properties of Phenol"] },
+            { "chapter": "Aldehydes and Ketones", "topics": ["Method of preparation for both aldehydes and ketones", "Method of preparation for Aldehydes", "Method of preparation for Ketones", "Chemical reactions for aldehydes and ketones", "Reactions for aldehydes", "Reactions for ketones", "Tests for aldehyde and ketones", "Method of Preparation for Both Aldehydes and Ketones", "Tests for Aldehyde and Ketones"] },
+            { "chapter": "Carboxylic Acid Derivatives", "topics": ["Preparation and Properties of Carboxylic Acids", "Reaction Involving Cleavage of \u2013OH Group", "Reactions Involving Acid Group", "Abnormal Behaviour of Formic Acid", "Preparation and Properties of Acid Derivatives", "Preparation and Properties of Esters"] },
+            { "chapter": "Amines", "topics": ["Preparation and Properties of Amines", "Separation of mixture of amines", "Preparation and Properties of Amides", "Preparation and Properties of Cyanides", "Preparation and Properties of Isocyanides"] },
+            { "chapter": "Practical Chemistry", "topics": ["Radicals", "Preliminary Tests"] },
+            { "chapter": "Biomolecules", "topics": ["Carbohydrates", "Preparation and Reactions of Glucose", "Disaccharides and Polysaccharides", "Properties and Preparation of Amino Acids", "Proteins", "Nucleic Acids", "Vitamins", "Fats"] }
+        ];
+
+        const neetBotanyRaw = [
+            { "chapter": "The Living World", "topics": ["Diversity in the Living World and Nomenclature", "Taxonomic Categories (Species, Genus, Family, etc.)", "Taxonomic Aids (Herbarium, Botanical Gardens, Museum, Zoological Parks)", "Key and Other Taxonomic Tools"] },
+            { "chapter": "Biological Classification", "topics": ["Kingdom Monera (Bacteria, Archaebacteria, Eubacteria)", "Kingdom Protista (Chrysophytes, Dinoflagellates, Euglenoids, Slime Moulds, Protozoans)", "Kingdom Fungi (Phycomycetes, Ascomycetes, Basidiomycetes, Deuteromycetes)", "Viruses, Viroids, Prions, and Lichens"] },
+            { "chapter": "Plant Kingdom", "topics": ["Algae (Chlorophyceae, Phaeophyceae, Rhodophyceae)", "Bryophytes (Liverworts and Mosses)", "Pteridophytes (Homosporous and Heterosporous)", "Gymnosperms and Angiosperms (Life Cycles)"] },
+            { "chapter": "Animal Kingdom", "topics": ["Basis of Classification (Symmetry, Coelom, Segment, etc.)", "Non-Chordates Phyla (Porifera to Echinodermata)", "Hemichordata and Chordata", "Classes of Vertebrates"] },
+            { "chapter": "Morphology of Flowering Plants", "topics": ["Root and Stem (Types and Modifications)", "Leaf (Venation, Phyllotaxy, and Modifications)", "Inflorescence and Flower (Parts of a Flower)", "Fruit, Seed, and Semi-Technical Description of Families (Fabaceae, Solanaceae, Liliaceae)"] },
+            { "chapter": "Anatomy of Flowering Plants", "topics": ["Meristematic and Permanent Tissues", "Tissue System (Epidermal, Ground, and Vascular)", "Anatomy of Dicotyledonous and Monocotyledonous Roots & Stems", "Secondary Growth in Dicot Stems and Roots"] },
+            { "chapter": "Cell Cycle and Cell Division", "topics": ["Phases of Cell Cycle (Interphase, G1, S, G2)", "Mitosis (Prophase, Metaphase, Anaphase, Telophase and Significance)", "Meiosis I (Prophase I subphases: Leptotene, Zygotene, Pachytene, Diplotene, Diakinesis)", "Meiosis II and Significance of Meiosis"] },
+            { "chapter": "Cell: The Unit of Life", "topics": ["Cell Theory and Prokaryotic vs Eukaryotic Cells", "Cell Membrane and Cell Wall Structure", "Endomembrane System (ER, Golgi, Lysosomes, Vacuoles)", "Mitochondria, Plastids, Ribosomes, and Nucleus"] },
+            { "chapter": "Plant Growth and Development", "topics": ["Growth Phases and Rate of Plant Growth", "Differentiation, Dedifferentiation, and Redifferentiation", "Plant Growth Regulators (Auxins, Gibberellins, Cytokinins, Ethylene, ABA)", "Photoperiodism and Vernalization"] },
+            { "chapter": "Respiration in Plants", "topics": ["Glycolysis (EMP Pathway)", "Aerobic Respiration (TCA Cycle / Krebs Cycle)", "Electron Transport System (ETS) and Oxidative Phosphorylation", "Amphibolic Pathway and Respiratory Quotient (RQ)"] },
+            { "chapter": "Photosynthesis in Higher Plants", "topics": ["Light Reaction (Absorption, Water Splitting, Cyclic & Non-cyclic Photo-phosphorylation)", "Chemiosmotic Hypothesis", "Dark Reaction / Carbon Fixation (C3 Pathway / Calvin Cycle)", "C4 Pathway (Kranz Anatomy) and Photorespiration"] },
+            { "chapter": "Sexual Reproduction in Flowering Plants", "topics": ["Flower structure and Pre-fertilization Events (Microsporogenesis & Megasporogenesis)", "Pollination (Types, Agencies, and Outbreeding Devices)", "Double Fertilization", "Post-fertilization Events (Endosperm, Embryo, Seed development, Apomixis & Polyembryony)"] },
+            { "chapter": "Biomolecules", "topics": ["Chemical Analysis and Primary/Secondary Metabolites", "Macromolecules (Proteins, Polysaccharides, Nucleic Acids)", "Structure of Proteins and Nucleic Acids", "Enzymes (Properties, Mechanism of Action, Classification, Co-factors)"] },
+            { "chapter": "Biodiversity and Its Conservation", "topics": ["Levels of Biodiversity and Patterns of Biodiversity", "Importance of Biodiversity and Loss of Biodiversity", "In-situ Conservation (National Parks, Biosphere Reserves, Sanctuaries)", "Ex-situ Conservation (Botanical Gardens, Seed Banks, Cryopreservation)"] },
+            { "chapter": "Ecosystem", "topics": ["Ecosystem Structure and Function", "Productivity and Decomposition", "Energy Flow (Food Chains, Food Web, Ecological Pyramids)", "Ecological Succession and Nutrient Cycling"] }
+        ];
+
+        const neetZoologyRaw = [
+            { "chapter": "Structural Organisation in Animals", "topics": ["Epithelial Tissue", "Connective, Muscular, and Nervous Tissues", "Morphology and Anatomy of Cockroach", "Morphology and Anatomy of Earthworm/Frog"] },
+            { "chapter": "Chemical Coordination and Integration", "topics": ["Endocrine Glands and Hormones", "Human Endocrine System", "Mechanism of Hormone Action", "Hormonal Disorders"] },
+            { "chapter": "Body Fluids and Circulation", "topics": ["Blood Composition and Coagulation", "Lymph and Tissue Fluid", "Human Circulatory System and Cardiac Cycle", "Regulation of Cardiac Activity and Disorders"] },
+            { "chapter": "Neural Control and Coordination", "topics": ["Neuron as Structural and Functional Unit", "Central Nervous System (Brain and Spinal Cord)", "Reflex Action and Sensory Organs", "Generation and Conduction of Nerve Impulse"] },
+            { "chapter": "Excretory Products and their Elimination", "topics": ["Modes of Excretion and Human Excretory System", "Mechanism of Urine Formation", "Regulation of Kidney Function", "Role of Other Organs in Excretion and Disorders"] },
+            { "chapter": "Breathing and Exchange of Gases", "topics": ["Respiratory Organs and Human Respiratory System", "Mechanism of Breathing and Respiratory Volumes", "Exchange and Transport of Gases", "Regulation of Respiration and Disorders"] },
+            { "chapter": "Locomotion and Movement", "topics": ["Types of Movement and Muscle Contraction", "Structure of Contractile Proteins", "Human Skeletal System (Axial and Appendicular)", "Joints and Disorders of Muscular & Skeletal System"] },
+            { "chapter": "Reproductive Health", "topics": ["Reproductive Health - Problems and Strategies", "Population Explosion and Birth Control", "Sexually Transmitted Diseases (STDs)", "Infertility and Assisted Reproductive Technologies (ART)"] },
+            { "chapter": "Human Reproduction", "topics": ["Male Reproductive System", "Female Reproductive System", "Gametogenesis (Spermatogenesis & Oogenesis)", "Menstrual Cycle, Fertilization, and Embryonic Development"] },
+            { "chapter": "Molecular Basis of Inheritance", "topics": ["DNA as Genetic Material and Structure of Polynucleotide Chain", "Packaging of DNA and DNA Replication", "Transcription and Genetic Code", "Translation and Regulation of Gene Expression (Lac Operon)"] },
+            { "chapter": "Principles of Inheritance and Variation", "topics": ["Mendel's Laws of Inheritance", "Inheritance of One and Two Genes", "Sex Determination and Linkage/Recombination", "Genetic Disorders and Pedigree Analysis"] },
+            { "chapter": "Evolution", "topics": ["Origin of Life and Evidences of Evolution", "Theories of Evolution (Darwinism, Lamarckism, Mutation Theory)", "Mechanism of Evolution (Hardy-Weinberg Principle)", "Human Evolution"] },
+            { "chapter": "Human Health and Diseases", "topics": ["Common Diseases in Humans (Bacterial, Viral, Protozoan, Fungal)", "Immunity (Innate and Acquired, Active and Passive)", "AIDS and Cancer", "Drug and Alcohol Abuse"] },
+            { "chapter": "Microbes in Human Welfare", "topics": ["Microbes in Household Products and Industrial Products", "Microbes in Sewage Treatment and Biogas Production", "Microbes as Biocontrol Agents", "Microbes as Biofertilizers"] },
+            { "chapter": "Biotechnology and Its Applications", "topics": ["Biotechnology Applications in Agriculture (Bt Crops, RNAi)", "Biotechnology Applications in Medicine (Insulin, Gene Therapy)", "Transgenic Animals", "Ethical Issues and Biopiracy"] },
+            { "chapter": "Biotechnology - Principles and Processes", "topics": ["Principles of Biotechnology (Genetic Engineering)", "Tools of Recombinant DNA Technology (Restriction Enzymes, PCR)", "Processes of Recombinant DNA Technology", "Downstream Processing"] },
+            { "chapter": "Organisms and Populations", "topics": ["Organism and Its Environment (Abiotic Factors)", "Responses to Abiotic Factors and Adaptations", "Population Attributes (Age Pyramids, Growth Models)", "Population Interactions (Mutualism, Competition, Predation, Parasitism)"] }
+        ];
+
+        const jeePhysicsRaw = [
+            { "chapter": "Alternating Current", "topics": ["Alternating Current, Voltage and Power", "AC Circuits", "Quality and Power Factor", "Transformers", "Parallel AC Circuits"] },
+            { "chapter": "Atomic Physics", "topics": ["Atomic Models", "Atomic Structure", "Bohr's Atomic Model", "Atomic Spectrum"] },
+            { "chapter": "Capacitance", "topics": ["Capacitance", "Grouping of Capacitors", "Capacitors with Dielectric", "Force and Energy stored in Capacitor", "Charging and Discharging of Capacitors"] },
+            { "chapter": "Center of Mass Momentum and Collision", "topics": ["Momentum", "Centre of Mass of Discrete Particles", "Centre of Mass of Continuous Mass Distribution", "Motion of Centre of Mass", "Impulse", "Collisions", "Variable Mass System"] },
+            { "chapter": "Current Electricity", "topics": ["Electric Current and Drift of Electrons", "Resistance and Resistivity", "Combination of Resistances", "Electric Cell or Battery", "Kirchoffs Laws", "Electric Power and Heating Effect of Current", "Wheatstone Bridge", "Electric Instruments"] },
+            { "chapter": "Dual Nature of Matter", "topics": ["Cathode Rays and Positive Rays", "Matter Waves", "Photoelectric Effect"] },
+            { "chapter": "Electromagnetic Induction", "topics": ["Magnetic Flux, Faraday's and Lenz law", "Induced Electric Field", "Motional and Rotational EMF", "Inductance", "Self and Mutual Inductance", "LR Circuit"] },
+            { "chapter": "Electromagnetic Waves", "topics": ["Electromagnetic Waves and Maxwell's equations", "Electromagnetic Spectrum", "X-Rays"] },
+            { "chapter": "Electrostatics", "topics": ["Electric Charge and Coulomb's law", "Electric Field and Electric Field Lines", "Electric Potential and Potential Energy", "Electric Dipole", "Electric Flux and Gauss Law"] },
+            { "chapter": "Experimental Physics", "topics": ["Experimental Physics", "Vernier Callipers"] },
+            { "chapter": "Gravitation", "topics": ["Newton's Law of Gravitation", "Gravitational field", "Acceleration Due to Gravity", "Work done", "Gravitational potential and Potential Energy", "Motion of satellite", "Kepler laws"] },
+            { "chapter": "Kinetic Theory of Gases", "topics": ["Gas Laws", "Speed of Gas", "Degree of Freedom and Specific Heat", "Pressure and Energy of gas"] },
+            { "chapter": "Laws of Motion", "topics": ["Newton's laws of motion", "Equilibrium of Forces", "Spring force", "Frictional force", "Non-uniform Circular Motion"] },
+            { "chapter": "Magnetic Effects of Current", "topics": ["Biot-Savart's Law and Ampere's Circuital Law", "Magnetic Field", "Motion of Charged Particle in Magnetic Field", "Force and Torque on Current Carrying Conductor", "Magnetic Moment", "Magnetic Dipole"] },
+            { "chapter": "Magnetic Properties of Matter", "topics": ["Magnetism and Properties of Magnet", "Magnetic Equipments", "Magnetic Materials and their Properties"] },
+            { "chapter": "Mathematics in Physics", "topics": ["Fundamentals of Vectors", "Addition and Subtraction of Vectors", "Multiplication of Vectors", "Errors of Measurement", "Significant numbers"] },
+            { "chapter": "Mechanical Properties of Fluids", "topics": ["Pressure and Thrust", "Pascal's Law", "Aechmidies Principle", "Hydrodynamics", "Efflux of Liquid", "Surface Tension", "Viscosity"] },
+            { "chapter": "Mechanical Properties of Solids", "topics": ["Elasticity", "Young's Modulus and Breaking Stress", "Bulk Modulus", "Shearing stress", "Work Done in Stretching a Wire"] },
+            { "chapter": "Motion In One Dimension", "topics": ["Rest and Motion", "Uniform Motion", "Graphs of motion in one dimension", "Non-uniform Motion", "Relative Motion", "Motion Under Gravity"] },
+            { "chapter": "Motion In Two Dimensions", "topics": ["Relative motion", "Projectile motion", "Uniform Circular Motion"] },
+            { "chapter": "Nuclear Physics", "topics": ["Nuclear structure", "Nuclear energy", "Nuclear reactions"] },
+            { "chapter": "Oscillations", "topics": ["Simple Harmonic Motion", "Energy of Simple Hormonic Motion", "Time Period and Frequency", "Applications of SHM", "Superposition of SHM's and Resonance", "Angular Oscillations"] },
+            { "chapter": "Ray Optics", "topics": ["Reflection of Light from Plane Mirror", "Mirror Formula, Reflection in Spherical Mirror", "Critical angle and total internal reflection", "Refraction of light from plane surface", "Lens Formula, Refraction of light from curved surface", "Combination of Lens and Mirrors", "Prism and Dispersion of Light", "Optical Instruments", "Human eye"] },
+            { "chapter": "Rotational Motion", "topics": ["Moment of inertia of rigid bodies", "Torque", "Rotational kinematics", "Angular momentum and Angular impulse", "Rolling without Slipping", "Combination of translation and rotation", "Collisions in rotation"] },
+            { "chapter": "Semiconductors", "topics": ["Energy Bands in Solids", "Semiconductors", "Diodes", "Logic Gates", "Rectifier", "Special purpose diodes"] },
+            { "chapter": "Thermal Properties of Matter", "topics": ["Thermometry", "Thermal Expansion", "Calorimetry", "Conduction", "Radiation"] },
+            { "chapter": "Thermodynamics", "topics": ["Thermodynamic Systems", "First Law of Thermodynamics", "Thermodynamic Processes", "Heat Engine, Refrigerator and Second Law of Thermodynamics"] },
+            { "chapter": "Units and Dimensions", "topics": ["Units", "Dimensions", "Errors of Measurement"] },
+            { "chapter": "Wave Optics", "topics": ["Wave Theory and Wavefronts", "Interference of Light", "Young's Double Slit Experiment", "Special Cases in YDSE", "Diffraction of Light", "Polarization of Light"] },
+            { "chapter": "Waves and Sound", "topics": ["Basics of Mechanical Waves", "Travelling Waves", "Interference and Superposition of Waves", "Stationary waves", "Vibration of String", "Organ Pipe (Vibration of Air Column)", "Beats", "Speed of Sound Waves", "Properties of Sound Waves"] },
+            { "chapter": "Work Power Energy", "topics": ["Work done", "Energy", "Power", "Circular motion"] }
+        ];
+
+        const jeeChemistryRaw = [
+            { "chapter": "Alcohols, Phenols and Ethers", "topics": ["Preparation and Properties of Alcohols", "Reactions of Alcohols", "Preparation of Phenols", "Reactions of Phenol", "Tests for aldehyde and ketones", "Preparation of Ethers", "Reactions of Ethers", "Preparation of Oxiranes", "Reactions of Oxiranes", "Dihydric alcohols", "Preparation and Reactions of Glycol", "Reactions of Carbonyl Compounds", "Tests for Aldehyde and Ketones", "Properties of Phenol"] },
+            { "chapter": "Aldehydes and Ketones", "topics": ["Method of preparation for both aldehydes and ketones", "Method of preparation for Aldehydes", "Method of preparation for Ketones", "Chemical reactions for aldehydes and ketones", "Reactions for aldehydes", "Tests for aldehyde and ketones"] },
+            { "chapter": "Amines", "topics": ["Preparation and Properties of Amines", "Separation of mixture of amines", "Preparation and Properties of Amides", "Preparation and Properties of Cyanides", "Preparation and Properties of Isocyanides"] },
+            { "chapter": "Biomolecules", "topics": ["Disaccharides and Polysaccharides", "Carbohydrates", "Preparation and Reactions of Glucose", "Properties and Preparation of Amino Acids", "Proteins", "Nucleic Acids", "Vitamins"] },
+            { "chapter": "Carboxylic Acid Derivatives", "topics": ["Reactions Involving Acid Group", "Preparation and Properties of Carboxylic Acids", "Reaction Involving Cleavage of -OH Group", "Preparation and Properties of Acid Derivatives", "Preparation and Properties of Esters"] },
+            { "chapter": "Chemical Bonding and Molecular Structure", "topics": ["Covalent and Co-ordinate Bonding", "Hybridisation and VSEPR Theory", "Molecular Orbital Theory", "Ionic bond", "Polarization", "Properties of ionic compounds", "Dipole moment", "Van Der Waals Forces, Hydrogen Bonding and Metallic Bonding"] },
+            { "chapter": "Chemical Equilibrium", "topics": ["Law of Mass Action, Equilibrium Constant (Kc and Kp) and its Application", "Le chatelier's principle"] },
+            { "chapter": "Chemical Kinetics", "topics": ["Rate of reaction", "Rate law and rate constant", "Integrated rate laws", "Methods to determine order of reaction", "Parallel and Sequencial rate laws", "Arrhenius theory"] },
+            { "chapter": "Classification of Elements and Periodicity", "topics": ["Earlier attempts of periodic classification", "Modern periodic table", "Periodic properties"] },
+            { "chapter": "Coordination Compounds", "topics": ["Terminology of coordination compounds", "Nomenclature of coordination compounds", "Isomerism of coordination compounds", "Werner's theory and Valence Bond Theory", "Crystal Field Theory", "Stability of complex ion", "Carbonyl Compounds"] },
+            { "chapter": "d and f Block Elements", "topics": ["Properties of D-block elements", "Compounds of Transition Metals", "F-Block elements"] },
+            { "chapter": "Electrochemistry", "topics": ["Cells and Electrode Potential, Nernst Equation", "Types of half cells", "Concentration cell", "Commercial Cells and Batteries", "Corrosion", "Conductance and Conductivity"] },
+            { "chapter": "General Organic Chemistry", "topics": ["IUPAC Nomenclature", "Classification of organic compounds", "Reaction Intermediates", "Electron displacement effects", "Conjugation and Aromaticity", "Attacking reagents", "Isomerism of Organic Compounds", "Purification of Organic Compounds", "Qualitative analysis of organic compounds", "Quantitative analysis of organic compounds"] },
+            { "chapter": "Haloalkanes and Haloarenes", "topics": ["Preparation and Properties of Monohalides", "Preparation and Properties of Geminal and Vicinal Dihalides", "Preparation and Properties of Aryl Halides", "Grignard Reagent"] },
+            { "chapter": "Hydrocarbons", "topics": ["Properties and Preparation of Alkanes", "Reactions of alkanes", "Properties and Preparation of Alkenes", "Reactions of alkenes", "Preparation and Reactions of Conjugate Dienes", "Preparation and Reactions of cycloalkanes and cycloalkenes", "Preparation and Properties of Benzene", "Reactions of Benzene", "Reactions of aromatic compounds"] },
+            { "chapter": "Ionic Equilibrium", "topics": ["Theories of Acids and Bases", "Ionic Product of Water", "PH of solutions", "Salt Hydrolysis", "Buffer solutions", "Solubility"] },
+            { "chapter": "p Block Elements (Group 13 & 14)", "topics": ["Boron and Its Compounds", "Aluminium and Its Compounds", "Carbon and Its Compounds", "Silicon and Its Compounds", "Tin and Lead Containing Compounds"] },
+            { "chapter": "p Block Elements (Group 15, 16, 17 & 18)", "topics": ["Nitrogen and Its Compounds", "Phosphorus and Its Compounds", "Oxygen and Its Compounds", "Sulphur and Its Compounds", "Halogens and Its Compounds", "Noble Gases"] },
+            { "chapter": "Practical Chemistry", "topics": ["Preliminary Tests", "Radicals", "Identification of Acid Radicals", "Identification of Basic Radicals"] },
+            { "chapter": "Redox Reactions", "topics": ["Oxidation and Reduction Reactions", "Types of redox reactions", "Oxidation number", "Balancing of redox reactions", "Equivalence concept", "Redox titration"] },
+            { "chapter": "Solutions", "topics": ["Solubility and Concentration of Solutions", "Vapour pressure and raoult's law", "Henry's law", "Colligative Properties and Abnormal Molecular Masses"] },
+            { "chapter": "Some Basic Concepts of Chemistry", "topics": ["Laws of chemical combination", "Mole concept", "Quantitative measures in chemical equations", "Concentration terms"] },
+            { "chapter": "Structure of Atom", "topics": ["Atomic Models", "Atomic Mass and Atomic Size", "Bohr's model", "Hydrogen spectrum", "Dual Behaviour of Matter and Heisenberg Uncertainty Principle", "Quantum mechanical model", "Electronic configuration"] },
+            { "chapter": "Thermodynamics", "topics": ["System and surrounding", "First Law and Basic Fundamentals of Thermodynamics", "Laws of Thermochemistry and Enthalpy Change", "Entropy and Second law of thermodynamics", "Third law of thermodynamics", "Carnot engine"] }
+        ];
+
+        const jeeMathsRaw = [
+            { "chapter": "Application of Derivatives", "topics": ["Rate Measure Error and Approximation", "Monotonicity", "Maxima Minima"] },
+            { "chapter": "Area Under Curves", "topics": ["Area of Curve along axis", "Area bounded by two curves", "Area bounded by Miscellaneous Curves"] },
+            { "chapter": "Basic of Mathematics", "topics": ["Logarithm", "Inequalities"] },
+            { "chapter": "Binomial Theorem", "topics": ["Terms of Binomial Expansion", "Remainder and Divisibility Problems", "Integral and Fractional Part of a Number", "Comparison between two numbers", "Multinomial Theorem", "Properties of Binomial Coefficients", "Sum of Series", "Binomial Theorem for Negative Index"] },
+            { "chapter": "Circle", "topics": ["General Equation of 2nd degree curve", "Equation of Circle & its intercept", "Position of point", "line and circle", "Tangent to circle", "Chord of Contact", "Chord with given Middle Point", "Intersection of Circles", "Common Tangents", "Common Chord", "Locus"] },
+            { "chapter": "Complex Number", "topics": ["Power of iota", "Algebra of complex numbers", "Conjugate, modulus and argument", "Polar and Euler Form", "Cube Root of Unity", "De Moivres Theorem", "nth roots of unity", "Rotation Theorem", "Locus Based on Distance Formula", "Geometry of Complex Number"] },
+            { "chapter": "Continuity and Differentiability", "topics": ["Continuity", "Differentiability"] },
+            { "chapter": "Definite Integration", "topics": ["Definite Integration by Parts", "Definite Integration by Substitution", "Properties of Definitive Integration", "Properties of Periodic Functions", "Leibnitz Rule of Differentiation", "Definite Integration by Reduction Formula", "Properties Involving Inequalities", "Walli's Formula", "Miscellaneous"] },
+            { "chapter": "Determinants", "topics": ["Expansion of Determinants", "Multiplication of Determinants", "Differentiation and Integration of Determinants", "System of Linear Equations", "Miscellaneous"] },
+            { "chapter": "Differential Equations", "topics": ["Order and Degree", "Variable Separable Form", "Homogeneous DE", "Linear Differential Equation", "Exact Forms", "Applications of DE"] },
+            { "chapter": "Differentiation", "topics": ["Differentiation of composite functions", "Differentiation of implicit functions", "Parametric differentiation", "Logarithmic differentiation", "Derivative of f(x) wrt g(x)", "Differentiation of Inverse Trigonometric Functions", "Derivative of function and its inverse", "Higher order derivatives", "Functional Equation", "Differentiation of determinants"] },
+            { "chapter": "Ellipse", "topics": ["General Equation of 2nd degree curve", "Equation of Ellipse", "Position of point", "Auxillary Circle", "Chord of ellipse", "Line and ellipse", "Chord of Contact", "Reflection property", "Chord with given Middle Point", "Locus"] },
+            { "chapter": "Functions", "topics": ["Domain", "Range", "Odd and Even Functions", "Periodicity", "Composite Function", "Types of Function (Mapping)", "Inverse of a Function", "Functional Equation", "Definition of Function", "Number of Solutions"] },
+            { "chapter": "Hyperbola", "topics": ["Equation of hyperbola", "Line and hyperbola", "Chord with given Middle Point", "Locus", "Rectangular hyperbola", "Mixed Questions of Ellipse and Hyperbola"] },
+            { "chapter": "Indefinite Integration", "topics": ["Integration by Substitution", "Integration by Parts", "Integration using Partial Fraction", "Miscellaneous Forms"] },
+            { "chapter": "Inverse Trigonometric Functions", "topics": ["Principal Value and Basics", "T inverse T property", "Converting one Inverse T function to other Inverse T", "Sum of complementary angles", "Sum And Difference Of Angles", "Multiple Angles", "Infinite Series"] },
+            { "chapter": "Limits", "topics": ["Existance of Limit", "Algebraic and Rational Limits", "Trigonometric and Inverse Trigonometric limits", "Exponential and logarithmic limits", "Special Forms", "Miscellaneous"] },
+            { "chapter": "Matrices", "topics": ["Formation and Basic of Matrix", "Basic Algebra of Matrices", "Product of Matrices", "Trace of a Matrix", "Symmetric & Skew Symmetric Matrices", "Types of Matrices", "Adjoint and its Properties", "Inverse of a Matrix", "Rank of Matrix"] },
+            { "chapter": "Parabola", "topics": ["General Equation of 2nd degree curve", "standard equation of parabola", "Chord of parabola", "Line and parabola", "Chord of Contact", "Locus", "Properties of Tangent", "Chord with given Middle Point"] },
+            { "chapter": "Permutation Combination", "topics": ["Factorial", "Permutation", "Combination", "Arrangement under Constraint", "Circular Permutation", "Selection of one or more item", "Division and Distribution of Distinct Items", "Division of Identical items", "Summation of Numbers", "Rearrangement", "Geometric Permutation", "Exponent of prime"] },
+            { "chapter": "Probability", "topics": ["Classical Definition of Probability", "Addition and Subtraction Theorems", "Conditional Probability and Multiplication Theorem", "Independent Events", "Total Probability", "Baye's Theorem", "Random Variable and its Probability Distribution", "Geometric Probability"] },
+            { "chapter": "Quadratic Equation", "topics": ["Relation between Roots and Coefficients", "Common Roots", "Graph and Sign of Quadratic", "Range of Quadratic Function", "Location of Roots", "N degree equation", "Descartes Rule of Sign"] },
+            { "chapter": "Sequences and Series", "topics": ["Arithmetic Progression", "Geometric Progression", "Mixed Question on AP and GP", "Harmonic Progression", "Means", "Summation of Series", "Inequalities"] },
+            { "chapter": "Sets and Relations", "topics": ["Questions on Symmetric Transitive and Reflexive Properties", "Questions on Venn Diagram", "Questions on number of relations and sets"] },
+            { "chapter": "Statistics", "topics": ["Statistics", "Mean", "Median", "Mode", "Relation Between Mean, Median and Mode", "Measures of Dispersion", "Mean Square Deviation", "Relation Between Variance and Mean Deviation"] },
+            { "chapter": "Straight Lines", "topics": ["Coordinate System", "Basic Forms of Straight Line", "Angle between Lines", "Derived Forms of Line", "Position of a point", "Point and Line", "Concurrency & Family of Lines", "Locus"] },
+            { "chapter": "Three Dimensional Geometry", "topics": ["Basics of point in 3 dimension", "Direction Cosines and Direction Ratios", "Line in Space"] },
+            { "chapter": "Trigonometric Ratios & Identities", "topics": ["Measurement of Angles", "Basic Identities & T Ratios", "Sum and Difference & Multiple angle Formula", "Transformation Formulas", "T-Ratios of Multiple & sub multiple angles", "Maximum and Minimum Values", "Trigonometric Series", "Number of Solutions"] },
+            { "chapter": "Vector Algebra", "topics": ["Algebra of Vectors", "Product of 2 vectors", "Scalar Triple Product", "Vector Triple Product"] }
+        ];
+
+        function arrayToTopicObj(arr) {
+            const obj = {};
+            arr.forEach(item => { obj[item.chapter] = item.topics; });
+            return obj;
+        }
+        const neetPhysicsTopics = arrayToTopicObj(neetPhysicsRaw);
+        const neetChemistryTopics = arrayToTopicObj(neetChemistryRaw);
+        const neetBotanyTopics = arrayToTopicObj(neetBotanyRaw);
+        const neetZoologyTopics = arrayToTopicObj(neetZoologyRaw);
+        const jeePhysicsTopics = arrayToTopicObj(jeePhysicsRaw);
+        const jeeChemistryTopics = arrayToTopicObj(jeeChemistryRaw);
+        const jeeMathsTopics = arrayToTopicObj(jeeMathsRaw);
+
+        function getChapterListFor(course, subject) {
+            if (course === 'NEET') {
+                if (subject === 'Physics') return Object.keys(neetPhysicsTopics);
+                if (subject === 'Chemistry') return Object.keys(neetChemistryTopics);
+                if (subject === 'Botany') return Object.keys(neetBotanyTopics);
+                if (subject === 'Zoology') return Object.keys(neetZoologyTopics);
+                return null;
+            }
+            if (course === 'JEE') {
+                if (subject === 'Physics') return Object.keys(jeePhysicsTopics);
+                if (subject === 'Chemistry') return Object.keys(jeeChemistryTopics);
+                if (subject === 'Mathematics') return Object.keys(jeeMathsTopics);
+                return null;
+            }
+            if (course === 'MHT CET') {
+                if (subject === 'Physics') return Object.keys(mhtcetPhysicsTopics);
+                if (subject === 'Mathematics') return Object.keys(mhtcetMathematicsTopics);
+                if (subject === 'Chemistry') return Object.keys(mhtcetChemistryTopics);
+                return null;
+            }
+            return null;
+        }
+
+        function getTopicsForChapter(course, subject, chapter) {
+            if (course === 'NEET') {
+                if (subject === 'Physics' && neetPhysicsTopics[chapter]) return neetPhysicsTopics[chapter];
+                if (subject === 'Chemistry' && neetChemistryTopics[chapter]) return neetChemistryTopics[chapter];
+                if (subject === 'Botany' && neetBotanyTopics[chapter]) return neetBotanyTopics[chapter];
+                if (subject === 'Zoology' && neetZoologyTopics[chapter]) return neetZoologyTopics[chapter];
+                return null;
+            }
+            if (course === 'JEE') {
+                if (subject === 'Physics' && jeePhysicsTopics[chapter]) return jeePhysicsTopics[chapter];
+                if (subject === 'Chemistry' && jeeChemistryTopics[chapter]) return jeeChemistryTopics[chapter];
+                if (subject === 'Mathematics' && jeeMathsTopics[chapter]) return jeeMathsTopics[chapter];
+                return null;
+            }
+            if (course === 'MHT CET') {
+                if (subject === 'Physics' && mhtcetPhysicsTopics[chapter]) return mhtcetPhysicsTopics[chapter];
+                if (subject === 'Chemistry' && mhtcetChemistryTopics[chapter]) return mhtcetChemistryTopics[chapter];
+                if (subject === 'Mathematics' && mhtcetMathematicsTopics[chapter]) return mhtcetMathematicsTopics[chapter];
+                return null;
+            }
+            return null;
+        }
+
+        // ---------- Firestore Operations ----------
+        const QUESTIONS_COLLECTION = 'practice_questions';
+        let currentQuestions = [];
+        let editingQuestionId = null;
+        let deleteTargetId = null;
+
+        async function refreshQuestions() {
+            const snapshot = await db.collection(QUESTIONS_COLLECTION).get();
+            currentQuestions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            return currentQuestions;
+        }
+
+        async function addQuestionToFirestore(questionData) {
+            await db.collection(QUESTIONS_COLLECTION).add(questionData);
+            showToast('✅ Question added!');
+            await refreshQuestions();
+            updateSubjectFilter();
+            renderQuestionBank();
+            clearAddForm();
+        }
+
+        async function updateQuestionInFirestore(id, questionData) {
+            await db.collection(QUESTIONS_COLLECTION).doc(id).update(questionData);
+            showToast('✅ Question updated!');
+            await refreshQuestions();
+            updateSubjectFilter();
+            renderQuestionBank();
+            clearAddForm();
+            editingQuestionId = null;
+            document.getElementById('submitBtn').textContent = 'Add Question';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            document.getElementById('formTitle').textContent = '✍️ Create New Question';
+        }
+
+        async function deleteQuestionFromFirestore(id) {
+            try {
+                await db.collection(QUESTIONS_COLLECTION).doc(id).delete();
+                showToast('🗑️ Question deleted.');
+                await refreshQuestions();
+                updateSubjectFilter();
+                renderQuestionBank();
+            } catch (err) {
+                showToast('❌ Delete failed. Try again.');
+                console.error(err);
+            }
+        }
+
+        // ---------- UI Form Handling ----------
+        function submitQuestion() {
+            const qData = gatherFormData();
+            if (!qData) return;
+            saveLastSelections();
+            if (editingQuestionId) {
+                updateQuestionInFirestore(editingQuestionId, qData);
+            } else {
+                addQuestionToFirestore(qData);
+            }
+        }
+
+        function gatherFormData() {
+            const type = document.getElementById('questionType').value;
+            const course = document.getElementById('courseSelect').value;
+            const subject = document.getElementById('subjectSelect').value;
+            const chapter = getChapterValue();
+            const topic = getTopicValue();
+            const year = parseInt(document.getElementById('yearInput').value);
+            const month = document.getElementById('monthSelect').value;
+            const day = parseInt(document.getElementById('dayInput').value);
+            const shift = document.getElementById('shiftSelect').value;
+            const text = document.getElementById('questionText').value.trim();
+            const qImage = document.getElementById('qImageData').value || null;
+            const solutionText = document.getElementById('solutionText').value.trim() || null;
+            const solutionImage = document.getElementById('solImageData').value || null;
+
+            if (!course || !subject) { showToast('⚠️ Select course and subject.'); return null; }
+            if (!text) { showToast('⚠️ Question text required.'); return null; }
+            if (!chapter) { showToast('⚠️ Chapter required.'); return null; }
+            if (!topic) { showToast('⚠️ Topic required.'); return null; }
+            if (isNaN(year) || year < 2000 || year > 2100) { showToast('⚠️ Valid year (2000-2100).'); return null; }
+            if (isNaN(day) || day < 1 || day > 31) { showToast('⚠️ Valid day (1-31).'); return null; }
+
+            let qData = { type, course, subject, chapter, topic, year, month, day, shift, text, questionImage: qImage, solutionText, solutionImage };
+
+            if (type === 'mcq') {
+                let options = {}, allOk = true;
+                ['A', 'B', 'C', 'D'].forEach(l => {
+                    const txt = document.getElementById(`optText${l}`).value.trim();
+                    const img = document.getElementById(`optImgData${l}`).value || null;
+                    if (!txt) allOk = false;
+                    options[l] = { text: txt, image: img };
+                });
+                if (!allOk) { showToast('⚠️ Fill all 4 options.'); return null; }
+                const correct = document.querySelector('input[name="correctAnswer"]:checked');
+                qData.options = options;
+                qData.correctAnswer = correct ? correct.value : 'A';
+            } else {
+                const ans = document.getElementById('correctTextAnswer').value.trim();
+                if (!ans) { showToast('⚠️ Correct answer required.'); return null; }
+                qData.correctAnswer = ans;
+            }
+            return qData;
+        }
+
+        function clearAddForm() {
+            document.getElementById('yearInput').value = '';
+            document.getElementById('monthSelect').value = 'January';
+            document.getElementById('dayInput').value = '';
+            document.getElementById('shiftSelect').value = 'Morning';
+            document.getElementById('questionText').value = '';
+            document.getElementById('solutionText').value = '';
+            clearImage('qImageInput', 'qImagePreview', 'qImageData');
+            clearImage('solImageInput', 'solImagePreview', 'solImageData');
+            if (document.getElementById('questionType').value === 'mcq') {
+                ['A', 'B', 'C', 'D'].forEach(l => {
+                    document.getElementById(`optText${l}`).value = '';
+                    clearImage(`optImgInput${l}`, `optImgPreview${l}`, `optImgData${l}`);
+                });
+                document.querySelector('input[name="correctAnswer"][value="A"]').checked = true;
+            } else {
+                document.getElementById('correctTextAnswer').value = '';
+            }
+
+            // Restore course, subject, chapter, topic from localStorage
+            restoreLastSelections();
+
+            editingQuestionId = null;
+            document.getElementById('submitBtn').textContent = 'Add Question';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            document.getElementById('formTitle').textContent = '✍️ Create New Question';
+        }
+
+        function editQuestion(id) {
+            const q = currentQuestions.find(q => q.id === id);
+            if (!q) return;
+            editingQuestionId = id;
+            document.getElementById('submitBtn').textContent = 'Update Question';
+            document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+            document.getElementById('formTitle').textContent = '✏️ Edit Question';
+            document.getElementById('courseSelect').value = q.course;
+            document.getElementById('subjectSelect').value = q.subject;
+            updateChapterField();
+            setTimeout(() => {
+                setChapterValue(q.chapter);
+                setTopicValue(q.topic);
+            }, 100);
+            document.getElementById('yearInput').value = q.year;
+            document.getElementById('monthSelect').value = q.month;
+            document.getElementById('dayInput').value = q.day;
+            document.getElementById('shiftSelect').value = q.shift;
+            document.getElementById('questionType').value = q.type;
+            toggleQuestionType();
+            document.getElementById('questionText').value = q.text;
+            if (q.questionImage) {
+                document.getElementById('qImageData').value = q.questionImage;
+                document.getElementById('qImagePreview').src = q.questionImage;
+                document.getElementById('qImagePreview').style.display = 'inline-block';
+                document.getElementById('qImageRemove').style.display = 'inline-flex';
+            } else {
+                clearImage('qImageInput', 'qImagePreview', 'qImageData');
+            }
+            document.getElementById('solutionText').value = q.solutionText || '';
+            if (q.solutionImage) {
+                document.getElementById('solImageData').value = q.solutionImage;
+                document.getElementById('solImagePreview').src = q.solutionImage;
+                document.getElementById('solImagePreview').style.display = 'inline-block';
+                document.getElementById('solImageRemove').style.display = 'inline-flex';
+            } else {
+                clearImage('solImageInput', 'solImagePreview', 'solImageData');
+            }
+            if (q.type === 'mcq') {
+                ['A', 'B', 'C', 'D'].forEach(l => {
+                    document.getElementById(`optText${l}`).value = q.options[l].text;
+                    if (q.options[l].image) {
+                        document.getElementById(`optImgData${l}`).value = q.options[l].image;
+                        document.getElementById(`optImgPreview${l}`).src = q.options[l].image;
+                        document.getElementById(`optImgPreview${l}`).style.display = 'inline-block';
+                        document.getElementById(`optImgData${l}Remove`).style.display = 'inline-flex';
+                    } else {
+                        clearImage(`optImgInput${l}`, `optImgPreview${l}`, `optImgData${l}`);
+                    }
+                });
+                document.querySelector(`input[name="correctAnswer"][value="${q.correctAnswer}"]`).checked = true;
+            } else {
+                document.getElementById('correctTextAnswer').value = q.correctAnswer;
+            }
+
+            switchTeacherTab('add');
+        }
+
+        function cancelEdit() {
+            clearAddForm();
+            switchTeacherTab('add');
+        }
+
+        // ---------- View Modal ----------
+        function viewQuestion(id) {
+            const q = currentQuestions.find(q => q.id === id);
+            if (!q) return;
+            const content = document.getElementById('viewContent');
+            let html = '';
+
+            html += `<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">`;
+            html += `<span class="view-label">${q.course}</span>`;
+            html += `<span class="view-label">${q.subject}</span>`;
+            html += `<span class="view-label" style="background:${q.type === 'mcq' ? '#fef3c7' : '#dbeafe'}; color:${q.type === 'mcq' ? '#92400e' : '#1e40af'};">${q.type.toUpperCase()}</span>`;
+            html += `</div>`;
+
+            html += `<div class="view-detail"><span class="view-label">Chapter</span><span class="view-value">${escapeHtml(q.chapter)}</span></div>`;
+            html += `<div class="view-detail"><span class="view-label">Topic</span><span class="view-value">${escapeHtml(q.topic)}</span></div>`;
+            html += `<div class="view-detail"><span class="view-label">Date</span><span class="view-value">${q.day} ${q.month} ${q.year} &bull; ${q.shift} Shift</span></div>`;
+
+            html += `<hr class="view-divider">`;
+
+            // Apply auto-wrap to question text
+            const renderedQText = autoWrapMathInText(q.text);
+            html += `<div class="view-label" style="margin-bottom:4px;">Question</div>`;
+            html += `<div class="view-question-text">${escapeHtml(renderedQText)}</div>`;
+            if (q.questionImage) {
+                html += `<img src="${q.questionImage}" style="max-width:100%; border-radius:10px; margin:8px 0; display:block; border:1px solid #e2e8f0;">`;
+            }
+
+            if (q.type === 'mcq') {
+                html += `<div class="view-label" style="margin:12px 0 6px;">Options</div>`;
+                html += `<div class="view-options-grid">`;
+                ['A', 'B', 'C', 'D'].forEach(l => {
+                    const isCorrect = q.correctAnswer === l;
+                    const optionText = autoWrapMathInText(q.options[l].text);
+                    html += `<div class="view-option-row${isCorrect ? ' correct' : ''}">`;
+                    html += `<span class="view-option-letter">${l}</span>`;
+                    html += `<span class="view-option-text">${escapeHtml(optionText)}</span>`;
+                    if (isCorrect) html += `<span class="correct-badge">✓ Correct</span>`;
+                    html += `</div>`;
+                    if (q.options[l].image) {
+                        html += `<img src="${q.options[l].image}" style="max-width:80px; border-radius:6px; margin:2px 0 4px 32px; display:block;">`;
+                    }
+                });
+                html += `</div>`;
+            } else {
+                const ansRendered = autoWrapMathInText(q.correctAnswer);
+                html += `<div class="view-detail" style="margin-top:10px;"><span class="view-label">Answer</span><span class="view-value" style="color:#16a34a; font-weight:600;">${escapeHtml(ansRendered)}</span></div>`;
+            }
+
+            if (q.solutionText || q.solutionImage) {
+                html += `<div class="solution-box">`;
+                html += `<span class="view-label">💡 Solution</span>`;
+                if (q.solutionText) {
+                    const solRendered = autoWrapMathInText(q.solutionText);
+                    html += `<div class="solution-text">${escapeHtml(solRendered)}</div>`;
+                }
+                if (q.solutionImage) html += `<img src="${q.solutionImage}" style="max-width:100%; border-radius:8px; margin-top:10px; display:block;">`;
+                html += `</div>`;
+            }
+
+            content.innerHTML = html;
+            document.getElementById('viewModal').classList.add('active');
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typesetPromise([content]).catch(err => console.error(err));
+            }
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.remove('active');
+        }
+
+        document.getElementById('viewModal').addEventListener('click', function (e) {
+            if (e.target === this) closeViewModal();
+        });
+
+        // ---------- Delete Modal ----------
+        function promptDeleteQuestion(id) {
+            deleteTargetId = id;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            deleteTargetId = null;
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        function confirmDeleteQuestion() {
+            if (deleteTargetId) {
+                const idToDelete = deleteTargetId;
+                closeDeleteModal();
+                deleteQuestionFromFirestore(idToDelete);
+            }
+        }
+
+        document.getElementById('deleteModal').addEventListener('click', function (e) {
+            if (e.target === this) closeDeleteModal();
+        });
+
+        // ---------- Export / Import ----------
+        function exportQuestions() {
+            if (!currentQuestions.length) { showToast('No questions to export.'); return; }
+            const dataStr = JSON.stringify(currentQuestions, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'practice_questions.json';
+            a.click(); URL.revokeObjectURL(url);
+            showToast('📥 Exported!');
+        }
+
+        async function importQuestions(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const text = await file.text();
+            try {
+                const data = JSON.parse(text);
+                if (!Array.isArray(data)) throw new Error('Invalid format');
+                const batch = db.batch();
+                data.forEach(q => {
+                    const { id, ...qData } = q;
+                    const ref = db.collection(QUESTIONS_COLLECTION).doc();
+                    batch.set(ref, qData);
+                });
+                await batch.commit();
+                showToast(`✅ Imported ${data.length} questions!`);
+                await refreshQuestions();
+                updateSubjectFilter();
+                renderQuestionBank();
+            } catch (e) {
+                showToast('❌ Import failed. Invalid JSON.');
+            }
+            event.target.value = '';
+        }
+
+        // ---------- Image Helpers ----------
+        function handleImageUpload(input, previewId, dataFieldId) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById(dataFieldId).value = e.target.result;
+                const preview = document.getElementById(previewId);
+                preview.src = e.target.result;
+                preview.style.display = 'inline-block';
+                const removeBtn = document.getElementById(dataFieldId.replace('Data', 'Remove'));
+                if (removeBtn) removeBtn.style.display = 'inline-flex';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearImage(inputId, previewId, dataFieldId) {
+            document.getElementById(inputId).value = '';
+            document.getElementById(dataFieldId).value = '';
+            document.getElementById(previewId).style.display = 'none';
+            const removeBtn = document.getElementById(dataFieldId.replace('Data', 'Remove'));
+            if (removeBtn) removeBtn.style.display = 'none';
+        }
+
+        // ---------- Chapter / Topic dynamic UI ----------
+        function updateChapterField() {
+            const course = document.getElementById('courseSelect').value;
+            const subject = document.getElementById('subjectSelect').value;
+            const container = document.getElementById('chapterContainer');
+            const chapters = getChapterListFor(course, subject);
+            if (chapters) {
+                container.innerHTML = `<select id="chapterDropdown" onchange="updateTopicField(); saveLastSelections();" style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:8px;"><option value="">-- Select Chapter --</option>${chapters.map(c => `<option value="${c}">${c}</option>`).join('')}</select>`;
+            } else {
+                container.innerHTML = '<input type="text" id="chapterTextInput" placeholder="e.g., Thermodynamics" oninput="updateTopicField(); saveLastSelections();">';
+            }
+            updateTopicField();
+        }
+
+        function updateTopicField() {
+            const course = document.getElementById('courseSelect').value;
+            const subject = document.getElementById('subjectSelect').value;
+            const chapter = getChapterValue();
+            const container = document.getElementById('topicContainer');
+            const topics = getTopicsForChapter(course, subject, chapter);
+            if (topics) {
+                container.innerHTML = `<select id="topicDropdown" onchange="saveLastSelections()" style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:8px;"><option value="">-- Select Topic --</option>${topics.map(t => `<option value="${t}">${t}</option>`).join('')}</select>`;
+            } else {
+                container.innerHTML = '<input type="text" id="topicTextInput" placeholder="e.g., First Law, Entropy" oninput="saveLastSelections()">';
+            }
+        }
+
+        function getChapterValue() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const textInput = document.getElementById('chapterTextInput');
+            return dropdown ? dropdown.value : (textInput ? textInput.value.trim() : '');
+        }
+        function getTopicValue() {
+            const dropdown = document.getElementById('topicDropdown');
+            const textInput = document.getElementById('topicTextInput');
+            return dropdown ? dropdown.value : (textInput ? textInput.value.trim() : '');
+        }
+        function setChapterValue(value) {
+            const dropdown = document.getElementById('chapterDropdown');
+            const textInput = document.getElementById('chapterTextInput');
+            if (dropdown) dropdown.value = value;
+            else if (textInput) textInput.value = value;
+            updateTopicField();
+        }
+        function setTopicValue(value) {
+            const dropdown = document.getElementById('topicDropdown');
+            const textInput = document.getElementById('topicTextInput');
+            if (dropdown) dropdown.value = value;
+            else if (textInput) textInput.value = value;
+        }
+
+        function toggleQuestionType() {
+            const type = document.getElementById('questionType').value;
+            document.getElementById('mcqOptions').style.display = type === 'mcq' ? 'block' : 'none';
+            document.getElementById('textAnswerSection').style.display = type === 'text' ? 'block' : 'none';
+        }
+
+        // ---------- Question Bank ----------
+        async function renderQuestionBank() {
+            const list = document.getElementById('questionList');
+            const fCourse = document.getElementById('filterCourse').value;
+            const fSubject = document.getElementById('filterSubject').value;
+            await refreshQuestions();
+            let filtered = currentQuestions.filter(q =>
+                (fCourse === 'all' || q.course === fCourse) &&
+                (fSubject === 'all' || q.subject === fSubject)
+            );
+            if (!filtered.length) {
+                list.innerHTML = '<div class="empty-state"><span style="font-size:3rem;">📭</span><p style="margin-top:8px;">No questions found.</p></div>';
+                return;
+            }
+            list.innerHTML = filtered.map(q => {
+                const badge = q.type === 'mcq'
+                    ? '<span class="badge badge-mcq">MCQ</span>'
+                    : '<span class="badge badge-text">Text</span>';
+                let ansRaw = '';
+                if (q.type === 'mcq') {
+                    ansRaw = `Ans: ${q.correctAnswer}) ${q.options[q.correctAnswer].text}`;
+                } else {
+                    ansRaw = `Ans: ${q.correctAnswer}`;
+                }
+                const ans = autoWrapMathInText(ansRaw);
+                const qTextRendered = autoWrapMathInText(q.text);
+                return `<div class="question-item">
+                    <div class="question-info" style="flex:1; min-width:0;">
+                        <div class="q-text">${escapeHtml(qTextRendered)}${q.questionImage ? ' 🖼️' : ''}</div>
+                        <div class="q-meta">${badge} 🎯${q.course} 📘${q.subject} 📖${q.chapter} 📌${q.topic} 📅${q.day} ${q.month} ${q.year} (${q.shift}) &bull; ${escapeHtml(ans)}</div>
+                    </div>
+                    <div style="display:flex; gap:4px; flex-shrink:0;">
+                        <button class="btn btn-outline btn-sm" onclick="viewQuestion('${q.id}')" title="View">👁️</button>
+                        <button class="btn btn-outline btn-sm" onclick="editQuestion('${q.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-danger btn-sm" onclick="promptDeleteQuestion('${q.id}')" title="Delete">🗑️</button>
+                    </div>
+                </div>`;
+            }).join('');
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typesetPromise([list]).catch(err => console.error(err));
+            }
+        }
+
+        function switchTeacherTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+            document.getElementById('tabAdd').style.display = tab === 'add' ? 'block' : 'none';
+            document.getElementById('tabBank').style.display = tab === 'bank' ? 'block' : 'none';
+            if (tab === 'bank') { updateSubjectFilter(); renderQuestionBank(); }
+            if (tab !== 'add' && editingQuestionId) cancelEdit();
+        }
+
+        function updateSubjectFilter() {
+            const sel = document.getElementById('filterSubject');
+            const subs = [...new Set(currentQuestions.map(q => q.subject))].sort();
+            sel.innerHTML = '<option value="all">📘 All Subjects</option>' + subs.map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = msg;
+            container.appendChild(t);
+            setTimeout(() => t.remove(), 2600);
+        }
+
+        function renderOptionRows() {
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = ['A', 'B', 'C', 'D'].map(l => `
+                <div class="option-row">
+                    <span class="option-letter">${l}</span>
+                    <input type="text" class="option-text-input" id="optText${l}" placeholder="Option ${l}">
+                    <input type="radio" name="correctAnswer" class="correct-radio" value="${l}" ${l === 'A' ? 'checked' : ''}>
+                    <button type="button" class="option-image-btn" onclick="document.getElementById('optImgInput${l}').click()" title="Add image">🖼️</button>
+                    <input type="file" id="optImgInput${l}" accept="image/*" style="display:none" onchange="handleImageUpload(this, 'optImgPreview${l}', 'optImgData${l}')">
+                    <img id="optImgPreview${l}" class="option-preview-img" alt="Opt ${l}" style="display:none;">
+                    <button type="button" class="option-remove-img" id="optImgData${l}Remove" style="display:none" onclick="clearImage('optImgInput${l}','optImgPreview${l}','optImgData${l}')">✕</button>
+                    <input type="hidden" id="optImgData${l}" value="">
+                </div>
+            `).join('');
+        }
+
+        window.onload = async function () {
+            renderOptionRows();
+            toggleQuestionType();
+            updateChapterField();
+            await refreshQuestions();
+            updateSubjectFilter();
+            switchTeacherTab('add');
+
+            const draft = localStorage.getItem('draft_question_detect');
+            if (draft) {
+                try {
+                    const q = JSON.parse(draft);
+                    localStorage.removeItem('draft_question_detect');
+
+                    if (q.course) document.getElementById('courseSelect').value = q.course;
+                    if (q.subject) document.getElementById('subjectSelect').value = q.subject;
+                    updateChapterField();
+
+                    setTimeout(() => {
+                        if (q.chapter) setChapterValue(q.chapter);
+                        if (q.topic) setTopicValue(q.topic);
+                    }, 150);
+
+                    if (q.year) document.getElementById('yearInput').value = q.year;
+                    if (q.month) document.getElementById('monthSelect').value = q.month;
+                    if (q.day) document.getElementById('dayInput').value = q.day;
+                    if (q.shift) document.getElementById('shiftSelect').value = q.shift;
+
+                    if (q.type) {
+                        document.getElementById('questionType').value = q.type;
+                        toggleQuestionType();
+                    }
+
+                    if (q.text) document.getElementById('questionText').value = q.text;
+                    if (q.solutionText) document.getElementById('solutionText').value = q.solutionText;
+
+                    if (q.type === 'mcq' && q.options) {
+                        ['A', 'B', 'C', 'D'].forEach(l => {
+                            if (q.options[l]) {
+                                document.getElementById(`optText${l}`).value = q.options[l].text || '';
+                            }
+                        });
+                        if (q.correctAnswer) {
+                            const radio = document.querySelector(`input[name="correctAnswer"][value="${q.correctAnswer}"]`);
+                            if (radio) radio.checked = true;
+                        }
+                    } else if (q.correctAnswer) {
+                        document.getElementById('correctTextAnswer').value = q.correctAnswer;
+                    }
+
+                    showToast('📋 Screen detector draft loaded! Please review and save.');
+                } catch (e) {
+                    console.error("Error loading auto-detect draft:", e);
+                }
+            } else {
+                restoreLastSelections();
+            }
+        };
+
+        // ---------- Canvas Background (unchanged) ----------
+        (function () {
+            const canvas = document.getElementById('equations-canvas');
+            const ctx = canvas.getContext('2d');
+
+            let width, height;
+            let dpr = Math.min(window.devicePixelRatio || 1, 2);
+            let isMobile = false;
+            let particleCount;
+            let baseSizeMultiplier;
+
+            function detectMobile() {
+                const w = window.innerWidth;
+                isMobile = w <= 768;
+                if (w <= 380) { particleCount = 18; baseSizeMultiplier = 0.55; }
+                else if (w <= 480) { particleCount = 24; baseSizeMultiplier = 0.65; }
+                else if (w <= 768) { particleCount = 32; baseSizeMultiplier = 0.78; }
+                else if (w <= 1024) { particleCount = 40; baseSizeMultiplier = 0.9; }
+                else { particleCount = 48; baseSizeMultiplier = 1.0; }
+            }
+
+            function resizeCanvas() {
+                detectMobile();
+                dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 2);
+                width = canvas.width = window.innerWidth * dpr;
+                height = canvas.height = window.innerHeight * dpr;
+                canvas.style.width = window.innerWidth + 'px';
+                canvas.style.height = window.innerHeight + 'px';
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(dpr, dpr);
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 300));
+            resizeCanvas();
+
+            const expressions = [
+                "E = mc²", "∫ x² dx", "∇ × B = μ₀J", "PV = nRT",
+                "sin²θ + cos²θ = 1", "H₂O + CO₂ → C₆H₁₂O₆", "ΔG = ΔH - TΔS",
+                "F = G(m₁m₂)/r²", "pH = -log[H⁺]", "DNA ⇌ RNA",
+                "Fe²⁺ + e⁻ → Fe", "λ = h/p", "v = u + at", "C₆H₁₂O₆",
+                "∑ F = ma", "lim (x→0) sin(x)/x = 1", "ATP → ADP + Pi",
+                "Krebs Cycle", "dψ/dt", "K_a = [H⁺][A⁻]/[HA]", "y = mx + c",
+            ];
+
+            function drawBenzene(ctx, x, y, size) {
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    const nextX = x + size * Math.cos(angle);
+                    const nextY = y + size * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(nextX, nextY);
+                    else ctx.lineTo(nextX, nextY);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.6, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            class ScienceParticle {
+                constructor() {
+                    this.reset();
+                    this.y = Math.random() * (window.innerHeight || 800);
+                }
+                reset() {
+                    this.type = Math.random() < 0.7 ? 'text' : 'chemistry';
+                    this.text = expressions[Math.floor(Math.random() * expressions.length)];
+                    this.x = Math.random() * (window.innerWidth || 400);
+                    this.y = -60;
+                    this.speed = 0.15 + Math.random() * 0.45;
+                    this.size = (10 + Math.floor(Math.random() * 14)) * baseSizeMultiplier;
+                    this.opacity = 0.12 + Math.random() * 0.15;
+                }
+                update(screenW, screenH) {
+                    this.y += this.speed;
+                    if (this.y > screenH + 60) {
+                        this.reset();
+                        this.y = -60;
+                        this.x = Math.random() * screenW;
+                    }
+                }
+                draw(ctx) {
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.fillStyle = `rgba(157, 23, 77, ${this.opacity})`;
+                    ctx.lineWidth = Math.max(1.2, 1.8 * baseSizeMultiplier);
+                    if (this.type === 'text') {
+                        ctx.font = `bold ${this.size}px 'Courier New', monospace`;
+                        ctx.fillText(this.text, this.x, this.y);
+                    } else {
+                        drawBenzene(ctx, this.x, this.y, this.size * 1.2);
+                    }
+                    ctx.restore();
+                }
+            }
+
+            let particles = [];
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    const p = new ScienceParticle();
+                    p.y = (window.innerHeight / particleCount) * i - 60 + Math.random() * 40;
+                    particles.push(p);
+                }
+            }
+            initParticles();
+
+            let animFrameId;
+            function animateCanvas() {
+                const screenW = window.innerWidth;
+                const screenH = window.innerHeight;
+                ctx.clearRect(0, 0, screenW, screenH);
+                particles.forEach(p => { p.update(screenW, screenH); p.draw(ctx); });
+                animFrameId = requestAnimationFrame(animateCanvas);
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                } else if (!document.hidden && !animFrameId) {
+                    animFrameId = requestAnimationFrame(animateCanvas);
+                }
+            });
+            animateCanvas();
+
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => { resizeCanvas(); initParticles(); }, 250);
+            });
+        })();
+    </script>
+</body>
+
+</html>
